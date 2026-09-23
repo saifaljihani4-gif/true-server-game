@@ -113,6 +113,13 @@ io.on('connection', (socket) => {
 
       if (executedId === room.gameData.spyId && !tie) {
         room.state = 'barra_spy_guess';
+        const catWords = barraCategories[room.gameData.category] || [];
+        const opts = Array.from(new Set([room.gameData.word, ...catWords])).sort(() => Math.random() - 0.5).slice(0, 9);
+        if (!opts.includes(room.gameData.word)) {
+          opts[0] = room.gameData.word;
+          opts.sort(() => Math.random() - 0.5);
+        }
+        room.gameData.spyOptions = opts;
       } else {
         room.state = 'barra_results';
         room.gameData.spyWon = true;

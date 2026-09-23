@@ -167,6 +167,10 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                   <button onClick={() => socket.emit('host_start_mafia', { code: room.code })} disabled={room.players.length < 3} className="py-4 px-5 rounded-2xl font-bold transition-all bg-white text-black hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 flex justify-between items-center">
                     مافيا <span className="w-3 h-3 rounded-full bg-red-500" />
                   </button>
+                  <button onClick={() => socket.emit('host_start_codenames_lobby', { code: room.code })} disabled={room.players.length < 2} className="py-4 px-5 rounded-2xl font-bold transition-all bg-white text-black hover:scale-105 disabled:opacity-50 flex justify-between items-center">
+                    كود نيمز <span className="w-3 h-3 rounded-full bg-blue-500" />
+                  </button>
+
                 </div>
                 {room.players.length < 3 && <p className="text-sm text-red-400 mt-4 text-center font-bold">تحتاج 3 لاعبين على الأقل لبدء اللعبة</p>}
               </div>
@@ -348,7 +352,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
     return (
       <main className="fade-screen flex min-h-[100dvh] flex-col items-center justify-center p-6 bg-black text-center">
         <h1 className="winner-explosion font-kufi text-4xl md:text-5xl font-bold mb-6 text-white">{room.gameData.spyWon ? <span className="text-red-500">الجاسوس فاز!</span> : <span className="text-green-400">الشعب فاز!</span>}</h1>
-          {room.gameData.spyGuessedWord && <div className="text-xl text-gray-300 mb-4">تخمين الجاسوس كان: <span className={room.gameData.spyWon ? "text-red-400" : "text-gray-500 line-through"}>{room.gameData.spyGuessedWord}</span></div>}
+          {room.gameData.spyGuessedWord && <div className="text-xl text-gray-300 mb-4">تخمين الجاسوس كان: <span className={room.gameData.spyWon ? "text-red-400" : "text-gray-500"}>{room.gameData.spyGuessedWord}</span></div>}
           <h2 className="font-kufi text-2xl font-bold mb-4 text-gray-400">اللي كان برا السالفة هو:</h2>
         <div className="text-5xl md:text-7xl font-black text-red-400 mb-8 winner-explosion">{spy?.name} {isSpyMe && '(أنت)'}</div>
         <div className="text-2xl text-gray-300 mb-12 bg-white/5 p-6 rounded-3xl border border-white/10">السالفة كانت: <span className="text-green-400 font-bold">{room.gameData.word}</span></div>
