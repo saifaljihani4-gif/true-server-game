@@ -1,0 +1,2 @@
+{ "compilerOptions":{"target":"ES2022","module":"ESNext","moduleResolution":"bundler","jsx":"react-jsx","strict":true,"noEmit":true,"skipLibCheck":true,"lib":["esnext","dom","dom.iterable"],"types":["node","vite/client"],"paths":{"@/*":["./src/*"]},"baseUrl":"."},
+  "include":["src/game","src/App.tsx","src/main.tsx","src/components/game","src/components/error-boundary.tsx","src/components/ui/tooltip.tsx","src/lib"] }
