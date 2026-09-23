@@ -167,7 +167,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                   <button onClick={() => socket.emit('host_start_mafia', { code: room.code })} disabled={room.players.length < 3} className="py-4 px-5 rounded-2xl font-bold transition-all bg-white text-black hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 flex justify-between items-center">
                     مافيا <span className="w-3 h-3 rounded-full bg-red-500" />
                   </button>
-                  <button onClick={() => socket.emit('host_start_codenames_lobby', { code: room.code })} disabled={room.players.length < 2} className="py-4 px-5 rounded-2xl font-bold transition-all bg-white text-black hover:scale-105 disabled:opacity-50 flex justify-between items-center">
+                  <button onClick={() => socket.emit('host_start_codenames_lobby', { code: room.code })} disabled={room.players.length < 1} className="py-4 px-5 rounded-2xl font-bold transition-all bg-white text-black hover:scale-105 disabled:opacity-50 flex justify-between items-center">
                     كود نيمز <span className="w-3 h-3 rounded-full bg-blue-500" />
                   </button>
 
