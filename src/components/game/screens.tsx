@@ -196,7 +196,7 @@ export function Game(props: GameProps) {
           prize={prize} prizes={prizes} customPrizes={customPrizes}
           onSelectPrize={onSelectPrize} onAddPrize={onAddPrize} onRemovePrize={onRemovePrize} onRandomPrize={onRandomPrize}
           intensity={intensity} setIntensity={setIntensity}
-          error={setupError} canCancel={Boolean(active)} onCancel={() => setSetup(false)} onStart={onStart}
+          error={setupError} canCancel={true} onCancel={() => { if (active) setSetup(false); else onExit(); }} onStart={onStart}
         />
       )}
       {active && !fate && (

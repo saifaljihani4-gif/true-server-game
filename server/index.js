@@ -96,7 +96,7 @@ io.on('connection', (socket) => {
     const room = rooms.get(code);
     if (room && (room.state === 'barra_voting' || room.state === 'mafia_voting')) {
       room.gameData.votes[socket.id] = votedForId;
-      io.to(room.hostId).emit('vote_registered', { voterId: socket.id, totalVotes: Object.keys(room.gameData.votes).length });
+      io.to(code).emit('room_state_update', room);
     }
   });
 

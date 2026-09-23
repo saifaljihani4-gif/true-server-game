@@ -149,7 +149,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
             </div>
             <div className="flex-1 bg-black/40 rounded-2xl p-4 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-3 content-start">
               {room.players.map((p: any) => (
-                <div key={p.id} className="fade-in-up bg-white/10 py-3 px-4 rounded-xl text-center font-bold text-white truncate border border-white/5 flex items-center justify-center gap-2">
+                <div key={p.id} className="winner-explosion bg-white/10 py-3 px-4 rounded-xl text-center font-bold text-white truncate border border-white/5 flex items-center justify-center gap-2">
                   {p.name} {p.id === room.hostId && <Crown size={14} className="text-yellow-500" />}
                 </div>
               ))}
@@ -189,14 +189,19 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
     return (
       <main className="fade-screen flex min-h-[100dvh] flex-col p-6 items-center justify-center text-center bg-black">
         <h1 className="font-kufi text-5xl md:text-7xl font-bold mb-6 text-white">انتهت اللعبة!</h1>
-        <div className="text-4xl md:text-5xl font-black mb-12 p-8 rounded-3xl bg-white/10 border border-white/20 fade-in-up">
+        <div className="text-4xl md:text-5xl font-black mb-12 p-8 rounded-3xl bg-white/10 border border-white/20 winner-explosion">
           {room.gameData.winner === 'town' ? <span className="text-green-400">فاز المواطنون</span> : <span className="text-red-500">فازت المافيا</span>}
         </div>
         {isHost && (
-          <button onClick={() => socket.emit('host_back_to_lobby', { code })} className="btn-clean font-kufi bg-white text-black px-10 py-4 rounded-2xl text-xl font-bold shadow-[0_0_20px_rgba(255,255,255,0.2)]">
-            العودة للوبي
-          </button>
-        )}
+            <div className="flex flex-col md:flex-row gap-4">
+              <button onClick={() => socket.emit(room.gameData?.mode === 'barra' ? 'host_start_barra' : 'host_start_mafia', { code })} className="btn-clean font-kufi bg-red-500 text-white px-10 py-4 rounded-2xl text-xl font-bold shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:scale-105 transition-transform">
+                العب راوند جديد
+              </button>
+              <button onClick={() => socket.emit('host_back_to_lobby', { code })} className="btn-clean font-kufi bg-white/10 text-white border border-white/20 px-10 py-4 rounded-2xl text-xl font-bold hover:bg-white/20 transition-colors">
+                العودة للوبي
+              </button>
+            </div>
+          )}
       </main>
     );
   }
@@ -214,7 +219,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center border-b border-white/10 bg-white/5 relative">
           <h1 className="font-kufi text-3xl md:text-5xl font-bold mb-8 text-white">وقت الأسئلة!</h1>
           {!isDone ? (
-            <div className="w-full max-w-2xl flex flex-col items-center fade-in-up" key={currentIdx}>
+            <div className="w-full max-w-2xl flex flex-col items-center winner-explosion" key={currentIdx}>
               <p className="text-gray-400 mb-4 font-bold text-lg">الدور الآن على:</p>
               <div className="flex items-center justify-center gap-4 md:gap-8 font-black mb-8 w-full">
                  <span className="text-3xl md:text-5xl text-blue-400 flex-1 text-end truncate">{order[currentIdx].asker}</span>
@@ -231,10 +236,10 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
               )}
             </div>
           ) : (
-            <div className="fade-in-up">
+            <div className="winner-explosion">
               <h2 className="text-3xl text-white font-bold mb-6">انتهت كل الأسئلة!</h2>
               {isHost && (
-                <button onClick={() => socket.emit('host_start_voting', { code })} className="btn-clean font-kufi bg-red-500 text-white px-8 py-4 rounded-2xl text-xl font-bold shadow-[0_0_20px_rgba(239,68,68,0.4)]">
+                <button onClick={() => socket.emit('host_start_voting', { code })} className="btn-clean font-kufi pulse-glow-red bg-red-500 text-white px-8 py-4 rounded-2xl text-xl font-bold shadow-[0_0_20px_rgba(239,68,68,0.4)]">
                   انتقل للتصويت
                 </button>
               )}
@@ -247,7 +252,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
           <div className="w-full max-w-sm glass-panel p-6 rounded-3xl border border-white/10 text-center">
             <h3 className="text-sm text-gray-400 font-bold mb-4">دورك السري (لا توريه أحد):</h3>
             {showRole ? (
-              <div className={`border rounded-xl p-6 mb-4 fade-in-up ${isBad ? "bg-red-500/10 border-red-500/30 text-red-400" : "bg-green-500/10 border-green-500/30 text-green-400"}`}>
+              <div className={`border rounded-xl p-6 mb-4 winner-explosion ${isBad ? "bg-red-500/10 border-red-500/30 text-red-400" : "bg-green-500/10 border-green-500/30 text-green-400"}`}>
                 <h1 className="font-kufi text-2xl font-black mb-1">{roleData.role}</h1>
                 <p className="text-xs font-bold opacity-80">{roleData.hint}</p>
               </div>
@@ -289,12 +294,12 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
             <h3 className="text-gray-400 font-bold mb-4 text-center">مين تتوقع إنه برا السالفة؟</h3>
             <div className="grid grid-cols-2 gap-3">
               {playersToVote.map((p: any) => (
-                <button key={p.id} onClick={() => castVote(p.id)} className={`py-4 px-4 rounded-xl font-bold text-sm transition-all ${votedFor === p.id ? 'bg-red-500 text-white scale-105' : 'bg-white/10 text-gray-300 border border-white/5 hover:bg-white/20'}`}>
+                <button key={p.id} onClick={() => castVote(p.id)} className={`pop-in-bouncy card-vibrate py-4 px-4 rounded-xl font-bold text-sm transition-all ${votedFor === p.id ? 'bg-red-500 text-white scale-105' : 'bg-white/10 text-gray-300 border border-white/5 hover:bg-white/20'}`}>
                   {p.name}
                 </button>
               ))}
             </div>
-            {votedFor && <p className="mt-6 text-green-400 font-bold text-center fade-in-up">تم تسجيل تصويتك!</p>}
+            {votedFor && <p className="mt-6 text-green-400 font-bold text-center winner-explosion">تم تسجيل تصويتك!</p>}
           </div>
         </div>
       </main>
@@ -307,14 +312,19 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
     return (
       <main className="fade-screen flex min-h-[100dvh] flex-col items-center justify-center p-6 bg-black text-center">
         <h1 className="font-kufi text-3xl font-bold mb-6 text-gray-400">اللي كان برا السالفة هو:</h1>
-        <div className="text-5xl md:text-7xl font-black text-red-400 mb-8 fade-in-up">{spy?.name} {isSpyMe && '(أنت)'}</div>
+        <div className="text-5xl md:text-7xl font-black text-red-400 mb-8 winner-explosion">{spy?.name} {isSpyMe && '(أنت)'}</div>
         <div className="text-2xl text-gray-300 mb-12 bg-white/5 p-6 rounded-3xl border border-white/10">السالفة كانت: <span className="text-green-400 font-bold">{room.gameData.word}</span></div>
         
         {isHost && (
-          <button onClick={() => socket.emit('host_back_to_lobby', { code })} className="btn-clean font-kufi bg-white text-black px-10 py-4 rounded-2xl text-xl font-bold mt-4 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
-            العودة للوبي
-          </button>
-        )}
+            <div className="flex flex-col md:flex-row gap-4 mt-4">
+              <button onClick={() => socket.emit('host_start_barra', { code })} className="btn-clean font-kufi bg-blue-500 text-white px-10 py-4 rounded-2xl text-xl font-bold shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:scale-105 transition-transform">
+                العب راوند جديد
+              </button>
+              <button onClick={() => socket.emit('host_back_to_lobby', { code })} className="btn-clean font-kufi bg-white/10 text-white border border-white/20 px-10 py-4 rounded-2xl text-xl font-bold hover:bg-white/20 transition-colors">
+                العودة للوبي
+              </button>
+            </div>
+          )}
       </main>
     );
   }
@@ -340,7 +350,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
           <div className="w-full max-w-sm glass-panel p-6 rounded-3xl border border-white/10 text-center">
             <h3 className="text-sm text-gray-400 font-bold mb-4">دورك السري (لا توريه أحد):</h3>
             {showRole ? (
-              <div className={`border rounded-xl p-6 mb-4 fade-in-up ${isBad ? "bg-red-500/10 border-red-500/30 text-red-400" : "bg-green-500/10 border-green-500/30 text-green-400"}`}>
+              <div className={`border rounded-xl p-6 mb-4 winner-explosion ${isBad ? "bg-red-500/10 border-red-500/30 text-red-400" : "bg-green-500/10 border-green-500/30 text-green-400"}`}>
                 <h1 className="font-kufi text-2xl font-black mb-1">{roleData.role}</h1>
                 <p className="text-xs font-bold opacity-80">{roleData.hint}</p>
               </div>
@@ -394,12 +404,12 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                 <h3 className="font-kufi text-xl font-bold mb-4 text-white">{roleData.type === 'mafia' ? 'تبي تقتل مين؟' : 'تبي تعالج مين؟'}</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {playersToVote.map((p: any) => (
-                    <button key={p.id} onClick={() => castMafiaAction(p.id)} className={`py-4 px-4 rounded-xl font-bold text-sm transition-all ${votedFor === p.id ? 'bg-red-500 text-white scale-105' : 'bg-white/10 text-gray-300 border border-white/5 hover:bg-white/20'}`}>
+                    <button key={p.id} onClick={() => castMafiaAction(p.id)} className={`pop-in-bouncy card-vibrate py-4 px-4 rounded-xl font-bold text-sm transition-all ${votedFor === p.id ? 'bg-red-500 text-white scale-105' : 'bg-white/10 text-gray-300 border border-white/5 hover:bg-white/20'}`}>
                       {p.name}
                     </button>
                   ))}
                 </div>
-                {votedFor && <p className="mt-6 text-green-400 font-bold fade-in-up">تم! بانتظار الباقين.</p>}
+                {votedFor && <p className="mt-6 text-green-400 font-bold winner-explosion">تم! بانتظار الباقين.</p>}
               </>
             ) : (
               <div className="text-gray-500 font-bold mt-10">
@@ -419,7 +429,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
         {/* PUBLIC TOP HALF */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center border-b border-white/10 bg-white/5">
           <h1 className="font-kufi text-5xl font-bold mb-6 text-yellow-500">أشرقت الشمس</h1>
-          <div className="glass-panel p-6 rounded-3xl border border-white/10 w-full max-w-lg mb-6 fade-in-up">
+          <div className="glass-panel p-6 rounded-3xl border border-white/10 w-full max-w-lg mb-6 winner-explosion">
             {dayData?.killedName ? (
               <>
                 <h3 className="text-gray-400 mb-2">الضحية الليلة:</h3>
@@ -480,12 +490,12 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                 <h3 className="text-gray-400 font-bold mb-4 text-center">مين تتوقع المافيا؟ (اختر للإعدام)</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {playersToVote.map((p: any) => (
-                    <button key={p.id} onClick={() => castVote(p.id)} className={`py-4 px-4 rounded-xl font-bold text-sm transition-all ${votedFor === p.id ? 'bg-red-500 text-white scale-105' : 'bg-white/10 text-gray-300 border border-white/5 hover:bg-white/20'}`}>
+                    <button key={p.id} onClick={() => castVote(p.id)} className={`pop-in-bouncy card-vibrate py-4 px-4 rounded-xl font-bold text-sm transition-all ${votedFor === p.id ? 'bg-red-500 text-white scale-105' : 'bg-white/10 text-gray-300 border border-white/5 hover:bg-white/20'}`}>
                       {p.name}
                     </button>
                   ))}
                 </div>
-                {votedFor && <p className="mt-6 text-green-400 font-bold text-center fade-in-up">تم تسجيل تصويتك!</p>}
+                {votedFor && <p className="mt-6 text-green-400 font-bold text-center winner-explosion">تم تسجيل تصويتك!</p>}
               </>
             )}
           </div>
@@ -500,7 +510,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
         {/* PUBLIC TOP HALF */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center border-b border-white/10 bg-white/5">
           <h1 className="font-kufi text-5xl font-bold mb-6 text-red-500">تم الإعدام</h1>
-          <div className="glass-panel p-8 rounded-3xl border border-white/10 w-full max-w-sm mb-8 fade-in-up">
+          <div className="glass-panel p-8 rounded-3xl border border-white/10 w-full max-w-sm mb-8 winner-explosion">
              <h3 className="text-gray-400 mb-2">الشخص اللي انطرد:</h3>
              <div className="text-4xl font-black text-red-500">{dayData?.executedName || 'لا أحد'}</div>
           </div>

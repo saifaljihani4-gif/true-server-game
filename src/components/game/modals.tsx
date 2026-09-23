@@ -129,7 +129,7 @@ export function SetupModal(props: SetupProps) {
               <Play size={15} className="rtl:-scale-x-100" /> ابدأ المباراة
             </button>
             {canCancel && (
-              <button onClick={onCancel} className="rounded-full border border-white/15 px-5 py-3 text-sm font-bold text-gray-400 hover:border-white/30 hover:text-white">رجوع للبطاقة</button>
+              <button onClick={onCancel} className="rounded-full border border-white/15 px-5 py-3 text-sm font-bold text-gray-400 hover:border-white/30 hover:text-white">رجوع</button>
             )}
           </div>
         </div>
