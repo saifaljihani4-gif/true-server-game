@@ -30,6 +30,8 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   const [aliveData, setAliveData] = useState<Record<string, boolean>>({});
   const [dayData, setDayData] = useState<any>(null);
   const [results, setResults] = useState<any>(null);
+  const [clueWord, setClueWord] = useState('');
+  const [clueNum, setClueNum] = useState(1);
 
   // Connection
   useEffect(() => {
