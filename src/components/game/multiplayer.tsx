@@ -306,12 +306,50 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
     );
   }
 
+  
+  if (room.state === 'barra_spy_guess') {
+    const isSpyMe = room.gameData.spyId === socket.id;
+    const spy = room.players.find((p:any) => p.id === room.gameData.spyId);
+    
+    // Generate random options for the spy
+    const catWords = Categories[room.gameData.category] || [];
+    const allOptions = Array.from(new Set([room.gameData.word, ...catWords])).sort(() => Math.random() - 0.5).slice(0, 9);
+    if (!allOptions.includes(room.gameData.word)) {
+      allOptions[0] = room.gameData.word;
+      allOptions.sort(() => Math.random() - 0.5);
+    }
+
+    return (
+      <main className="fade-screen flex min-h-[100dvh] flex-col items-center justify-center p-6 bg-black text-center">
+        <h1 className="font-kufi text-4xl md:text-5xl font-bold mb-6 text-red-500 pop-in-bouncy">صادوك يا جاسوس!</h1>
+        <div className="text-2xl text-gray-300 mb-8">الجاسوس هو: <span className="text-red-400 font-bold">{spy?.name}</span></div>
+        
+        {isSpyMe ? (
+          <div className="w-full max-w-2xl fade-in-up">
+            <h2 className="text-xl font-bold text-white mb-6">عندك فرصة أخيرة! خمن السالفة:</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {allOptions.map(opt => (
+                <button key={opt} onClick={() => socket.emit('spy_guess_word', { code, word: opt })} className="p-4 rounded-xl font-bold text-white bg-white/10 hover:bg-red-500 hover:scale-105 transition-all border border-white/5">
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-xl text-yellow-400 font-bold animate-pulse">الجاسوس قاعد يحاول يخمن السالفة...</div>
+        )}
+      </main>
+    );
+  }
+
   if (room.state === 'barra_results') {
     const spy = room.players.find((p:any) => p.id === room.gameData.spyId);
     const isSpyMe = room.gameData.spyId === socket.id;
     return (
       <main className="fade-screen flex min-h-[100dvh] flex-col items-center justify-center p-6 bg-black text-center">
-        <h1 className="font-kufi text-3xl font-bold mb-6 text-gray-400">اللي كان برا السالفة هو:</h1>
+        <h1 className="winner-explosion font-kufi text-4xl md:text-5xl font-bold mb-6 text-white">{room.gameData.spyWon ? <span className="text-red-500">الجاسوس فاز!</span> : <span className="text-green-400">الشعب فاز!</span>}</h1>
+          {room.gameData.spyGuessedWord && <div className="text-xl text-gray-300 mb-4">تخمين الجاسوس كان: <span className={room.gameData.spyWon ? "text-red-400" : "text-gray-500 line-through"}>{room.gameData.spyGuessedWord}</span></div>}
+          <h2 className="font-kufi text-2xl font-bold mb-4 text-gray-400">اللي كان برا السالفة هو:</h2>
         <div className="text-5xl md:text-7xl font-black text-red-400 mb-8 winner-explosion">{spy?.name} {isSpyMe && '(أنت)'}</div>
         <div className="text-2xl text-gray-300 mb-12 bg-white/5 p-6 rounded-3xl border border-white/10">السالفة كانت: <span className="text-green-400 font-bold">{room.gameData.word}</span></div>
         

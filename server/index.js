@@ -103,9 +103,31 @@ io.on('connection', (socket) => {
   socket.on('host_reveal_results', ({ code }) => {
     const room = rooms.get(code);
     if (room && room.hostId === socket.id) {
-      room.state = 'barra_results';
+      const tally = {};
+      Object.values(room.gameData.votes).forEach(v => { tally[v] = (tally[v] || 0) + 1; });
+      let maxVotes = 0, executedId = null, tie = false;
+      for (const [id, count] of Object.entries(tally)) {
+        if (count > maxVotes) { maxVotes = count; executedId = id; tie = false; }
+        else if (count === maxVotes) { tie = true; }
+      }
+
+      if (executedId === room.gameData.spyId && !tie) {
+        room.state = 'barra_spy_guess';
+      } else {
+        room.state = 'barra_results';
+        room.gameData.spyWon = true;
+      }
       io.to(code).emit('room_state_update', room);
-      io.to(code).emit('show_results', { spyId: room.gameData.spyId, word: room.gameData.word, votes: room.gameData.votes });
+    }
+  });
+
+  socket.on('spy_guess_word', ({ code, word }) => {
+    const room = rooms.get(code);
+    if (room && room.state === 'barra_spy_guess') {
+      room.state = 'barra_results';
+      room.gameData.spyGuessedWord = word;
+      room.gameData.spyWon = (word === room.gameData.word);
+      io.to(code).emit('room_state_update', room);
     }
   });
 
