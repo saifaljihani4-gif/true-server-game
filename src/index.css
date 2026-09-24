@@ -185,14 +185,6 @@ input::placeholder { color: rgba(156,163,175,.72); }
   .home-title { letter-spacing: .08em; font-size: clamp(2.6rem, 13vw, 4.5rem); }
   .home-mark::after { inset: -20px; }
 }
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-    transition-duration: .01ms !important;
-  }
-}
 /* ============ v2: الجائزة، المؤقت، الواجهة العربية ============ */
 html { direction: rtl; }
 .kicker-ar { color: rgba(239,233,222,.55); font-size: .8rem; font-weight: 700; }

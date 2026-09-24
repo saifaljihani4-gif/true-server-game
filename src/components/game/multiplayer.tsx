@@ -486,7 +486,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                 onClick={() => socket.emit('cn_guess', { code, index: idx })}
                 className={`flex items-center justify-center p-1 sm:p-2 rounded-lg sm:rounded-xl border transition-all min-h-[46px] sm:min-h-[64px] ${bg} ${!revealed && amIActiveOperative && gd.clue ? 'cursor-pointer hover:scale-105 active:scale-95' : 'cursor-default opacity-90'}`}
               >
-                <span className={`font-bold text-[10px] sm:text-xs md:text-sm lg:text-base leading-tight break-words text-center text-white ${revealed ? 'opacity-40 line-through' : ''}`}>
+                <span className={`font-bold text-[10px] sm:text-xs md:text-sm lg:text-base leading-tight break-words text-center text-white ${revealed ? 'opacity-35 scale-95' : ''}`}>
                   {card.word}
                 </span>
               </button>
