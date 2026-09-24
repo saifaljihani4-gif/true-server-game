@@ -133,13 +133,14 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   if (room.state === 'lobby') {
     return (
       <main className="fade-screen relative flex min-h-[100dvh] flex-col p-6">
-        <header className="flex justify-between items-center mb-8">
-          <button onClick={() => { socket.disconnect(); onBack(); }} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-gray-400 hover:text-white transition-colors">
+        <header className="flex justify-between items-center mb-6 max-w-5xl mx-auto w-full gap-4">
+          <button onClick={() => { socket.disconnect(); onBack(); }} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-gray-400 hover:text-white transition-colors shrink-0">
             <ChevronRight size={15} /> خروج
           </button>
-          <div className="flex items-center gap-3 px-6 py-2 bg-white/10 border border-white/20 rounded-full">
-            <span className="text-sm font-bold text-gray-400">كود الروم:</span>
-            <span className="text-2xl font-black tracking-widest text-white">{room.code}</span>
+          <img src="/images/info.png" alt="True Server" className="h-9 sm:h-12 w-auto object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]" />
+          <div className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-1.5 sm:py-2 bg-white/10 border border-white/20 rounded-full shrink-0">
+            <span className="text-xs sm:text-sm font-bold text-gray-400">كود الروم:</span>
+            <span className="text-xl sm:text-2xl font-black tracking-widest text-white">{room.code}</span>
           </div>
         </header>
 

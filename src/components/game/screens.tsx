@@ -16,8 +16,15 @@ export const MODE_ICONS: Record<Mode, LucideIcon> = {
 
 export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin: () => void; onHost: () => void }) {
   return (
-    <main className="fade-screen flex min-h-[100dvh] flex-col justify-end items-center pb-10 sm:pb-14 p-4 sm:p-6">
+    <main className="fade-screen flex min-h-[100dvh] flex-col justify-end items-center pb-8 sm:pb-12 p-4 sm:p-6">
       <div className="fade-in-up flex w-full max-w-sm flex-col items-center text-center">
+        <div className="mb-4 sm:mb-6 flex justify-center">
+          <img
+            src="/images/info.png"
+            alt="True Server"
+            className="w-56 sm:w-72 h-auto object-contain drop-shadow-[0_0_25px_rgba(168,85,247,0.5)] hover:scale-105 transition-transform"
+          />
+        </div>
         <div className="flex flex-col gap-3.5 w-full mx-auto">
           <button onClick={onHost} className="btn-clean rounded-2xl bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:via-[#522295] hover:to-[#2e1056] text-white border border-purple-400/35 hover:border-purple-300/60 px-6 py-3.5 sm:py-4 text-base sm:text-lg font-bold shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_25px_rgba(147,51,234,0.3)] hover:scale-[1.02] transition-all">
             إنشاء روم جديد
@@ -46,9 +53,10 @@ export function Categories({ onBack, onSelect }: { onBack: () => void; onSelect:
         <ChevronRight size={15} /> الرئيسية
       </button>
 
-      <div className="fade-in-up mb-8 mt-14 text-center md:mb-10 md:mt-6">
-        <h2 className="font-kufi text-4xl font-bold md:text-6xl">اختر اللعبة</h2>
-        <p className="mt-3 text-sm font-medium text-gray-400 md:text-base">{MODES.length} ألعاب، والجائزة تحددها قبل ما تبدأ</p>
+      <div className="fade-in-up mb-6 mt-12 text-center md:mb-8 md:mt-4">
+        <img src="/images/info.png" alt="True Server" className="h-12 sm:h-16 w-auto object-contain mx-auto mb-3 drop-shadow-[0_0_20px_rgba(168,85,247,0.4)]" />
+        <h2 className="font-kufi text-3xl font-bold md:text-5xl">اختر اللعبة</h2>
+        <p className="mt-2 text-sm font-medium text-gray-400 md:text-base">{MODES.length} ألعاب، والجائزة تحددها قبل ما تبدأ</p>
       </div>
 
       <div className="grid w-full max-w-5xl grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">

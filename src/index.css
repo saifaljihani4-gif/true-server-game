@@ -69,7 +69,7 @@ input::placeholder { color: rgba(156,163,175,.72); }
 .stage-app { min-height: 100dvh; position: relative; isolation: isolate; overflow: hidden; }
 .global-bg {
   position: fixed; inset: 0; z-index: -3;
-  background: url('/images/banner.png') center/cover no-repeat #08080a;
+  background: url('/images/banner.gif') center/cover no-repeat #08080a;
   transform: translate3d(0, 0, 0);
 }
 .global-overlay {
@@ -114,7 +114,7 @@ input::placeholder { color: rgba(156,163,175,.72); }
   border: 1px solid rgba(168, 85, 247, 0.3); box-shadow: 0 8px 22px rgba(0,0,0,.55);
 }
 .card-face.card-back {
-  background: url('/images/banner.png') center/cover no-repeat #08080a;
+  background: url('/images/banner.gif') center/cover no-repeat #08080a;
 }
 .card-face.card-back::after {
   content: ''; position: absolute; inset: 0;
