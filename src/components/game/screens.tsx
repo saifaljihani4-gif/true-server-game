@@ -31,15 +31,15 @@ export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin:
         <h1 dir="ltr" className="fade-in-up text-4xl sm:text-6xl md:text-7xl font-black text-white mb-8 tracking-[0.08em] font-display drop-shadow-[0_6px_28px_rgba(168,85,247,0.45)]">TRUE SERVER</h1>
         
         <div className="flex flex-col gap-3.5 w-full max-w-sm mx-auto">
-          <button onClick={onHost} className="btn-clean rounded-2xl bg-[#7c3aed] hover:bg-[#6d28d9] text-white border border-[#a855f7]/50 px-6 py-3.5 sm:py-4 text-base sm:text-lg font-bold shadow-[0_0_25px_rgba(124,58,237,0.4)] hover:scale-[1.03] transition-all">
+          <button onClick={onHost} className="btn-clean rounded-2xl bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:via-[#522295] hover:to-[#2e1056] text-white border border-purple-400/35 hover:border-purple-300/60 px-6 py-3.5 sm:py-4 text-base sm:text-lg font-bold shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_25px_rgba(147,51,234,0.3)] hover:scale-[1.02] transition-all">
             إنشاء روم جديد
           </button>
           
           <div className="flex gap-3">
-            <button onClick={onJoin} className="flex-1 btn-clean rounded-2xl bg-[#161026] hover:bg-[#23173d] border border-purple-500/30 px-4 py-3 sm:py-3.5 text-xs sm:text-sm font-bold text-purple-100 hover:border-purple-400/50 transition-all">
+            <button onClick={onJoin} className="flex-1 btn-clean rounded-2xl bg-[#120c1f]/90 hover:bg-[#1e1433] border border-white/10 hover:border-purple-400/40 px-4 py-3 sm:py-3.5 text-xs sm:text-sm font-bold text-gray-200 hover:text-white shadow-lg transition-all">
               الانضمام لروم
             </button>
-            <button onClick={onEnter} className="flex-1 btn-clean rounded-2xl bg-[#161026] hover:bg-[#23173d] border border-purple-500/30 px-4 py-3 sm:py-3.5 text-xs sm:text-sm font-bold text-purple-100 hover:border-purple-400/50 transition-all">
+            <button onClick={onEnter} className="flex-1 btn-clean rounded-2xl bg-[#120c1f]/90 hover:bg-[#1e1433] border border-white/10 hover:border-purple-400/40 px-4 py-3 sm:py-3.5 text-xs sm:text-sm font-bold text-gray-200 hover:text-white shadow-lg transition-all">
               ألعاب التحدي
             </button>
           </div>
