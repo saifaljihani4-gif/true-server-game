@@ -111,19 +111,20 @@ io.on('connection', (socket) => {
         else if (count === maxVotes) { tie = true; }
       }
 
-      if (executedId === room.gameData.spyId && !tie) {
-        room.state = 'barra_spy_guess';
-        const catWords = barraCategories[room.gameData.category] || [];
-        const opts = Array.from(new Set([room.gameData.word, ...catWords])).sort(() => Math.random() - 0.5).slice(0, 9);
-        if (!opts.includes(room.gameData.word)) {
-          opts[0] = room.gameData.word;
-          opts.sort(() => Math.random() - 0.5);
-        }
-        room.gameData.spyOptions = opts;
-      } else {
-        room.state = 'barra_results';
-        room.gameData.spyWon = true;
+      const spyCaught = (executedId === room.gameData.spyId && !tie);
+      room.gameData.spyCaught = spyCaught;
+      room.gameData.executedId = executedId;
+      room.gameData.tie = tie;
+
+      // Always give the spy the guessing phase at the end
+      room.state = 'barra_spy_guess';
+      const catWords = barraCategories[room.gameData.category] || [];
+      const opts = Array.from(new Set([room.gameData.word, ...catWords])).sort(() => Math.random() - 0.5).slice(0, 9);
+      if (!opts.includes(room.gameData.word)) {
+        opts[0] = room.gameData.word;
+        opts.sort(() => Math.random() - 0.5);
       }
+      room.gameData.spyOptions = opts;
       io.to(code).emit('room_state_update', room);
     }
   });
@@ -133,7 +134,11 @@ io.on('connection', (socket) => {
     if (room && room.state === 'barra_spy_guess') {
       room.state = 'barra_results';
       room.gameData.spyGuessedWord = word;
-      room.gameData.spyWon = (word === room.gameData.word);
+      const isCorrect = (word === room.gameData.word);
+      room.gameData.spyGuessedCorrectly = isCorrect;
+      // If caught, spy only wins if guessed word correctly
+      // If not caught, spy already won, but guessed word adds glory
+      room.gameData.spyWon = room.gameData.spyCaught ? isCorrect : true;
       io.to(code).emit('room_state_update', room);
     }
   });
