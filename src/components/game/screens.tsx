@@ -16,21 +16,9 @@ export const MODE_ICONS: Record<Mode, LucideIcon> = {
 
 export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin: () => void; onHost: () => void }) {
   return (
-    <main className="fade-screen flex min-h-[100dvh] items-center justify-center p-4 sm:p-6">
-      <div className="fade-in-up flex w-full max-w-2xl flex-col items-center text-center">
-        {/* True Server Glowing Logo */}
-        <div className="relative mb-5 flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full bg-purple-600/30 blur-2xl animate-pulse" />
-          <img
-            src="/images/icon.png"
-            alt="True Server"
-            className="relative h-24 w-24 sm:h-28 sm:w-28 rounded-full border-2 border-white/20 object-cover shadow-[0_0_35px_rgba(168,85,247,0.35)]"
-          />
-        </div>
-
-        <h1 dir="ltr" className="fade-in-up text-4xl sm:text-6xl md:text-7xl font-black text-white mb-8 tracking-[0.08em] font-display drop-shadow-[0_6px_28px_rgba(168,85,247,0.45)]">TRUE SERVER</h1>
-        
-        <div className="flex flex-col gap-3.5 w-full max-w-sm mx-auto">
+    <main className="fade-screen flex min-h-[100dvh] flex-col justify-end items-center pb-10 sm:pb-14 p-4 sm:p-6">
+      <div className="fade-in-up flex w-full max-w-sm flex-col items-center text-center">
+        <div className="flex flex-col gap-3.5 w-full mx-auto">
           <button onClick={onHost} className="btn-clean rounded-2xl bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:via-[#522295] hover:to-[#2e1056] text-white border border-purple-400/35 hover:border-purple-300/60 px-6 py-3.5 sm:py-4 text-base sm:text-lg font-bold shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_25px_rgba(147,51,234,0.3)] hover:scale-[1.02] transition-all">
             إنشاء روم جديد
           </button>
