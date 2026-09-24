@@ -18,21 +18,31 @@ export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin:
   return (
     <main className="fade-screen flex min-h-[100dvh] items-center justify-center p-4 sm:p-6">
       <div className="fade-in-up flex w-full max-w-2xl flex-col items-center text-center">
-        <span className="kicker-ar mb-4 md:mb-8 text-gray-400 font-bold text-sm sm:text-base" style={{ animationDelay: '.04s' }}>مرحباً بك في</span>
+        {/* True Server Glowing Logo */}
+        <div className="relative mb-5 flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full bg-purple-600/30 blur-2xl animate-pulse" />
+          <img
+            src="/images/icon.png"
+            alt="True Server"
+            className="relative h-24 w-24 sm:h-28 sm:w-28 rounded-full border-2 border-white/20 object-cover shadow-[0_0_35px_rgba(168,85,247,0.35)]"
+          />
+        </div>
+
+        <span className="text-xs sm:text-sm font-bold uppercase tracking-[0.25em] text-purple-300 mb-2">منصة الألعاب الجماعية</span>
         
-        <h1 dir="ltr" className="home-title font-display fade-in-up text-4xl sm:text-6xl md:text-8xl font-semibold text-white mb-8 md:mb-12 tracking-wider" style={{ animationDelay: '.2s' }}>TRUE SERVER</h1>
+        <h1 dir="ltr" className="home-title font-display fade-in-up text-4xl sm:text-6xl md:text-7xl font-bold text-white mb-8 tracking-wider">TRUE SERVER</h1>
         
-        <div className="flex flex-col gap-3.5 w-full max-w-sm mx-auto" style={{ animationDelay: '.4s' }}>
-          <button onClick={onJoin} className="btn-clean font-kufi rounded-full bg-white px-6 py-3 text-base sm:text-lg font-bold text-black shadow-[0_0_25px_rgba(255,255,255,.2)] hover:scale-105 transition-transform md:py-4">
-            انضمام من الجوال
+        <div className="flex flex-col gap-3.5 w-full max-w-sm mx-auto">
+          <button onClick={onHost} className="btn-clean font-kufi rounded-2xl bg-white px-6 py-3.5 sm:py-4 text-base sm:text-lg font-bold text-black shadow-[0_0_30px_rgba(255,255,255,.25)] hover:scale-[1.03] transition-transform">
+            إنشاء روم جديد
           </button>
           
           <div className="flex gap-3">
-            <button onClick={onEnter} className="flex-1 btn-clean font-kufi rounded-full bg-white/10 border border-white/20 px-3 py-3 text-xs sm:text-sm font-bold text-white hover:bg-white/20 transition-all md:py-4">
-              ألعاب الواجهة
+            <button onClick={onJoin} className="flex-1 btn-clean font-kufi rounded-2xl bg-white/10 border border-white/20 px-4 py-3 sm:py-3.5 text-xs sm:text-sm font-bold text-white hover:bg-white/20 transition-all">
+              الانضمام لروم
             </button>
-            <button onClick={onHost} className="flex-1 btn-clean font-kufi rounded-full bg-white/10 border border-white/20 px-3 py-3 text-xs sm:text-sm font-bold text-white hover:bg-white/20 transition-all md:py-4">
-              إنشاء روم أونلاين
+            <button onClick={onEnter} className="flex-1 btn-clean font-kufi rounded-2xl bg-purple-950/40 border border-purple-500/30 px-4 py-3 sm:py-3.5 text-xs sm:text-sm font-bold text-purple-200 hover:bg-purple-900/40 transition-all">
+              ألعاب التحدي
             </button>
           </div>
         </div>
