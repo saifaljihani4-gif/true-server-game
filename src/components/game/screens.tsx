@@ -16,28 +16,32 @@ export const MODE_ICONS: Record<Mode, LucideIcon> = {
 
 export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin: () => void; onHost: () => void }) {
   return (
-    <main className="fade-screen flex min-h-[100dvh] flex-col justify-end items-center pb-8 sm:pb-12 p-4 sm:p-6">
-      <div className="fade-in-up flex w-full max-w-sm flex-col items-center text-center">
-        <div className="mb-4 sm:mb-6 flex justify-center">
-          <img
-            src="/images/info.png"
-            alt="True Server"
-            className="w-56 sm:w-72 h-auto object-contain drop-shadow-[0_0_25px_rgba(168,85,247,0.5)] hover:scale-105 transition-transform"
-          />
-        </div>
-        <div className="flex flex-col gap-3.5 w-full mx-auto">
-          <button onClick={onHost} className="btn-clean rounded-2xl bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:via-[#522295] hover:to-[#2e1056] text-white border border-purple-400/35 hover:border-purple-300/60 px-6 py-3.5 sm:py-4 text-base sm:text-lg font-bold shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_25px_rgba(147,51,234,0.3)] hover:scale-[1.02] transition-all">
-            إنشاء روم جديد
+    <main className="fade-screen flex h-[100dvh] max-h-[100dvh] flex-col justify-between items-center pt-3 sm:pt-6 pb-6 sm:pb-10 px-4 overflow-y-auto">
+      {/* 1. Header/Info placed WAY UP at the top */}
+      <div className="fade-in-up flex justify-center w-full pt-1 sm:pt-2">
+        <img
+          src="/images/info.png"
+          alt="True Server"
+          className="w-40 sm:w-56 md:w-64 h-auto object-contain drop-shadow-[0_0_25px_rgba(168,85,247,0.55)] hover:scale-105 transition-transform"
+        />
+      </div>
+
+      {/* 2. Middle empty space so banner is fully visible */}
+      <div className="flex-1" />
+
+      {/* 3. Action buttons placed cleanly at the bottom */}
+      <div className="fade-in-up flex w-full max-w-xs sm:max-w-sm flex-col gap-3 pb-2 sm:pb-4">
+        <button onClick={onHost} className="btn-clean rounded-2xl bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:via-[#522295] hover:to-[#2e1056] text-white border border-purple-400/35 hover:border-purple-300/60 px-6 py-3.5 text-base sm:text-lg font-bold shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_25px_rgba(147,51,234,0.3)] hover:scale-[1.02] transition-all">
+          إنشاء روم جديد
+        </button>
+        
+        <div className="flex gap-2.5">
+          <button onClick={onJoin} className="flex-1 btn-clean rounded-2xl bg-[#120c1f]/90 hover:bg-[#1e1433] border border-white/10 hover:border-purple-400/40 px-3 py-3 text-xs sm:text-sm font-bold text-gray-200 hover:text-white shadow-lg transition-all">
+            الانضمام لروم
           </button>
-          
-          <div className="flex gap-3">
-            <button onClick={onJoin} className="flex-1 btn-clean rounded-2xl bg-[#120c1f]/90 hover:bg-[#1e1433] border border-white/10 hover:border-purple-400/40 px-4 py-3 sm:py-3.5 text-xs sm:text-sm font-bold text-gray-200 hover:text-white shadow-lg transition-all">
-              الانضمام لروم
-            </button>
-            <button onClick={onEnter} className="flex-1 btn-clean rounded-2xl bg-[#120c1f]/90 hover:bg-[#1e1433] border border-white/10 hover:border-purple-400/40 px-4 py-3 sm:py-3.5 text-xs sm:text-sm font-bold text-gray-200 hover:text-white shadow-lg transition-all">
-              ألعاب التحدي
-            </button>
-          </div>
+          <button onClick={onEnter} className="flex-1 btn-clean rounded-2xl bg-[#120c1f]/90 hover:bg-[#1e1433] border border-white/10 hover:border-purple-400/40 px-3 py-3 text-xs sm:text-sm font-bold text-gray-200 hover:text-white shadow-lg transition-all">
+            ألعاب التحدي
+          </button>
         </div>
       </div>
     </main>

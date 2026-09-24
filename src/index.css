@@ -69,12 +69,12 @@ input::placeholder { color: rgba(156,163,175,.72); }
 .stage-app { min-height: 100dvh; position: relative; isolation: isolate; overflow: hidden; }
 .global-bg {
   position: fixed; inset: 0; z-index: -3;
-  background: url('/images/banner.gif') center/cover no-repeat #08080a;
+  background: #08080a url('/images/banner.gif') center center / contain no-repeat;
   transform: translate3d(0, 0, 0);
 }
 .global-overlay {
   position: fixed; inset: 0; z-index: -2;
-  background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(5,5,8,0.55) 100%);
+  background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(5,5,8,0.4) 100%);
   pointer-events: none;
 }
 .grain {
@@ -170,13 +170,11 @@ input::placeholder { color: rgba(156,163,175,.72); }
 @keyframes grainShift { 0%, 100% { transform: translate3d(0,0,0); } 25% { transform: translate3d(1%, -1%, 0); } 50% { transform: translate3d(-1%, 1%, 0); } 75% { transform: translate3d(1%, 1%, 0); } }
 @keyframes logoFloat { 0%, 100% { transform: translate3d(0,0,0); } 50% { transform: translate3d(0,-8px,0); } }
 @keyframes ringPulse { 0%, 100% { opacity: .55; transform: scale(1); } 50% { opacity: .2; transform: scale(1.045); } }
-@media (max-width: 640px) {
-  .global-overlay { background: rgba(6,7,9,.82); }
-  .game-scroll { padding: 1rem .8rem 7rem !important; }
+@media (max-width: 768px) {
+  .global-bg { background: #08080a url('/images/banner.gif') center 22% / contain no-repeat !important; }
+  .global-overlay { background: linear-gradient(180deg, transparent 40%, rgba(6,7,9,0.7) 100%) !important; }
+  .game-scroll { padding: 1rem .8rem 6rem !important; }
   .glass-nav { align-items: center; }
-  .global-bg { background-position: 61% center; }
-  .home-title { letter-spacing: .08em; font-size: clamp(2.6rem, 13vw, 4.5rem); }
-  .home-mark::after { inset: -20px; }
 }
 /* ============ v2: الجائزة، المؤقت، الواجهة العربية ============ */
 html { direction: rtl; }
