@@ -16,22 +16,22 @@ export const MODE_ICONS: Record<Mode, LucideIcon> = {
 
 export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin: () => void; onHost: () => void }) {
   return (
-    <main className="fade-screen flex min-h-[100dvh] items-center justify-center p-6">
+    <main className="fade-screen flex min-h-[100dvh] items-center justify-center p-4 sm:p-6">
       <div className="fade-in-up flex w-full max-w-2xl flex-col items-center text-center">
-        <span className="kicker-ar mb-7 md:mb-8 text-gray-400 font-bold" style={{ animationDelay: '.04s' }}>مرحباً بك في</span>
+        <span className="kicker-ar mb-4 md:mb-8 text-gray-400 font-bold text-sm sm:text-base" style={{ animationDelay: '.04s' }}>مرحباً بك في</span>
         
-        <h1 dir="ltr" className="home-title font-display fade-in-up whitespace-nowrap text-5xl font-semibold text-white sm:text-6xl md:text-8xl mb-12" style={{ animationDelay: '.2s' }}>TRUE SERVER</h1>
+        <h1 dir="ltr" className="home-title font-display fade-in-up text-4xl sm:text-6xl md:text-8xl font-semibold text-white mb-8 md:mb-12 tracking-wider" style={{ animationDelay: '.2s' }}>TRUE SERVER</h1>
         
-        <div className="flex flex-col gap-4 w-full max-w-sm mx-auto" style={{ animationDelay: '.4s' }}>
-          <button onClick={onJoin} className="btn-clean font-kufi rounded-full bg-white px-8 py-3.5 text-lg font-bold text-black shadow-[0_0_25px_rgba(255,255,255,.2)] hover:scale-105 transition-transform md:py-4">
+        <div className="flex flex-col gap-3.5 w-full max-w-sm mx-auto" style={{ animationDelay: '.4s' }}>
+          <button onClick={onJoin} className="btn-clean font-kufi rounded-full bg-white px-6 py-3 text-base sm:text-lg font-bold text-black shadow-[0_0_25px_rgba(255,255,255,.2)] hover:scale-105 transition-transform md:py-4">
             انضمام من الجوال
           </button>
           
-          <div className="flex gap-4">
-            <button onClick={onEnter} className="flex-1 btn-clean font-kufi rounded-full bg-white/10 border border-white/20 px-4 py-3.5 text-sm font-bold text-white hover:bg-white/20 transition-all md:py-4">
+          <div className="flex gap-3">
+            <button onClick={onEnter} className="flex-1 btn-clean font-kufi rounded-full bg-white/10 border border-white/20 px-3 py-3 text-xs sm:text-sm font-bold text-white hover:bg-white/20 transition-all md:py-4">
               ألعاب الواجهة
             </button>
-            <button onClick={onHost} className="flex-1 btn-clean font-kufi rounded-full bg-white/10 border border-white/20 px-4 py-3.5 text-sm font-bold text-white hover:bg-white/20 transition-all md:py-4">
+            <button onClick={onHost} className="flex-1 btn-clean font-kufi rounded-full bg-white/10 border border-white/20 px-3 py-3 text-xs sm:text-sm font-bold text-white hover:bg-white/20 transition-all md:py-4">
               إنشاء روم أونلاين
             </button>
           </div>

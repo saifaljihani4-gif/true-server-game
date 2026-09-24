@@ -1,6 +1,44 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Component, type ErrorInfo, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '@/components/ui/tooltip';
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = { hasError: false };
+
+  public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('App Error:', error, errorInfo);
+  }
+
+  public render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex min-h-[100dvh] flex-col items-center justify-center p-6 text-center bg-black text-white">
+          <h2 className="font-kufi text-2xl font-bold mb-4 text-red-400">حدث خطأ غير متوقع</h2>
+          <p className="text-gray-400 text-sm max-w-md mb-6">{this.state.error?.message || 'تعذر عرض الصفحة'}</p>
+          <button
+            onClick={() => { this.setState({ hasError: false }); window.location.reload(); }}
+            className="px-6 py-3 rounded-full bg-white text-black font-bold text-sm hover:scale-105 transition-transform"
+          >
+            إعادة تحميل اللعبة
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import {
   DEFAULT_PRIZES, fillDialectCard, makeCards, modeMeta, randomPunishment, pick,
   type Card, type Intensity, type Mode,
@@ -190,30 +228,32 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="stage-app selection:bg-white/20">
-          <div className="global-bg" /><div className="global-overlay" /><div className="grain" />
-          <div dir="ltr" className="pointer-events-none fixed bottom-4 right-6 z-50 text-[10px] font-bold uppercase tracking-[.2em] text-gray-500">By <span className="text-white">sr6h</span></div>
-          {celebration && <VictoryLight />}
-          {screen === 'home' && <Home onEnter={() => setScreen('categories')} onJoin={() => setScreen('join')} onHost={() => setScreen('host')} />}
-          {screen === 'categories' && <Categories onBack={() => setScreen('home')} onSelect={chooseMode} />}
-          {screen === 'game' && (
-            <Game
-              mode={mode} modeLabel={modeMeta(mode).name} round={round} dealing={dealing} cards={cards} active={active}
-              setup={setup} setSetup={setSetup} p1={p1} p2={p2} setP1={setP1} setP2={setP2} scores={scores} setupError={setupError}
-              prize={prize} prizes={prizes} customPrizes={customPrizes}
-              onSelectPrize={selectPrize} onAddPrize={addPrize} onRemovePrize={removePrize} onRandomPrize={randomPrize}
-              intensity={intensity} setIntensity={setIntensity}
-              timer={timer} timerTotal={timerTotal} timerActive={timerActive}
-              toggleTimer={() => setTimerActive(v => (timer > 0 ? !v : false))} addTime={addTime}
-              showAnswer={showAnswer} setShowAnswer={setShowAnswer} muted={muted} onToggleMute={toggleMute}
-              onExit={exitGame} onPick={pickCard} onStart={startRound} onCancelActive={cancelActive} onDeclare={declareWinner}
-              fate={fate} onCloseFate={closeFate}
-            />
-          )}
-        
-          {screen === 'join' && <JoinRoom onBack={() => setScreen('home')} />}
-          {screen === 'host' && <HostLobby onBack={() => setScreen('home')} />}
-        </div>
+        <ErrorBoundary>
+          <div className="stage-app selection:bg-white/20">
+            <div className="global-bg" /><div className="global-overlay" /><div className="grain" />
+            <div dir="ltr" className="pointer-events-none fixed bottom-4 right-6 z-50 text-[10px] font-bold uppercase tracking-[.2em] text-gray-500">By <span className="text-white">sr6h</span></div>
+            {celebration && <VictoryLight />}
+            {screen === 'home' && <Home onEnter={() => setScreen('categories')} onJoin={() => setScreen('join')} onHost={() => setScreen('host')} />}
+            {screen === 'categories' && <Categories onBack={() => setScreen('home')} onSelect={chooseMode} />}
+            {screen === 'game' && (
+              <Game
+                mode={mode} modeLabel={modeMeta(mode).name} round={round} dealing={dealing} cards={cards} active={active}
+                setup={setup} setSetup={setSetup} p1={p1} p2={p2} setP1={setP1} setP2={setP2} scores={scores} setupError={setupError}
+                prize={prize} prizes={prizes} customPrizes={customPrizes}
+                onSelectPrize={selectPrize} onAddPrize={addPrize} onRemovePrize={removePrize} onRandomPrize={randomPrize}
+                intensity={intensity} setIntensity={setIntensity}
+                timer={timer} timerTotal={timerTotal} timerActive={timerActive}
+                toggleTimer={() => setTimerActive(v => (timer > 0 ? !v : false))} addTime={addTime}
+                showAnswer={showAnswer} setShowAnswer={setShowAnswer} muted={muted} onToggleMute={toggleMute}
+                onExit={exitGame} onPick={pickCard} onStart={startRound} onCancelActive={cancelActive} onDeclare={declareWinner}
+                fate={fate} onCloseFate={closeFate}
+              />
+            )}
+          
+            {screen === 'join' && <JoinRoom onBack={() => setScreen('home')} />}
+            {screen === 'host' && <HostLobby onBack={() => setScreen('home')} />}
+          </div>
+        </ErrorBoundary>
       </TooltipProvider>
     </QueryClientProvider>
   );
