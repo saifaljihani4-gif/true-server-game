@@ -342,7 +342,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
             </div>
           </div>
         ) : (
-          <div className="text-xl text-yellow-400 font-bold animate-pulse">الجاسوس قاعد يحاول يخمن السالفة...</div>
+          <div className="text-xl text-purple-400 font-bold animate-pulse">الجاسوس قاعد يحاول يخمن السالفة...</div>
         )}
       </main>
     );
@@ -456,7 +456,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
             <div className={`text-base sm:text-2xl font-bold ${isRedTurn ? 'text-red-500' : 'text-blue-500'}`}>دور الفريق {isRedTurn ? 'الأحمر' : 'الأزرق'}</div>
             {gd.clue ? (
               <div className="text-xs sm:text-base text-white mt-0.5 sm:mt-1">
-                تلميحة: <span className="font-bold text-yellow-400">{gd.clue.word}</span> ({gd.clue.number})
+                تلميحة: <span className="font-bold text-purple-300">{gd.clue.word}</span> ({gd.clue.number})
               </div>
             ) : (
               <div className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">بانتظار الرئيس يعطي تلميحة...</div>

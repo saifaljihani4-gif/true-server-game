@@ -34,9 +34,9 @@
   --app-font-serif: 'Cormorant Garamond', Georgia, serif;
   --app-font-mono: 'Space Mono', monospace;
   --radius: 1.15rem;
-  --prize: #e6c46a;
-  --prize-soft: #f3dc9a;
-  --prize-deep: #9c7b2c;
+  --prize: #a855f7;
+  --prize-soft: #d8b4fe;
+  --prize-deep: #7e22ce;
   --danger: #ff6565;
   --success: #4ade80;
 }
@@ -98,16 +98,16 @@ input::placeholder { color: rgba(156,163,175,.72); }
 .arabic-text { font-family: 'Tajawal', 'Segoe UI', sans-serif; line-height: 1.55; }
 .font-kufi { font-family: 'Reem Kufi', 'Tajawal', sans-serif; }
 .glass-panel {
-  background: linear-gradient(145deg, rgba(28,29,32,.72), rgba(10,11,14,.68));
-  border: 1px solid rgba(239,233,222,.13);
-  box-shadow: 0 22px 60px rgba(0,0,0,.42), inset 0 1px rgba(255,255,255,.06);
-  backdrop-filter: blur(22px) saturate(.8);
+  background: linear-gradient(145deg, rgba(22, 16, 36, 0.8), rgba(9, 9, 14, 0.85));
+  border: 1px solid rgba(168, 85, 247, 0.18);
+  box-shadow: 0 22px 60px rgba(0,0,0,0.55), 0 0 30px rgba(147, 51, 234, 0.08), inset 0 1px rgba(255,255,255,0.08);
+  backdrop-filter: blur(24px) saturate(0.9);
 }
 .glass-nav {
-  background: rgba(8,9,11,.78);
-  border-bottom: 1px solid rgba(239,233,222,.10);
-  backdrop-filter: blur(20px) saturate(.8);
-  box-shadow: 0 14px 34px rgba(0,0,0,.18);
+  background: rgba(12, 10, 18, 0.85);
+  border-bottom: 1px solid rgba(168, 85, 247, 0.16);
+  backdrop-filter: blur(20px) saturate(0.9);
+  box-shadow: 0 14px 34px rgba(0,0,0,0.3);
 }
 .fade-in-up { animation: fadeInUp .72s cubic-bezier(.2,.8,.2,1) both; }
 @keyframes fadeInUp { from { opacity: 0; transform: translate3d(0, 22px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
@@ -115,10 +115,10 @@ input::placeholder { color: rgba(156,163,175,.72); }
 .fade-screen { animation: screenIn .42s ease backwards; }
 @keyframes screenIn { from { opacity: 0; transform: translate3d(0, 6px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
 .btn-clean { transition: transform .28s cubic-bezier(.2,.8,.2,1), background-color .28s ease, border-color .28s ease, color .28s ease, box-shadow .28s ease; }
-.btn-clean:hover:not(:disabled) { transform: translate3d(0, -3px, 0) scale(1.02); box-shadow: 0 14px 30px rgba(0,0,0,.28); }
+.btn-clean:hover:not(:disabled) { transform: translate3d(0, -3px, 0) scale(1.02); box-shadow: 0 14px 30px rgba(0,0,0,0.3), 0 0 15px rgba(168, 85, 247, 0.2); }
 .btn-clean:active:not(:disabled) { transform: translate3d(0, 1px, 0) scale(.98); }
 .mode-card { transition: transform .42s cubic-bezier(.2,.8,.2,1), border-color .3s ease, background-color .3s ease, box-shadow .3s ease; }
-.mode-card:hover, .mode-card:focus-visible { transform: translate3d(0, -3px, 0); border-color: rgba(239,233,222,.34); background-color: rgba(35,36,40,.76); box-shadow: 0 16px 34px rgba(0,0,0,.3); }
+.mode-card:hover, .mode-card:focus-visible { transform: translate3d(0, -3px, 0); border-color: rgba(168, 85, 247, 0.45); background-color: rgba(28, 20, 44, 0.85); box-shadow: 0 16px 34px rgba(0,0,0,0.4), 0 0 25px rgba(168, 85, 247, 0.18); }
 .card-container { perspective: 1200px; transition: opacity .35s ease, transform .35s cubic-bezier(.2,.8,.2,1); }
 .card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform .62s cubic-bezier(.2,.8,.2,1); }
 .card-container.flipped .card-inner { transform: rotateY(180deg); }
@@ -226,9 +226,9 @@ html { direction: rtl; }
 }
 .chip:hover { border-color: rgba(239,233,222,.4); transform: translate3d(0, -2px, 0); }
 .chip[aria-pressed='true'] {
-  border-color: rgba(230,196,106,.85); color: var(--prize-soft);
-  background: linear-gradient(145deg, rgba(230,196,106,.22), rgba(230,196,106,.06));
-  box-shadow: 0 0 22px rgba(230,196,106,.16);
+  border-color: rgba(168, 85, 247, 0.85); color: var(--prize-soft);
+  background: linear-gradient(145deg, rgba(168, 85, 247, 0.28), rgba(126, 34, 206, 0.1));
+  box-shadow: 0 0 22px rgba(168, 85, 247, 0.25);
 }
 .chip .chip-x { display: inline-flex; margin-inline-end: -.35rem; padding: .15rem; border-radius: 999px; color: rgba(239,233,222,.5); }
 .chip .chip-x:hover { color: white; background: rgba(255,255,255,.14); }
@@ -243,7 +243,7 @@ html { direction: rtl; }
 
 .setup-input { width: 100%; padding: .95rem 1rem; text-align: center; font-weight: 700; font-size: 1.05rem; color: white; background: rgba(255,255,255,.05); border: 1px solid rgba(239,233,222,.2); border-radius: 1rem; transition: border-color .25s ease, background-color .25s ease; }
 .setup-input:focus { outline: none; border-color: rgba(239,233,222,.6); background: rgba(255,255,255,.09); }
-.setup-input.gold:focus { border-color: rgba(230,196,106,.75); }
+.setup-input.gold:focus { border-color: rgba(168, 85, 247, 0.75); }
 
 /* المؤقت الدائري */
 .timer-ring { position: relative; width: clamp(150px, 42vw, 200px); aspect-ratio: 1; }
@@ -253,13 +253,13 @@ html { direction: rtl; }
 
 .card-quote { border-inline-start: 2px solid rgba(239,233,222,.35); padding: .35rem .95rem; text-align: start; font-size: 1.2rem; font-weight: 500; color: rgba(239,233,222,.92); background: rgba(255,255,255,.05); border-radius: .25rem .75rem .75rem .25rem; }
 .tag-pill { display: inline-flex; align-items: center; padding: .12rem .6rem; border-radius: 999px; border: 1px solid rgba(239,233,222,.28); font-size: .7rem; font-weight: 700; color: rgba(239,233,222,.85); }
-.tag-pill.gold { border-color: rgba(230,196,106,.6); color: var(--prize-soft); }
+.tag-pill.gold { border-color: rgba(168, 85, 247, 0.6); color: var(--prize-soft); background: rgba(147, 51, 234, 0.12); }
 
 .mode-row { text-align: start; }
 .mode-row .mode-icon { transition: background-color .3s ease, color .3s ease, border-color .3s ease; }
-.mode-row:hover .mode-icon, .mode-row:focus-visible .mode-icon { background: #efe9de; color: #0d0e11; border-color: #efe9de; }
+.mode-row:hover .mode-icon, .mode-row:focus-visible .mode-icon { background: #a855f7; color: #ffffff; border-color: #c084fc; box-shadow: 0 0 15px rgba(168, 85, 247, 0.4); }
 
-.fate-winner { border-color: rgba(230,196,106,.6) !important; box-shadow: 0 0 0 1px rgba(230,196,106,.1), 0 26px 70px rgba(0,0,0,.6), 0 0 70px rgba(230,196,106,.14) !important; }
+.fate-winner { border-color: rgba(168, 85, 247, 0.6) !important; box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.2), 0 26px 70px rgba(0,0,0,0.6), 0 0 70px rgba(168, 85, 247, 0.25) !important; }
 
 @media (max-width: 640px) {
   .prize-strip { font-size: .74rem; padding: .45rem .85rem; }
