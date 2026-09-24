@@ -52,35 +52,37 @@ export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin:
 
 export function Categories({ onBack, onSelect }: { onBack: () => void; onSelect: (mode: Mode) => void }) {
   return (
-    <main className="fade-screen relative flex min-h-[100dvh] flex-col items-center justify-center p-5 md:p-8">
-      <button onClick={onBack} className="absolute start-5 top-6 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-gray-400 hover:text-white md:start-8 md:top-8">
-        <ChevronRight size={15} /> الرئيسية
-      </button>
-
-      <div className="fade-in-up mb-6 mt-12 text-center md:mb-8 md:mt-4">
-        <img src="/images/info.png" alt="True Server" className="h-12 sm:h-16 w-auto object-contain mx-auto mb-3 drop-shadow-[0_0_20px_rgba(168,85,247,0.4)]" />
-        <h2 className="font-kufi text-3xl font-bold md:text-5xl">اختر اللعبة</h2>
-        <p className="mt-2 text-sm font-medium text-gray-400 md:text-base">{MODES.length} ألعاب، والجائزة تحددها قبل ما تبدأ</p>
+    <main className="fade-screen relative flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-start p-3 sm:p-5 md:p-8">
+      <div className="w-full max-w-5xl flex items-center justify-start mb-2 pt-1">
+        <button onClick={onBack} className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs sm:text-sm font-bold text-gray-400 hover:text-white">
+          <ChevronRight size={14} /> الرئيسية
+        </button>
       </div>
 
-      <div className="grid w-full max-w-5xl grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+      <div className="fade-in-up mb-4 sm:mb-6 text-center w-full">
+        <img src="/images/info.png" alt="True Server" className="h-10 sm:h-14 w-auto object-contain mx-auto mb-2 drop-shadow-[0_0_20px_rgba(168,85,247,0.4)]" />
+        <h2 className="font-kufi text-2xl sm:text-3xl font-bold md:text-5xl">اختر اللعبة</h2>
+        <p className="mt-1 text-xs sm:text-sm font-medium text-gray-400 md:text-base">{MODES.length} ألعاب، والجائزة تحددها قبل ما تبدأ</p>
+      </div>
+
+      <div className="grid w-full max-w-5xl grid-cols-1 gap-2.5 sm:gap-3 md:grid-cols-2 md:gap-4 pb-6">
         {MODES.map((item, i) => {
           const Icon = MODE_ICONS[item.id];
           return (
-            <button key={item.id} onClick={() => onSelect(item.id)} className="mode-card mode-row glass-panel fade-in-up group flex items-center gap-4 rounded-2xl p-4 md:gap-5 md:p-5" style={{ animationDelay: `${i * 0.05}s` }}>
-              <span className="mode-icon flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white">
-                <Icon size={22} strokeWidth={1.6} />
+            <button key={item.id} onClick={() => onSelect(item.id)} className="mode-card mode-row glass-panel fade-in-up group flex items-center gap-3 rounded-2xl p-3 sm:p-4 md:gap-5 md:p-5 w-full text-right" style={{ animationDelay: `${i * 0.05}s` }}>
+              <span className="mode-icon flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white">
+                <Icon size={18} strokeWidth={1.6} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="flex flex-wrap items-center gap-2">
-                  <span className="font-kufi text-xl font-bold md:text-2xl">{item.name}</span>
-                  {item.isNew && <span className="tag-pill gold">جديد</span>}
+                <span className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <span className="font-kufi text-lg sm:text-xl font-bold md:text-2xl truncate">{item.name}</span>
+                  {item.isNew && <span className="tag-pill gold text-[10px] sm:text-xs">جديد</span>}
                 </span>
-                <span className="arabic-text mt-1 block text-sm font-medium text-gray-400">{item.copy}</span>
-                <span className="mt-2.5 flex items-center gap-3 text-xs font-bold text-gray-500">
-                  <span className="inline-flex items-center gap-1"><Timer size={12} /> {item.time} ثانية</span>
-                  <span className="h-3 w-px bg-white/15" />
-                  <span>{item.tags.join(' / ')}</span>
+                <span className="arabic-text mt-0.5 block text-xs sm:text-sm font-medium text-gray-400 line-clamp-2">{item.copy}</span>
+                <span className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] sm:text-xs font-bold text-gray-500">
+                  <span className="inline-flex items-center gap-1"><Timer size={11} /> {item.time} ثانية</span>
+                  <span className="h-2.5 w-px bg-white/15" />
+                  <span className="truncate">{item.tags.join(' / ')}</span>
                 </span>
               </span>
             </button>

@@ -108,20 +108,20 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   // --- 1. LOGIN SCREEN ---
   if (!room) {
     return (
-      <main className="fade-screen flex min-h-[100dvh] flex-col items-center justify-center p-6 bg-black">
-        <button onClick={onBack} className="absolute start-5 top-6 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-gray-400 hover:text-white transition-colors">
-          <ChevronRight size={15} /> رجوع
+      <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-center p-4 sm:p-6 bg-black relative">
+        <button onClick={onBack} className="absolute start-4 top-4 sm:start-5 sm:top-6 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-gray-400 hover:text-white transition-colors">
+          <ChevronRight size={14} /> رجوع
         </button>
-        <form onSubmit={initialHost ? handleCreateAndJoin : handleJoinOnly} className="w-full max-w-sm flex flex-col gap-5 glass-panel p-8 rounded-3xl border border-white/10 shadow-2xl">
-          <div className="text-center mb-2"><h2 className="font-kufi text-3xl font-bold text-white">{initialHost ? 'إنشاء روم جديد' : 'الانضمام لروم'}</h2></div>
-          {error && <div className="bg-red-500/20 text-red-300 px-4 py-3 rounded-xl text-sm font-bold border border-red-500/30 text-center">{error}</div>}
+        <form onSubmit={initialHost ? handleCreateAndJoin : handleJoinOnly} className="w-full max-w-sm flex flex-col gap-4 sm:gap-5 glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl">
+          <div className="text-center mb-1"><h2 className="font-kufi text-2xl sm:text-3xl font-bold text-white">{initialHost ? 'إنشاء روم جديد' : 'الانضمام لروم'}</h2></div>
+          {error && <div className="bg-red-500/20 text-red-300 px-3 py-2 sm:px-4 sm:py-3 rounded-xl text-xs sm:text-sm font-bold border border-red-500/30 text-center">{error}</div>}
           
           {!initialHost && (
-            <input type="text" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={4} placeholder="كود الروم" className="w-full bg-black/50 border border-white/10 rounded-2xl px-5 py-4 text-center text-3xl font-bold tracking-widest text-white uppercase focus:outline-none focus:border-white/30 transition-colors" required />
+            <input type="text" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={4} placeholder="كود الروم" className="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3 sm:px-5 sm:py-4 text-center text-2xl sm:text-3xl font-bold tracking-widest text-white uppercase focus:outline-none focus:border-white/30 transition-colors" required />
           )}
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} maxLength={12} placeholder="اسمك" className="w-full bg-black/50 border border-white/10 rounded-2xl px-5 py-4 text-xl font-bold text-center text-white focus:outline-none focus:border-white/30 transition-colors" required dir="auto" />
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} maxLength={12} placeholder="اسمك" className="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3 sm:px-5 sm:py-4 text-base sm:text-xl font-bold text-center text-white focus:outline-none focus:border-white/30 transition-colors" required dir="auto" />
           
-          <button type="submit" className="mt-2 w-full bg-white text-black font-kufi font-bold text-xl py-4 rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-[1.02] transition-transform">
+          <button type="submit" className="mt-2 w-full bg-white text-black font-kufi font-bold text-lg sm:text-xl py-3 sm:py-4 rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-[1.02] transition-transform">
             {initialHost ? 'إنشاء ودخول' : 'ادخل الروم'}
           </button>
         </form>
@@ -132,15 +132,15 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   // --- 2. LOBBY SCREEN ---
   if (room.state === 'lobby') {
     return (
-      <main className="fade-screen relative flex min-h-[100dvh] flex-col p-6">
-        <header className="flex justify-between items-center mb-6 max-w-5xl mx-auto w-full gap-4">
-          <button onClick={() => { socket.disconnect(); onBack(); }} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-gray-400 hover:text-white transition-colors shrink-0">
-            <ChevronRight size={15} /> خروج
+      <main className="fade-screen relative flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col p-3 sm:p-6">
+        <header className="flex flex-wrap justify-between items-center mb-4 sm:mb-6 max-w-5xl mx-auto w-full gap-2 sm:gap-4">
+          <button onClick={() => { socket.disconnect(); onBack(); }} className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-gray-400 hover:text-white transition-colors shrink-0">
+            <ChevronRight size={14} /> خروج
           </button>
-          <img src="/images/info.png" alt="True Server" className="h-9 sm:h-12 w-auto object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]" />
-          <div className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-1.5 sm:py-2 bg-white/10 border border-white/20 rounded-full shrink-0">
+          <img src="/images/info.png" alt="True Server" className="h-8 sm:h-12 w-auto object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]" />
+          <div className="flex items-center gap-1.5 sm:gap-3 px-3 sm:px-6 py-1 sm:py-2 bg-white/10 border border-white/20 rounded-full shrink-0">
             <span className="text-xs sm:text-sm font-bold text-gray-400">كود الروم:</span>
-            <span className="text-xl sm:text-2xl font-black tracking-widest text-white">{room.code}</span>
+            <span className="text-lg sm:text-2xl font-black tracking-widest text-white">{room.code}</span>
           </div>
         </header>
 
