@@ -28,12 +28,10 @@ export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin:
           />
         </div>
 
-        <span className="text-xs sm:text-sm font-bold uppercase tracking-[0.25em] text-purple-300 mb-2">منصة الألعاب الجماعية</span>
-        
         <h1 dir="ltr" className="home-title font-display fade-in-up text-4xl sm:text-6xl md:text-7xl font-bold text-white mb-8 tracking-wider">TRUE SERVER</h1>
         
         <div className="flex flex-col gap-3.5 w-full max-w-sm mx-auto">
-          <button onClick={onHost} className="btn-clean font-kufi rounded-2xl bg-white px-6 py-3.5 sm:py-4 text-base sm:text-lg font-bold text-black shadow-[0_0_30px_rgba(255,255,255,.25)] hover:scale-[1.03] transition-transform">
+          <button onClick={onHost} className="btn-clean font-kufi rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 text-white border border-purple-400/40 px-6 py-3.5 sm:py-4 text-base sm:text-lg font-bold shadow-[0_0_25px_rgba(168,85,247,0.4)] hover:scale-[1.03] transition-transform">
             إنشاء روم جديد
           </button>
           

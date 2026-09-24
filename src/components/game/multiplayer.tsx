@@ -236,7 +236,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                  <span className="text-3xl md:text-5xl text-pink-400 flex-1 text-start truncate">{order[currentIdx].answerer}</span>
               </div>
               {isHost && (
-                <button onClick={() => socket.emit('host_next_question', { code })} className="btn-clean font-kufi bg-white text-black px-8 py-3 rounded-2xl text-lg font-bold shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+                <button onClick={() => socket.emit('host_next_question', { code })} className="btn-clean font-kufi bg-gradient-to-r from-purple-600 to-indigo-600 text-white border border-purple-400/40 px-8 py-3 rounded-2xl text-lg font-bold shadow-[0_0_20px_rgba(168,85,247,0.35)]">
                   {currentIdx === order.length - 1 ? 'إنهاء الأسئلة' : 'السؤال التالي'}
                 </button>
               )}
@@ -288,7 +288,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
           <h1 className="font-kufi text-4xl font-bold mb-4 text-red-400">وقت التصويت!</h1>
           <div className="text-6xl font-black text-white mb-6">{votesCount} <span className="text-3xl text-white/30">/ {room.players.length}</span></div>
           {isHost && (
-            <button onClick={() => socket.emit('host_reveal_results', { code })} disabled={votesCount === 0} className="btn-clean font-kufi bg-white text-black px-8 py-3 rounded-2xl text-lg font-bold disabled:opacity-50">
+            <button onClick={() => socket.emit('host_reveal_results', { code })} disabled={votesCount === 0} className="btn-clean font-kufi bg-gradient-to-r from-purple-600 to-indigo-600 text-white border border-purple-400/40 px-8 py-3 rounded-2xl text-lg font-bold shadow-[0_0_20px_rgba(168,85,247,0.35)] disabled:opacity-50">
               كشف النتائج
             </button>
           )}
@@ -423,7 +423,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
         </div>
 
         {isHost && (
-          <button onClick={() => socket.emit('host_start_codenames', { code })} className="btn-clean font-kufi bg-white text-black px-8 sm:px-12 py-3 sm:py-4 rounded-2xl text-base sm:text-xl font-bold hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+          <button onClick={() => socket.emit('host_start_codenames', { code })} className="btn-clean font-kufi bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 text-white border border-purple-400/40 px-8 sm:px-12 py-3 sm:py-4 rounded-2xl text-base sm:text-xl font-bold hover:scale-105 transition-transform shadow-[0_0_25px_rgba(168,85,247,0.4)]">
             ابدأ اللعبة
           </button>
         )}
@@ -471,7 +471,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
             const revealed = card.revealed;
             const seeColor = revealed || isSpymaster;
             
-            let bg = 'bg-white/10 hover:bg-white/20 border-white/10';
+            let bg = "bg-[url('/images/banner.png')] bg-cover bg-center border-purple-500/40 hover:border-purple-300 hover:shadow-[0_0_15px_rgba(168,85,247,0.4)]";
             if (seeColor) {
               if (card.color === 'red') bg = 'bg-red-500 border-red-400';
               else if (card.color === 'blue') bg = 'bg-blue-500 border-blue-400';
@@ -595,7 +595,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
             <div className={`p-4 rounded-xl border text-sm font-bold ${doctorDone ? 'border-green-500 bg-green-500/20 text-green-400' : 'border-white/20 bg-white/5 text-gray-500'}`}>الطبيب {doctorDone ? 'جاهز' : 'ينتظر'}</div>
           </div>
           {isHost && (
-            <button onClick={() => socket.emit('host_end_night', { code })} className="btn-clean font-kufi bg-white text-black px-8 py-3 rounded-2xl font-bold shadow-[0_0_15px_rgba(255,255,255,0.2)]">إنهاء الليل</button>
+            <button onClick={() => socket.emit('host_end_night', { code })} className="btn-clean font-kufi bg-gradient-to-r from-purple-600 to-indigo-600 text-white border border-purple-400/40 px-8 py-3 rounded-2xl font-bold shadow-[0_0_20px_rgba(168,85,247,0.35)]">إنهاء الليل</button>
           )}
         </div>
 
@@ -682,7 +682,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
           <h1 className="font-kufi text-4xl font-bold mb-4 text-red-400">تصويت الإعدام!</h1>
           <div className="text-6xl font-black text-white mb-6">{votesCount} <span className="text-3xl text-white/30">/ {aliveCount}</span></div>
           {isHost && (
-            <button onClick={() => socket.emit('host_execute_mafia', { code })} disabled={votesCount === 0} className="btn-clean font-kufi bg-white text-black px-8 py-3 rounded-2xl text-lg font-bold disabled:opacity-50">
+            <button onClick={() => socket.emit('host_execute_mafia', { code })} disabled={votesCount === 0} className="btn-clean font-kufi bg-gradient-to-r from-purple-600 to-indigo-600 text-white border border-purple-400/40 px-8 py-3 rounded-2xl text-lg font-bold shadow-[0_0_20px_rgba(168,85,247,0.35)] disabled:opacity-50">
               إعدام الأعلى تصويتاً
             </button>
           )}
