@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=Reem+Kufi:wght@500;600;700&family=Space+Mono:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Tajawal:wght@400;500;700;800;900&display=swap');
 @import 'tailwindcss';
 
 @theme inline {
@@ -30,8 +30,8 @@
   --primary-foreground: 222 13% 7%;
   --muted: 220 11% 16%;
   --muted-foreground: 218 10% 64%;
-  --app-font-sans: 'DM Sans', 'Tajawal', sans-serif;
-  --app-font-serif: 'Cormorant Garamond', Georgia, serif;
+  --app-font-sans: 'Outfit', 'Plus Jakarta Sans', 'Tajawal', sans-serif;
+  --app-font-serif: 'Montserrat', sans-serif;
   --app-font-mono: 'Space Mono', monospace;
   --radius: 1.15rem;
   --prize: #a855f7;
@@ -87,8 +87,8 @@ input::placeholder { color: rgba(156,163,175,.72); }
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
   animation: grainShift 11s steps(2, end) infinite;
 }
-.font-display { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 800; letter-spacing: -0.02em; }
-.font-editorial { font-family: 'DM Sans', sans-serif; }
+.font-display { font-family: 'Montserrat', 'Outfit', sans-serif; font-weight: 900; letter-spacing: 0.05em; }
+.font-editorial { font-family: 'Outfit', sans-serif; }
 .arabic-text { font-family: 'Tajawal', sans-serif; line-height: 1.55; }
 .font-kufi { font-family: 'Tajawal', sans-serif; }
 .glass-panel {

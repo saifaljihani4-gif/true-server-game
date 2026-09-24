@@ -28,7 +28,7 @@ export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin:
           />
         </div>
 
-        <h1 dir="ltr" className="fade-in-up text-4xl sm:text-6xl md:text-7xl font-extrabold text-white mb-8 tracking-wider font-sans drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)]">TRUE SERVER</h1>
+        <h1 dir="ltr" className="fade-in-up text-4xl sm:text-6xl md:text-7xl font-black text-white mb-8 tracking-[0.08em] font-display drop-shadow-[0_6px_28px_rgba(168,85,247,0.45)]">TRUE SERVER</h1>
         
         <div className="flex flex-col gap-3.5 w-full max-w-sm mx-auto">
           <button onClick={onHost} className="btn-clean rounded-2xl bg-[#7c3aed] hover:bg-[#6d28d9] text-white border border-[#a855f7]/50 px-6 py-3.5 sm:py-4 text-base sm:text-lg font-bold shadow-[0_0_25px_rgba(124,58,237,0.4)] hover:scale-[1.03] transition-all">
