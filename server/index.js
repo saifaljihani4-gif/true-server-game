@@ -56,12 +56,32 @@ io.on('connection', (socket) => {
       const spyIndex = Math.floor(Math.random() * room.players.length);
       const spyId = room.players[spyIndex].id;
       
-      // Generate question order
-      const shuffledPlayers = [...room.players].sort(() => Math.random() - 0.5);
-      const questionOrder = shuffledPlayers.map((p, idx) => ({
-        asker: p.name,
-        answerer: shuffledPlayers[(idx + 1) % shuffledPlayers.length].name
-      }));
+      // Generate question order where everyone asks everyone
+      const players = [...room.players];
+      const allPairs = [];
+      for (let i = 0; i < players.length; i++) {
+        for (let j = 0; j < players.length; j++) {
+          if (i !== j) {
+            allPairs.push({
+              asker: players[i].name,
+              askerId: players[i].id,
+              answerer: players[j].name,
+              answererId: players[j].id
+            });
+          }
+        }
+      }
+      // Shuffle pairs smartly so the same asker is not consecutive
+      const questionOrder = [];
+      const pool = [...allPairs];
+      let lastAsker = null;
+      while (pool.length > 0) {
+        let idx = pool.findIndex(p => p.asker !== lastAsker);
+        if (idx === -1) idx = 0;
+        const [picked] = pool.splice(idx, 1);
+        questionOrder.push(picked);
+        lastAsker = picked.asker;
+      }
       
       room.gameData = { mode: 'barra', category: randomCategory, word: secretWord, spyId: spyId, votes: {}, questionOrder, currentQuestion: 0 };
 
@@ -79,6 +99,12 @@ io.on('connection', (socket) => {
     const room = rooms.get(code);
     if (room && room.hostId === socket.id) {
       room.gameData.currentQuestion = (room.gameData.currentQuestion || 0) + 1;
+      if (room.gameData.currentQuestion >= (room.gameData.questionOrder?.length || 0)) {
+        room.state = 'barra_voting';
+        io.to(code).emit('room_state_update', room);
+        io.to(code).emit('start_voting', { players: room.players });
+        return;
+      }
       io.to(code).emit('room_state_update', room);
     }
   });

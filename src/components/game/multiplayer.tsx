@@ -222,30 +222,38 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
     return (
       <main className="fade-screen relative flex min-h-[100dvh] flex-col bg-black">
         {/* PUBLIC TOP HALF */}
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center border-b border-white/10 bg-white/5 relative">
-          <h1 className="font-kufi text-3xl md:text-5xl font-bold mb-8 text-white">وقت الأسئلة!</h1>
+        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 text-center border-b border-white/10 bg-white/5 relative">
+          <h1 className="font-kufi text-2xl sm:text-4xl font-bold mb-3 text-white">وقت الأسئلة!</h1>
           {!isDone ? (
             <div className="w-full max-w-2xl flex flex-col items-center winner-explosion" key={currentIdx}>
-              <p className="text-gray-400 mb-4 font-bold text-lg">الدور الآن على:</p>
-              <div className="flex items-center justify-center gap-4 md:gap-8 font-black mb-8 w-full">
-                 <span className="text-3xl md:text-5xl text-blue-400 flex-1 text-end truncate">{order[currentIdx].asker}</span>
-                 <div className="flex flex-col items-center justify-center bg-black/40 px-3 py-2 rounded-xl border border-white/5">
-                   <span className="text-gray-400 text-sm md:text-lg font-bold">يسأل</span>
-                   <span className="text-gray-500 text-xl md:text-3xl">➔</span>
+              <div className="text-xs sm:text-sm font-bold text-purple-300 mb-4 bg-purple-950/60 border border-purple-500/40 px-3.5 py-1 rounded-full shadow-sm">
+                سؤال {currentIdx + 1} من {order.length}
+              </div>
+              <p className="text-gray-400 mb-3 font-bold text-sm sm:text-base">الدور الآن على:</p>
+              <div className="flex items-center justify-center gap-3 sm:gap-6 font-black mb-6 w-full max-w-lg">
+                 <span className="text-xl sm:text-3xl md:text-4xl text-blue-400 flex-1 text-end truncate">{order[currentIdx].asker}</span>
+                 <div className="flex flex-col items-center justify-center bg-black/50 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10">
+                   <span className="text-gray-300 text-xs sm:text-sm font-bold">يسأل</span>
+                   <span className="text-purple-400 text-base sm:text-2xl">➔</span>
                  </div>
-                 <span className="text-3xl md:text-5xl text-pink-400 flex-1 text-start truncate">{order[currentIdx].answerer}</span>
+                 <span className="text-xl sm:text-3xl md:text-4xl text-pink-400 flex-1 text-start truncate">{order[currentIdx].answerer}</span>
               </div>
               {isHost && (
-                <button onClick={() => socket.emit('host_next_question', { code })} className="btn-clean font-kufi bg-[#7c3aed] hover:bg-[#6d28d9] text-white border border-purple-400/40 px-8 py-3 rounded-2xl text-lg font-bold shadow-[0_0_20px_rgba(168,85,247,0.35)]">
-                  {currentIdx === order.length - 1 ? 'إنهاء الأسئلة' : 'السؤال التالي'}
-                </button>
+                <div className="flex flex-wrap justify-center gap-3">
+                  <button onClick={() => socket.emit('host_next_question', { code })} className="btn-clean font-kufi bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:to-[#2e1056] text-white border border-purple-400/40 px-6 sm:px-8 py-2.5 sm:py-3 rounded-2xl text-sm sm:text-base font-bold shadow-[0_0_20px_rgba(147,51,234,0.35)] hover:scale-105 transition-all">
+                    {currentIdx === order.length - 1 ? 'إنهاء وبدء التصويت' : 'السؤال التالي'}
+                  </button>
+                  <button onClick={() => socket.emit('host_start_voting', { code })} className="btn-clean font-kufi bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all">
+                    تخطي وبدء التصويت
+                  </button>
+                </div>
               )}
             </div>
           ) : (
             <div className="winner-explosion">
-              <h2 className="text-3xl text-white font-bold mb-6">انتهت كل الأسئلة!</h2>
+              <h2 className="text-2xl sm:text-3xl text-white font-bold mb-4">انتهت كل الأسئلة!</h2>
               {isHost && (
-                <button onClick={() => socket.emit('host_start_voting', { code })} className="btn-clean font-kufi pulse-glow-red bg-red-500 text-white px-8 py-4 rounded-2xl text-xl font-bold shadow-[0_0_20px_rgba(239,68,68,0.4)]">
+                <button onClick={() => socket.emit('host_start_voting', { code })} className="btn-clean font-kufi pulse-glow-red bg-red-500 text-white px-8 py-3.5 rounded-2xl text-lg font-bold shadow-[0_0_20px_rgba(239,68,68,0.4)]">
                   انتقل للتصويت
                 </button>
               )}
