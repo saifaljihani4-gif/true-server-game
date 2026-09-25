@@ -179,7 +179,7 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
               return (
                 <div
                   key={r}
-                  className={`flex gap-1.5 sm:gap-2.5 transition-transform ${isStaggered ? 'translate-x-3 sm:translate-x-5' : '-translate-x-3 sm:-translate-x-5'}`}
+                  className={`flex gap-1 sm:gap-2 transition-transform ${isStaggered ? 'translate-x-2 sm:translate-x-3' : '-translate-x-2 sm:-translate-x-3'}`}
                 >
                   {rowCells.map((cell: any) => {
                     const isWinning = winningPathSet.has(cell.id);
@@ -193,11 +193,11 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
                     }
 
                     if (isActive) {
-                      bgClass = 'bg-purple-600 text-white border-white ring-4 ring-purple-400/80 scale-110 z-10 animate-pulse';
+                      bgClass = 'bg-purple-600 text-white border-white ring-2 ring-purple-400/80 scale-105 z-10 animate-pulse';
                     }
 
                     if (isWinning) {
-                      bgClass += ' ring-4 ring-yellow-300 scale-105 animate-bounce z-20';
+                      bgClass += ' ring-2 ring-yellow-300 scale-105 animate-bounce z-20';
                     }
 
                     return (
@@ -205,7 +205,7 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
                         key={cell.id}
                         onClick={() => handleCellClick(cell)}
                         disabled={!!cell.owner || (!!activeCellId && !isActive)}
-                        className={`w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl border-2 flex items-center justify-center font-kufi font-black text-lg sm:text-2xl transition-all duration-200 select-none ${bgClass} active:scale-95 disabled:cursor-not-allowed`}
+                        className={`w-9 h-9 sm:w-11 sm:h-11 md:w-13 md:h-13 rounded-lg sm:rounded-xl border flex items-center justify-center font-kufi font-black text-sm sm:text-lg md:text-xl transition-all duration-200 select-none ${bgClass} active:scale-95 disabled:cursor-not-allowed`}
                       >
                         {cell.letter}
                       </button>

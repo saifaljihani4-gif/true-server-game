@@ -16,30 +16,30 @@ export const MODE_ICONS: Record<Mode, LucideIcon> = {
 
 export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin: () => void; onHost: () => void }) {
   return (
-    <main className="fade-screen flex h-[100dvh] max-h-[100dvh] flex-col justify-between items-center pt-3 sm:pt-6 pb-6 sm:pb-10 px-4 overflow-y-auto">
-      {/* 1. Header/Info placed WAY UP at the top */}
-      <div className="fade-in-up flex justify-center w-full pt-1 sm:pt-2">
+    <main className="fade-screen flex h-[100dvh] max-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col justify-between items-center pt-2 sm:pt-4 pb-4 sm:pb-6 px-3 sm:px-4">
+      {/* 1. Header/Info placed at top */}
+      <div className="fade-in-up flex justify-center w-full pt-1">
         <img
           src="/images/info.png"
           alt="True Server"
-          className="w-40 sm:w-56 md:w-64 h-auto object-contain drop-shadow-[0_0_25px_rgba(168,85,247,0.55)] hover:scale-105 transition-transform"
+          className="w-36 sm:w-48 md:w-56 h-auto object-contain drop-shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:scale-105 transition-transform"
         />
       </div>
 
       {/* 2. Middle empty space so banner is fully visible */}
-      <div className="flex-1" />
+      <div className="flex-1 min-h-[40px]" />
 
       {/* 3. Action buttons placed cleanly at the bottom */}
-      <div className="fade-in-up flex w-full max-w-xs sm:max-w-sm flex-col gap-3 pb-2 sm:pb-4">
-        <button onClick={onHost} className="btn-clean rounded-2xl bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:via-[#522295] hover:to-[#2e1056] text-white border border-purple-400/35 hover:border-purple-300/60 px-6 py-3.5 text-base sm:text-lg font-bold shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_25px_rgba(147,51,234,0.3)] hover:scale-[1.02] transition-all">
+      <div className="fade-in-up flex w-full max-w-xs sm:max-w-sm flex-col gap-2.5 pb-2">
+        <button onClick={onHost} className="btn-clean rounded-2xl bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:via-[#522295] hover:to-[#2e1056] text-white border border-purple-400/35 hover:border-purple-300/60 px-5 py-3 text-sm sm:text-base font-bold shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_25px_rgba(147,51,234,0.3)] hover:scale-[1.02] transition-all">
           إنشاء روم جديد
         </button>
         
-        <div className="flex gap-2.5">
-          <button onClick={onJoin} className="flex-1 btn-clean rounded-2xl bg-[#120c1f]/90 hover:bg-[#1e1433] border border-white/10 hover:border-purple-400/40 px-3 py-3 text-xs sm:text-sm font-bold text-gray-200 hover:text-white shadow-lg transition-all">
+        <div className="flex gap-2">
+          <button onClick={onJoin} className="flex-1 btn-clean rounded-2xl bg-[#120c1f]/90 hover:bg-[#1e1433] border border-white/10 hover:border-purple-400/40 px-3 py-2.5 text-xs sm:text-sm font-bold text-gray-200 hover:text-white shadow-lg transition-all">
             الانضمام لروم
           </button>
-          <button onClick={onEnter} className="flex-1 btn-clean rounded-2xl bg-[#120c1f]/90 hover:bg-[#1e1433] border border-white/10 hover:border-purple-400/40 px-3 py-3 text-xs sm:text-sm font-bold text-gray-200 hover:text-white shadow-lg transition-all">
+          <button onClick={onEnter} className="flex-1 btn-clean rounded-2xl bg-[#120c1f]/90 hover:bg-[#1e1433] border border-white/10 hover:border-purple-400/40 px-3 py-2.5 text-xs sm:text-sm font-bold text-gray-200 hover:text-white shadow-lg transition-all">
             ألعاب التحدي
           </button>
         </div>
@@ -52,42 +52,49 @@ export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin:
 
 export function Categories({ onBack, onSelect }: { onBack: () => void; onSelect: (mode: Mode) => void }) {
   return (
-    <main className="fade-screen relative flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-start p-3 sm:p-5 md:p-8">
-      <div className="w-full max-w-5xl flex items-center justify-start mb-2 pt-1">
-        <button onClick={onBack} className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs sm:text-sm font-bold text-gray-400 hover:text-white">
-          <ChevronRight size={14} /> الرئيسية
-        </button>
-      </div>
+    <main className="fade-screen relative flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-start py-3 px-3 sm:py-5 sm:px-4">
+      <div className="w-full max-w-md sm:max-w-xl md:max-w-3xl flex flex-col items-stretch">
+        <div className="w-full flex items-center justify-start mb-2 pt-1">
+          <button onClick={onBack} className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-gray-400 hover:text-white transition-colors">
+            <ChevronRight size={14} /> الرئيسية
+          </button>
+        </div>
 
-      <div className="fade-in-up mb-4 sm:mb-6 text-center w-full">
-        <img src="/images/info.png" alt="True Server" className="h-10 sm:h-14 w-auto object-contain mx-auto mb-2 drop-shadow-[0_0_20px_rgba(168,85,247,0.4)]" />
-        <h2 className="font-kufi text-2xl sm:text-3xl font-bold md:text-5xl">اختر اللعبة</h2>
-        <p className="mt-1 text-xs sm:text-sm font-medium text-gray-400 md:text-base">{MODES.length} ألعاب، والجائزة تحددها قبل ما تبدأ</p>
-      </div>
+        <div className="fade-in-up mb-3 sm:mb-5 text-center w-full">
+          <img src="/images/info.png" alt="True Server" className="h-8 sm:h-10 w-auto object-contain mx-auto mb-1.5 drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]" />
+          <h2 className="font-kufi text-xl sm:text-2xl md:text-3xl font-bold text-white">اختر اللعبة</h2>
+          <p className="mt-0.5 text-xs sm:text-sm font-medium text-gray-400">{MODES.length} ألعاب، والجائزة تحددها قبل ما تبدأ</p>
+        </div>
 
-      <div className="grid w-full max-w-5xl grid-cols-1 gap-2.5 sm:gap-3 md:grid-cols-2 md:gap-4 pb-6">
-        {MODES.map((item, i) => {
-          const Icon = MODE_ICONS[item.id];
-          return (
-            <button key={item.id} onClick={() => onSelect(item.id)} className="mode-card mode-row glass-panel fade-in-up group flex items-center gap-3 rounded-2xl p-3 sm:p-4 md:gap-5 md:p-5 w-full text-right" style={{ animationDelay: `${i * 0.05}s` }}>
-              <span className="mode-icon flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white">
-                <Icon size={18} strokeWidth={1.6} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                  <span className="font-kufi text-lg sm:text-xl font-bold md:text-2xl truncate">{item.name}</span>
-                  {item.isNew && <span className="tag-pill gold text-[10px] sm:text-xs">جديد</span>}
+        <div className="grid w-full grid-cols-1 md:grid-cols-2 gap-2 sm:gap-2.5 pb-8">
+          {MODES.map((item, i) => {
+            const Icon = MODE_ICONS[item.id];
+            return (
+              <button
+                key={item.id}
+                onClick={() => onSelect(item.id)}
+                className="mode-card mode-row glass-panel fade-in-up group flex items-center gap-2.5 sm:gap-3 rounded-xl p-2.5 sm:p-3 w-full text-right transition-all"
+                style={{ animationDelay: `${i * 0.04}s` }}
+              >
+                <span className="mode-icon flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white">
+                  <Icon size={16} strokeWidth={1.8} />
                 </span>
-                <span className="arabic-text mt-0.5 block text-xs sm:text-sm font-medium text-gray-400 line-clamp-2">{item.copy}</span>
-                <span className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] sm:text-xs font-bold text-gray-500">
-                  <span className="inline-flex items-center gap-1"><Timer size={11} /> {item.time} ثانية</span>
-                  <span className="h-2.5 w-px bg-white/15" />
-                  <span className="truncate">{item.tags.join(' / ')}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center gap-1.5">
+                    <span className="font-kufi text-sm sm:text-base font-bold text-white truncate">{item.name}</span>
+                    {item.isNew && <span className="tag-pill gold text-[10px] px-1.5 py-0.5">جديد</span>}
+                  </span>
+                  <span className="arabic-text mt-0.5 block text-[11px] sm:text-xs font-medium text-gray-400 line-clamp-1">{item.copy}</span>
+                  <span className="mt-1 flex flex-wrap items-center gap-2 text-[10px] sm:text-[11px] font-bold text-gray-500">
+                    <span className="inline-flex items-center gap-1"><Timer size={10} /> {item.time} ثانية</span>
+                    <span className="h-2 w-px bg-white/15" />
+                    <span className="truncate">{item.tags.join(' / ')}</span>
+                  </span>
                 </span>
-              </span>
-            </button>
-          );
-        })}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </main>
   );
