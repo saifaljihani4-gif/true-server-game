@@ -489,9 +489,12 @@ io.on('connection', (socket) => {
         round: 1,
         usedQuestions: []
       };
-      room.players.forEach((p, i) => {
+      // Distribute only non-host contestants into green and orange teams
+      const nonHostPlayers = room.players.filter(p => p.id !== room.hostId);
+      nonHostPlayers.forEach((p, i) => {
         room.gameData.teams[p.id] = i % 2 === 0 ? 'green' : 'orange';
       });
+      delete room.gameData.teams[room.hostId];
       io.to(room.code).emit('room_state_update', room);
     }
   });
@@ -499,6 +502,8 @@ io.on('connection', (socket) => {
   socket.on('horoof_join_team', ({ code, team }) => {
     const room = getRoom(code);
     if (room && room.state === 'horoof_lobby') {
+      // The host is the referee/presenter and must not play or join a team
+      if (socket.id === room.hostId) return;
       if (team === 'green' || team === 'orange') {
         room.gameData.teams[socket.id] = team;
         io.to(room.code).emit('room_state_update', room);
@@ -509,6 +514,7 @@ io.on('connection', (socket) => {
   socket.on('host_start_horoof', ({ code }) => {
     const room = getRoom(code);
     if (room && room.hostId === socket.id) {
+      delete room.gameData.teams[room.hostId];
       room.state = 'horoof_playing';
       room.gameData.board = generateHoroofBoard();
       room.gameData.turn = 'green';
@@ -544,6 +550,8 @@ io.on('connection', (socket) => {
   socket.on('horoof_buzz', ({ code }) => {
     const room = getRoom(code);
     if (!room || room.state !== 'horoof_playing') return;
+    // Host is referee and cannot buzz
+    if (socket.id === room.hostId) return;
     if (!room.gameData.activeQuestion || room.gameData.buzzedPlayer) return;
     const team = room.gameData.teams?.[socket.id];
     if (!team) return;

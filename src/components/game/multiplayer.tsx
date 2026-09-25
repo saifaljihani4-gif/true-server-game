@@ -175,8 +175,8 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                   <button onClick={() => socket.emit('host_start_codenames_lobby', { code: room.code })} disabled={room.players.length < 3} className="py-4 px-5 rounded-2xl font-bold transition-all bg-white text-black hover:scale-105 disabled:opacity-50 flex justify-between items-center">
                     كود نيمز <span className="w-3 h-3 rounded-full bg-blue-500" />
                   </button>
-                  <button onClick={() => socket.emit('host_start_horoof_lobby', { code: room.code })} disabled={room.players.length < 2} className="py-4 px-5 rounded-2xl font-bold transition-all bg-white text-black hover:scale-105 disabled:opacity-50 flex justify-between items-center">
-                    تحدي الحروف <span className="w-3 h-3 rounded-full bg-emerald-500" />
+                  <button onClick={() => socket.emit('host_start_horoof_lobby', { code: room.code })} disabled={room.players.length < 3} className="py-4 px-5 rounded-2xl font-bold transition-all bg-white text-black hover:scale-105 disabled:opacity-50 flex justify-between items-center">
+                    تحدي الحروف (2 ضد بعض + حكم) <span className="w-3 h-3 rounded-full bg-emerald-500" />
                   </button>
                   <button onClick={() => socket.emit('host_start_aded', { code: room.code })} disabled={room.players.length < 1} className="py-4 px-5 rounded-2xl font-bold transition-all bg-white text-black hover:scale-105 disabled:opacity-50 flex justify-between items-center">
                     عدّد (30 ثانية) <span className="w-3 h-3 rounded-full bg-amber-500" />
