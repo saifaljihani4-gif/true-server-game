@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { socket } from '@/lib/socket';
 import { ChevronRight, Users, Eye, EyeOff, Trophy, Crown } from 'lucide-react';
 import { HoroofLobby, HoroofBoardView, HoroofWinnerView } from './horoof';
+import { AdedGameView } from './aded';
 
 function DiscussionTimer({ duration = 60 }: { duration?: number }) {
   const [timeLeft, setTimeLeft] = useState(duration);
@@ -177,6 +178,9 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                   <button onClick={() => socket.emit('host_start_horoof_lobby', { code: room.code })} disabled={room.players.length < 2} className="py-4 px-5 rounded-2xl font-bold transition-all bg-white text-black hover:scale-105 disabled:opacity-50 flex justify-between items-center">
                     تحدي الحروف <span className="w-3 h-3 rounded-full bg-emerald-500" />
                   </button>
+                  <button onClick={() => socket.emit('host_start_aded', { code: room.code })} disabled={room.players.length < 1} className="py-4 px-5 rounded-2xl font-bold transition-all bg-white text-black hover:scale-105 disabled:opacity-50 flex justify-between items-center">
+                    عدّد (30 ثانية) <span className="w-3 h-3 rounded-full bg-amber-500" />
+                  </button>
                 </div>
                 {room.players.length < 2 && <p className="text-sm text-red-400 mt-4 text-center font-bold">تحتاج لاعبين على الأقل لبدء اللعبة</p>}
               </div>
@@ -227,6 +231,11 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
 
   if (room.state === 'horoof_winner') {
     return <HoroofWinnerView room={room} socket={socket} isHost={isHost} onBack={onBack} />;
+  }
+
+  // --- ADED (عدّد - مين يعدد أكثر) ---
+  if (room.state === 'aded_playing') {
+    return <AdedGameView room={room} socket={socket} onBack={onBack} isHost={isHost} />;
   }
 
   // --- BARRA AL SALFA ---

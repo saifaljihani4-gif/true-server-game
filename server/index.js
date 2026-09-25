@@ -5,6 +5,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { generateHoroofBoard, getQuestionForLetter, checkHoroofWinner } from './horoofData.js';
+import { getRandomAdedTopic } from './adedData.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -597,6 +598,141 @@ io.on('connection', (socket) => {
       room.gameData.buzzedPlayer = null;
       room.gameData.winner = null;
       room.gameData.winningPath = null;
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  /* =========================================
+     ADED (عدّد - مين يعدد أكثر بـ 30 ثانية) LOGIC
+     ========================================= */
+  socket.on('host_start_aded', ({ code }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id) {
+      room.state = 'aded_playing';
+      const topic = getRandomAdedTopic([]);
+      room.gameData = {
+        mode: 'aded',
+        topic,
+        usedTopics: [topic],
+        activePlayerId: room.players[0]?.id || null,
+        count: 0,
+        timerDuration: 30,
+        timerStartedAt: null,
+        isRunning: false,
+        scores: {},
+        history: []
+      };
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('host_aded_next_topic', ({ code }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id && room.state === 'aded_playing') {
+      const newTopic = getRandomAdedTopic(room.gameData.usedTopics || []);
+      room.gameData.topic = newTopic;
+      room.gameData.usedTopics = room.gameData.usedTopics || [];
+      room.gameData.usedTopics.push(newTopic);
+      room.gameData.count = 0;
+      room.gameData.isRunning = false;
+      room.gameData.timerStartedAt = null;
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('host_aded_set_custom_topic', ({ code, customTopic }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id && room.state === 'aded_playing' && customTopic) {
+      room.gameData.topic = String(customTopic).trim().slice(0, 120);
+      room.gameData.count = 0;
+      room.gameData.isRunning = false;
+      room.gameData.timerStartedAt = null;
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('host_aded_set_player', ({ code, playerId }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id && room.state === 'aded_playing') {
+      room.gameData.activePlayerId = playerId;
+      room.gameData.count = 0;
+      room.gameData.isRunning = false;
+      room.gameData.timerStartedAt = null;
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('host_aded_start_timer', ({ code }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id && room.state === 'aded_playing') {
+      room.gameData.isRunning = true;
+      room.gameData.timerStartedAt = Date.now();
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('host_aded_stop_timer', ({ code }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id && room.state === 'aded_playing') {
+      room.gameData.isRunning = false;
+      room.gameData.timerStartedAt = null;
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('host_aded_increment', ({ code }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id && room.state === 'aded_playing') {
+      room.gameData.count = (room.gameData.count || 0) + 1;
+      io.to(room.code).emit('room_state_update', room);
+      io.to(room.code).emit('aded_count_bump', { count: room.gameData.count });
+    }
+  });
+
+  socket.on('host_aded_decrement', ({ code }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id && room.state === 'aded_playing') {
+      room.gameData.count = Math.max(0, (room.gameData.count || 0) - 1);
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('host_aded_save_score', ({ code }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id && room.state === 'aded_playing') {
+      const pId = room.gameData.activePlayerId;
+      const count = room.gameData.count || 0;
+      if (pId) {
+        room.gameData.scores = room.gameData.scores || {};
+        room.gameData.scores[pId] = Math.max(room.gameData.scores[pId] || 0, count);
+
+        const player = room.players.find(p => p.id === pId);
+        room.gameData.history = room.gameData.history || [];
+        room.gameData.history.unshift({
+          playerId: pId,
+          playerName: player ? player.name : 'مجهول',
+          count,
+          topic: room.gameData.topic,
+          time: new Date().toLocaleTimeString('ar-SA')
+        });
+
+        // Advance to next player
+        if (room.players.length > 0) {
+          const currIdx = room.players.findIndex(p => p.id === pId);
+          const nextIdx = (currIdx + 1) % room.players.length;
+          room.gameData.activePlayerId = room.players[nextIdx]?.id || null;
+        }
+      }
+
+      // Reset count, stop timer, and draw new topic
+      room.gameData.count = 0;
+      room.gameData.isRunning = false;
+      room.gameData.timerStartedAt = null;
+      const nextTopic = getRandomAdedTopic(room.gameData.usedTopics || []);
+      room.gameData.topic = nextTopic;
+      room.gameData.usedTopics = room.gameData.usedTopics || [];
+      room.gameData.usedTopics.push(nextTopic);
+
       io.to(room.code).emit('room_state_update', room);
     }
   });
