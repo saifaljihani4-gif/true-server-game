@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { socket } from '@/lib/socket';
 import { ChevronRight, Users, Eye, EyeOff, Trophy, Crown } from 'lucide-react';
 import { HoroofLobby, HoroofBoardView, HoroofWinnerView } from './horoof';
-import { AdedGameView } from './aded';
+import { AdedLobbyView, AdedGameView, AdedResultsView } from './aded';
 
 function DiscussionTimer({ duration = 60 }: { duration?: number }) {
   const [timeLeft, setTimeLeft] = useState(duration);
@@ -234,8 +234,16 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   }
 
   // --- ADED (عدّد - مين يعدد أكثر) ---
+  if (room.state === 'aded_lobby') {
+    return <AdedLobbyView room={room} socket={socket} onBack={onBack} isHost={isHost} />;
+  }
+
   if (room.state === 'aded_playing') {
     return <AdedGameView room={room} socket={socket} onBack={onBack} isHost={isHost} />;
+  }
+
+  if (room.state === 'aded_results') {
+    return <AdedResultsView room={room} socket={socket} isHost={isHost} onBack={onBack} />;
   }
 
   // --- BARRA AL SALFA ---

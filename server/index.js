@@ -608,20 +608,58 @@ io.on('connection', (socket) => {
   socket.on('host_start_aded', ({ code }) => {
     const room = getRoom(code);
     if (room && room.hostId === socket.id) {
-      room.state = 'aded_playing';
-      const topic = getRandomAdedTopic([]);
+      room.state = 'aded_lobby';
       room.gameData = {
         mode: 'aded',
-        topic,
-        usedTopics: [topic],
-        activePlayerId: room.players[0]?.id || null,
-        count: 0,
-        timerDuration: 30,
-        timerStartedAt: null,
-        isRunning: false,
+        contestants: room.players.map(p => p.id),
+        currentTurnIdx: 0,
+        round: 1,
         scores: {},
-        history: []
+        history: [],
+        usedTopics: []
       };
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('aded_toggle_contestant', ({ code }) => {
+    const room = getRoom(code);
+    if (room && room.state === 'aded_lobby') {
+      room.gameData.contestants = room.gameData.contestants || [];
+      const idx = room.gameData.contestants.indexOf(socket.id);
+      if (idx !== -1) {
+        room.gameData.contestants.splice(idx, 1);
+      } else {
+        room.gameData.contestants.push(socket.id);
+      }
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('host_aded_start_game', ({ code }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id && (room.state === 'aded_lobby' || room.state === 'aded_results')) {
+      // Ensure contestants list has all players if none were toggled
+      if (!room.gameData.contestants || room.gameData.contestants.length === 0) {
+        room.gameData.contestants = room.players.map(p => p.id);
+      }
+      // Filter out any disconnected players
+      room.gameData.contestants = room.gameData.contestants.filter(id => room.players.some(p => p.id === id));
+      if (room.gameData.contestants.length === 0) {
+        room.gameData.contestants = room.players.map(p => p.id);
+      }
+
+      room.state = 'aded_playing';
+      room.gameData.currentTurnIdx = 0;
+      room.gameData.activePlayerId = room.gameData.contestants[0] || room.players[0]?.id;
+      const topic = getRandomAdedTopic(room.gameData.usedTopics || []);
+      room.gameData.topic = topic;
+      room.gameData.usedTopics = room.gameData.usedTopics || [];
+      room.gameData.usedTopics.push(topic);
+      room.gameData.count = 0;
+      room.gameData.isRunning = false;
+      room.gameData.timerStartedAt = null;
+
       io.to(room.code).emit('room_state_update', room);
     }
   });
@@ -655,6 +693,8 @@ io.on('connection', (socket) => {
     const room = getRoom(code);
     if (room && room.hostId === socket.id && room.state === 'aded_playing') {
       room.gameData.activePlayerId = playerId;
+      const idx = (room.gameData.contestants || []).indexOf(playerId);
+      if (idx !== -1) room.gameData.currentTurnIdx = idx;
       room.gameData.count = 0;
       room.gameData.isRunning = false;
       room.gameData.timerStartedAt = null;
@@ -715,24 +755,49 @@ io.on('connection', (socket) => {
           topic: room.gameData.topic,
           time: new Date().toLocaleTimeString('ar-SA')
         });
-
-        // Advance to next player
-        if (room.players.length > 0) {
-          const currIdx = room.players.findIndex(p => p.id === pId);
-          const nextIdx = (currIdx + 1) % room.players.length;
-          room.gameData.activePlayerId = room.players[nextIdx]?.id || null;
-        }
       }
 
-      // Reset count, stop timer, and draw new topic
-      room.gameData.count = 0;
-      room.gameData.isRunning = false;
-      room.gameData.timerStartedAt = null;
+      // Advance turn in contestants list
+      const contestants = room.gameData.contestants || room.players.map(p => p.id);
+      const nextIdx = (room.gameData.currentTurnIdx || 0) + 1;
+
+      if (nextIdx >= contestants.length) {
+        // Round Finished! Everyone completed their turn!
+        room.state = 'aded_results';
+        room.gameData.isRunning = false;
+        room.gameData.timerStartedAt = null;
+      } else {
+        // Next contestant's turn
+        room.gameData.currentTurnIdx = nextIdx;
+        room.gameData.activePlayerId = contestants[nextIdx] || room.players[0]?.id;
+        room.gameData.count = 0;
+        room.gameData.isRunning = false;
+        room.gameData.timerStartedAt = null;
+        const nextTopic = getRandomAdedTopic(room.gameData.usedTopics || []);
+        room.gameData.topic = nextTopic;
+        room.gameData.usedTopics = room.gameData.usedTopics || [];
+        room.gameData.usedTopics.push(nextTopic);
+      }
+
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('host_aded_new_round', ({ code }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id) {
+      room.state = 'aded_playing';
+      room.gameData.round = (room.gameData.round || 1) + 1;
+      room.gameData.currentTurnIdx = 0;
+      const contestants = room.gameData.contestants && room.gameData.contestants.length > 0 ? room.gameData.contestants : room.players.map(p => p.id);
+      room.gameData.activePlayerId = contestants[0] || room.players[0]?.id;
       const nextTopic = getRandomAdedTopic(room.gameData.usedTopics || []);
       room.gameData.topic = nextTopic;
       room.gameData.usedTopics = room.gameData.usedTopics || [];
       room.gameData.usedTopics.push(nextTopic);
-
+      room.gameData.count = 0;
+      room.gameData.isRunning = false;
+      room.gameData.timerStartedAt = null;
       io.to(room.code).emit('room_state_update', room);
     }
   });
