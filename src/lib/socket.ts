@@ -4,4 +4,9 @@ const URL = import.meta.env.PROD ? window.location.origin : `http://${window.loc
 
 export const socket = io(URL, {
   autoConnect: false,
+  transports: ['websocket', 'polling'],
+  reconnection: true,
+  reconnectionAttempts: 10,
+  reconnectionDelay: 500,
+  timeout: 5000,
 });

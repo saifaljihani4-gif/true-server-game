@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronRight, Users, Bell, Check, X, RotateCcw, Crown, Sparkles } from 'lucide-react';
+import { sfx } from '@/game/sfx';
 
 export function HoroofLobby({ room, socket, onBack, isHost }: { room: any; socket: any; onBack: () => void; isHost: boolean }) {
   const code = room.code;
@@ -115,6 +116,7 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
   const handleCellClick = (cell: any) => {
     if (cell.owner) return;
     if (activeCellId) return;
+    sfx.select();
     socket.emit('horoof_select_cell', { code, cellId: cell.id });
   };
 
@@ -256,7 +258,10 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
               <div className="flex flex-col items-center gap-1.5 my-1">
                 {myTeam && (
                   <button
-                    onClick={() => socket.emit('horoof_buzz', { code })}
+                    onClick={() => {
+                      sfx.buzz();
+                      socket.emit('horoof_buzz', { code });
+                    }}
                     className="btn-clean font-kufi bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 text-white px-6 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-[0_0_20px_rgba(239,68,68,0.5)] active:scale-95 transition-all"
                   >
                     <Bell size={16} /> اضغط الجرس للإجابة!
@@ -326,6 +331,10 @@ export function HoroofWinnerView({ room, socket, isHost, onBack }: { room: any; 
   const winner = gd.winner; // 'green' | 'orange'
   const winnerIsGreen = winner === 'green';
   const scores = gd.scores || { green: 0, orange: 0 };
+
+  useEffect(() => {
+    sfx.win();
+  }, []);
 
   return (
     <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-center p-4 sm:p-6 bg-black text-center">
