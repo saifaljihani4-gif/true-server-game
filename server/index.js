@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { generateHoroofBoard, getQuestionForLetter, checkHoroofWinner } from './horoofData.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -436,6 +437,126 @@ io.on('connection', (socket) => {
   });
 
   /* =========================================
+     HOROOF (حروف مع عزيز) LOGIC
+     ========================================= */
+  socket.on('host_start_horoof_lobby', ({ code }) => {
+    const room = rooms.get(code);
+    if (room && room.hostId === socket.id) {
+      room.state = 'horoof_lobby';
+      room.gameData = {
+        mode: 'horoof',
+        teams: {},
+        scores: { green: 0, orange: 0 },
+        round: 1,
+        usedQuestions: []
+      };
+      room.players.forEach((p, i) => {
+        room.gameData.teams[p.id] = i % 2 === 0 ? 'green' : 'orange';
+      });
+      io.to(code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('horoof_join_team', ({ code, team }) => {
+    const room = rooms.get(code);
+    if (room && room.state === 'horoof_lobby') {
+      room.gameData.teams[socket.id] = team;
+      io.to(code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('host_start_horoof', ({ code }) => {
+    const room = rooms.get(code);
+    if (room && room.hostId === socket.id) {
+      room.state = 'horoof_playing';
+      room.gameData.board = generateHoroofBoard();
+      room.gameData.turn = 'green';
+      room.gameData.activeCell = null;
+      room.gameData.activeQuestion = null;
+      room.gameData.buzzedPlayer = null;
+      room.gameData.winner = null;
+      room.gameData.winningPath = null;
+      room.gameData.round = room.gameData.round || 1;
+      room.gameData.scores = room.gameData.scores || { green: 0, orange: 0 };
+      room.gameData.usedQuestions = room.gameData.usedQuestions || [];
+      io.to(code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('horoof_select_cell', ({ code, cellId }) => {
+    const room = rooms.get(code);
+    if (room && room.state === 'horoof_playing' && !room.gameData.activeCell) {
+      const cell = room.gameData.board.find(c => c.id === cellId);
+      if (!cell || cell.owner) return;
+      room.gameData.activeCell = cellId;
+      const q = getQuestionForLetter(cell.letter, new Set(room.gameData.usedQuestions));
+      room.gameData.usedQuestions.push(q.id);
+      room.gameData.activeQuestion = q;
+      room.gameData.buzzedPlayer = null;
+      io.to(code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('horoof_buzz', ({ code }) => {
+    const room = rooms.get(code);
+    if (room && room.state === 'horoof_playing' && room.gameData.activeQuestion && !room.gameData.buzzedPlayer) {
+      const player = room.players.find(p => p.id === socket.id);
+      const team = room.gameData.teams[socket.id];
+      if (player && team) {
+        room.gameData.buzzedPlayer = { id: socket.id, name: player.name, team };
+        io.to(code).emit('room_state_update', room);
+      }
+    }
+  });
+
+  socket.on('host_horoof_clear_buzz', ({ code }) => {
+    const room = rooms.get(code);
+    if (room && room.hostId === socket.id && room.state === 'horoof_playing') {
+      room.gameData.buzzedPlayer = null;
+      io.to(code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('host_horoof_judge', ({ code, outcome }) => {
+    const room = rooms.get(code);
+    if (room && room.hostId === socket.id && room.state === 'horoof_playing' && room.gameData.activeCell) {
+      const cell = room.gameData.board.find(c => c.id === room.gameData.activeCell);
+      if (cell && (outcome === 'green' || outcome === 'orange')) {
+        cell.owner = outcome;
+        const winResult = checkHoroofWinner(room.gameData.board);
+        if (winResult) {
+          room.gameData.winner = winResult.winner;
+          room.gameData.winningPath = winResult.winningPath;
+          room.gameData.scores[winResult.winner] = (room.gameData.scores[winResult.winner] || 0) + 1;
+          room.state = 'horoof_winner';
+        }
+      }
+      if (!room.gameData.winner) {
+        room.gameData.turn = room.gameData.turn === 'green' ? 'orange' : 'green';
+      }
+      room.gameData.activeCell = null;
+      room.gameData.activeQuestion = null;
+      room.gameData.buzzedPlayer = null;
+      io.to(code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('host_horoof_new_round', ({ code }) => {
+    const room = rooms.get(code);
+    if (room && room.hostId === socket.id) {
+      room.state = 'horoof_playing';
+      room.gameData.round = (room.gameData.round || 1) + 1;
+      room.gameData.board = generateHoroofBoard();
+      room.gameData.turn = room.gameData.round % 2 === 1 ? 'green' : 'orange';
+      room.gameData.activeCell = null;
+      room.gameData.activeQuestion = null;
+      room.gameData.buzzedPlayer = null;
+      room.gameData.winner = null;
+      room.gameData.winningPath = null;
+      io.to(code).emit('room_state_update', room);
+    }
+  });
+
   /* =========================================
      CORE LOBBY
      ========================================= */
