@@ -10,17 +10,20 @@ export function HoroofLobby({ room, socket, onBack, isHost }: { room: any; socke
   const orangePlayers = room.players.filter((p: any) => room.gameData?.teams?.[p.id] === 'orange' && p.id !== room.hostId);
 
   return (
-    <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col p-3 sm:p-6 items-center bg-black">
-      <div className="w-full max-w-4xl flex items-center justify-between mb-3 sm:mb-5">
-        <button
-          onClick={() => { socket.emit('host_back_to_lobby', { code }); onBack(); }}
-          className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs sm:text-sm font-bold text-gray-400 hover:text-white transition-colors"
-        >
-          <ChevronRight size={14} /> خروج
-        </button>
-        <img src="/images/info.png" alt="True Server" className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]" />
-        <div className="text-xs sm:text-sm font-bold bg-white/10 px-3 py-1.5 rounded-full border border-white/20 text-white">
-          كود: <span className="font-mono text-base font-black text-amber-400">{code}</span>
+    <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col pt-14 sm:pt-6 px-3 sm:px-6 pb-6 items-center">
+      <div className="w-full max-w-4xl flex flex-col sm:flex-row items-center justify-between mb-4 sm:mb-5 gap-3">
+        <div className="flex items-center justify-between w-full sm:w-auto gap-3">
+          <button
+            onClick={() => { socket.emit('host_back_to_lobby', { code }); onBack(); }}
+            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs sm:text-sm font-bold text-gray-400 hover:text-white transition-colors"
+          >
+            <ChevronRight size={14} /> خروج
+          </button>
+          <img src="/images/info.png" alt="True Server" className="h-7 sm:h-9 w-auto object-contain drop-shadow-md" />
+        </div>
+        <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-bold bg-white/10 px-5 py-2 rounded-2xl border border-white/20 text-white shadow-lg">
+          <span className="text-gray-400">كود الروم:</span>
+          <span className="font-mono text-xl sm:text-2xl font-black text-amber-400">{code}</span>
         </div>
       </div>
 
@@ -155,7 +158,7 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
   };
 
   return (
-    <main className="fade-screen relative flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-between p-3 sm:p-5 bg-[#07080b]">
+    <main className="fade-screen relative flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-between pt-14 sm:pt-5 p-3 sm:p-5">
       {/* 1. TOP HEADER & SCOREBOARD */}
       <div className="w-full max-w-4xl flex items-center justify-between gap-2 mb-3">
         <button
@@ -385,7 +388,7 @@ export function HoroofWinnerView({ room, socket, isHost, onBack }: { room: any; 
   }, []);
 
   return (
-    <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-center p-4 sm:p-6 bg-black text-center">
+    <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-center p-4 sm:p-6 text-center">
       <div className="w-16 h-16 rounded-full bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center mb-4 winner-explosion">
         <Sparkles size={32} className="text-yellow-400" />
       </div>

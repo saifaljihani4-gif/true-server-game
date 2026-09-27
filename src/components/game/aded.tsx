@@ -16,18 +16,21 @@ export function AdedLobbyView({ room, socket, onBack, isHost }: { room: any; soc
     .filter(Boolean);
 
   return (
-    <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-between p-4 sm:p-8 bg-[#07080b]">
+    <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-between pt-14 sm:pt-6 px-4 sm:px-8 pb-6">
       {/* Top Header */}
-      <div className="w-full max-w-3xl flex items-center justify-between">
-        <button
-          onClick={() => { socket.emit('host_back_to_lobby', { code }); onBack(); }}
-          className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs sm:text-sm font-bold text-gray-400 hover:text-white transition-colors"
-        >
-          <ChevronRight size={16} /> خروج للوبي الرئيسي
-        </button>
-        <img src="/images/info.png" alt="True Server" className="h-9 sm:h-12 w-auto object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]" />
-        <div className="text-xs sm:text-sm font-mono font-bold bg-white/10 px-4 py-2 rounded-full border border-white/15 text-white">
-          كود: <span className="font-black text-amber-400 text-sm sm:text-base">{code}</span>
+      <div className="w-full max-w-3xl flex flex-col sm:flex-row items-center justify-between gap-3 mb-4">
+        <div className="flex items-center justify-between w-full sm:w-auto gap-3">
+          <button
+            onClick={() => { socket.emit('host_back_to_lobby', { code }); onBack(); }}
+            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs sm:text-sm font-bold text-gray-400 hover:text-white transition-colors"
+          >
+            <ChevronRight size={16} /> خروج للوبي الرئيسي
+          </button>
+          <img src="/images/info.png" alt="True Server" className="h-7 sm:h-10 w-auto object-contain drop-shadow-md" />
+        </div>
+        <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-mono font-bold bg-white/10 px-5 py-2 rounded-2xl border border-white/15 text-white shadow-lg">
+          <span className="text-gray-400">كود الروم:</span>
+          <span className="font-black text-amber-400 text-xl sm:text-2xl">{code}</span>
         </div>
       </div>
 
@@ -184,7 +187,7 @@ export function AdedGameView({ room, socket, onBack, isHost }: { room: any; sock
   };
 
   return (
-    <main className="fade-screen relative flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-between p-3 sm:p-6 bg-[#06070a]">
+    <main className="fade-screen relative flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-between pt-14 sm:pt-6 px-3 sm:px-6 pb-6">
       {/* 1. TOP HEADER & QUEUE STATUS */}
       <div className="w-full max-w-4xl flex items-center justify-between gap-2 mb-2 sm:mb-4">
         <button
@@ -377,17 +380,20 @@ export function AdedResultsView({ room, socket, isHost, onBack }: { room: any; s
   const champion = ranked[0];
 
   return (
-    <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-between p-3 sm:p-6 bg-[#06070a] text-center">
-      <div className="w-full max-w-3xl flex items-center justify-between">
-        <button
-          onClick={() => { socket.emit('host_back_to_lobby', { code }); onBack(); }}
-          className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs sm:text-sm font-bold text-gray-400 hover:text-white transition-colors"
-        >
-          <ChevronRight size={14} /> خروج للوبي
-        </button>
-        <img src="/images/info.png" alt="True Server" className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]" />
-        <div className="text-xs sm:text-sm font-mono font-bold bg-white/10 px-3 py-1.5 rounded-full border border-white/15 text-white">
-          كود: <span className="font-black text-amber-400">{code}</span>
+    <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-between pt-14 sm:pt-6 px-3 sm:px-6 pb-6 text-center">
+      <div className="w-full max-w-3xl flex flex-col sm:flex-row items-center justify-between gap-3 mb-4">
+        <div className="flex items-center justify-between w-full sm:w-auto gap-3">
+          <button
+            onClick={() => { socket.emit('host_back_to_lobby', { code }); onBack(); }}
+            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs sm:text-sm font-bold text-gray-400 hover:text-white transition-colors"
+          >
+            <ChevronRight size={14} /> خروج للوبي
+          </button>
+          <img src="/images/info.png" alt="True Server" className="h-7 sm:h-9 w-auto object-contain drop-shadow-md" />
+        </div>
+        <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-mono font-bold bg-white/10 px-5 py-2 rounded-2xl border border-white/15 text-white shadow-lg">
+          <span className="text-gray-400">كود الروم:</span>
+          <span className="font-black text-amber-400 text-xl sm:text-2xl">{code}</span>
         </div>
       </div>
 
