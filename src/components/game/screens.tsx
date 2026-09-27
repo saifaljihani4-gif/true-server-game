@@ -16,7 +16,7 @@ export const MODE_ICONS: Record<Mode, LucideIcon> = {
 
 export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin: () => void; onHost: () => void }) {
   return (
-    <main className="fade-screen flex h-[100dvh] max-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col justify-between items-center pt-2 sm:pt-4 pb-4 sm:pb-6 px-3 sm:px-4">
+    <main className="fade-screen flex h-[100dvh] max-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col justify-between items-center pt-2 sm:pt-4 pb-12 sm:pb-16 px-3 sm:px-4">
       {/* 1. Header/Info placed at top */}
       <div className="fade-in-up flex justify-center w-full pt-1">
         <img
@@ -29,8 +29,8 @@ export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin:
       {/* 2. Middle empty space so banner is fully visible */}
       <div className="flex-1 min-h-[40px]" />
 
-      {/* 3. Action buttons placed cleanly at the bottom */}
-      <div className="fade-in-up flex w-full max-w-xs sm:max-w-sm flex-col gap-2.5 pb-2">
+      {/* 3. Action buttons placed cleanly above Discord mobile overlay */}
+      <div className="fade-in-up flex w-full max-w-xs sm:max-w-sm flex-col gap-2.5 pb-4">
         <button onClick={onHost} className="btn-clean rounded-2xl bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:via-[#522295] hover:to-[#2e1056] text-white border border-purple-400/35 hover:border-purple-300/60 px-5 py-3 text-sm sm:text-base font-bold shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_25px_rgba(147,51,234,0.3)] hover:scale-[1.02] transition-all">
           إنشاء روم جديد
         </button>
