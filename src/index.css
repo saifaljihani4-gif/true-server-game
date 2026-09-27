@@ -95,12 +95,12 @@ input::placeholder { color: rgba(156,163,175,.72); }
 }
 .global-bg {
   position: fixed; inset: 0; z-index: -3;
-  background: #08080a url('/images/banner.gif') center center / contain no-repeat;
+  background: #08080a url('/images/banner.gif') center center / cover no-repeat;
   transform: translate3d(0, 0, 0);
 }
 .global-overlay {
   position: fixed; inset: 0; z-index: -2;
-  background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(5,5,8,0.4) 100%);
+  background: radial-gradient(circle at 50% 35%, rgba(18, 12, 32, 0.45) 0%, rgba(6, 7, 10, 0.88) 100%), linear-gradient(180deg, rgba(8,8,10,0.3) 0%, rgba(6,7,10,0.92) 100%);
   pointer-events: none;
 }
 .grain {
@@ -198,10 +198,10 @@ input::placeholder { color: rgba(156,163,175,.72); }
 @keyframes ringPulse { 0%, 100% { opacity: .55; transform: scale(1); } 50% { opacity: .2; transform: scale(1.045); } }
 @media (max-width: 768px) {
   .global-bg {
-    background: #08080a url('/images/banner.gif') center top / 100% auto no-repeat !important;
+    background: #08080a url('/images/banner.gif') center center / cover no-repeat !important;
   }
   .global-overlay {
-    background: linear-gradient(180deg, transparent 35%, rgba(6,7,9,0.85) 100%) !important;
+    background: radial-gradient(circle at 50% 30%, rgba(18, 12, 32, 0.4) 0%, rgba(6, 7, 10, 0.9) 100%), linear-gradient(180deg, rgba(8,8,10,0.15) 0%, rgba(6,7,10,0.95) 100%) !important;
   }
   .game-scroll { padding: 1rem .8rem 6rem !important; }
   .glass-nav { align-items: center; }

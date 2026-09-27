@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import {
-  Tv, ArrowLeftRight, Ban, ChevronRight, Hand, ListOrdered, Mic2, Puzzle, ShoppingBag, Smile, Theater, Timer, Trophy, Volume2, VolumeX,
+  Tv, ArrowLeftRight, Ban, ChevronRight, Crown, Gamepad2, Hand, ListOrdered, Mic2, Puzzle, ShoppingBag, Smile, Theater, Timer, Trophy, Users, Volume2, VolumeX,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { INTENSITY_LABEL, MODES, type Card, type Intensity, type Mode } from '@/game/data';
@@ -9,38 +9,82 @@ import { ActiveModal, FateModal, SetupModal, titleSize, type Fate } from './moda
 export const MODE_ICONS: Record<Mode, LucideIcon> = {
   dialects: Mic2, letters: Ban, gibberish: Puzzle, improv: Theater,
   taboo: Hand, emoji: Smile, lists: ListOrdered, sell: ShoppingBag,
- series: Tv,
+  series: Tv,
 };
 
 /* ---------------------------------------------------------------- */
 
 export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin: () => void; onHost: () => void }) {
   return (
-    <main className="fade-screen flex h-[100dvh] max-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col justify-between items-center pt-2 sm:pt-4 pb-12 sm:pb-16 px-3 sm:px-4">
-      {/* 1. Header/Info placed at top */}
-      <div className="fade-in-up flex justify-center w-full pt-1">
+    <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-between py-5 px-4 sm:py-7 sm:px-6">
+      {/* Top Tag */}
+      <div className="w-full flex justify-center items-center pt-1">
+        <div className="inline-flex items-center gap-2 rounded-full border border-purple-500/25 bg-purple-950/40 px-3.5 py-1 backdrop-blur-md shadow-[0_0_20px_rgba(168,85,247,0.15)]">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="font-kufi text-[11px] sm:text-xs font-bold text-purple-200">سيرفر ترو الرسمي • True Server</span>
+        </div>
+      </div>
+
+      {/* Hero Section */}
+      <div className="fade-in-up flex flex-col items-center text-center my-auto py-3 max-w-md w-full">
+        {/* Animated Badge / Logo with purple aura */}
+        <div className="relative mb-3 sm:mb-4 group">
+          <div className="absolute -inset-4 rounded-full bg-gradient-to-r from-purple-600/30 to-pink-600/30 blur-xl opacity-75 group-hover:opacity-100 transition-opacity" />
+          <div className="relative flex items-center justify-center w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-black/60 border border-purple-400/30 shadow-[0_0_35px_rgba(168,85,247,0.35)] backdrop-blur-lg overflow-hidden p-2">
+            <img
+              src="/images/icon.gif"
+              alt="True Icon"
+              className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(168,85,247,0.6)]"
+            />
+          </div>
+        </div>
+
+        {/* Info banner / title */}
         <img
           src="/images/info.png"
           alt="True Server"
-          className="w-36 sm:w-48 md:w-56 h-auto object-contain drop-shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:scale-105 transition-transform"
+          className="h-8 sm:h-11 w-auto object-contain mx-auto mb-2 drop-shadow-[0_0_25px_rgba(168,85,247,0.6)]"
         />
+
+        <p className="font-kufi text-xs sm:text-sm font-medium text-gray-300 max-w-xs sm:max-w-sm leading-relaxed mb-4">
+          تحديات جماعية ومسابقات تفاعلية مع أصدقائك في الديسكورد
+        </p>
+
+        {/* Feature Pills showcase */}
+        <div className="flex flex-wrap justify-center items-center gap-1.5 max-w-xs sm:max-w-sm">
+          <span className="text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300">تحدي الحروف</span>
+          <span className="text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300">عدّد</span>
+          <span className="text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300">برا السالفة</span>
+          <span className="text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300">مافيا</span>
+          <span className="text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300">كود نيمز</span>
+        </div>
       </div>
 
-      {/* 2. Middle empty space so banner is fully visible */}
-      <div className="flex-1 min-h-[40px]" />
-
-      {/* 3. Action buttons placed cleanly above Discord mobile overlay */}
-      <div className="fade-in-up flex w-full max-w-xs sm:max-w-sm flex-col gap-2.5 pb-4">
-        <button onClick={onHost} className="btn-clean rounded-2xl bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:via-[#522295] hover:to-[#2e1056] text-white border border-purple-400/35 hover:border-purple-300/60 px-5 py-3 text-sm sm:text-base font-bold shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_25px_rgba(147,51,234,0.3)] hover:scale-[1.02] transition-all">
-          إنشاء روم جديد
+      {/* Action Buttons Section */}
+      <div className="fade-in-up flex w-full max-w-xs sm:max-w-sm flex-col gap-2.5 pb-12 sm:pb-8">
+        <button
+          onClick={onHost}
+          className="btn-clean relative group overflow-hidden rounded-2xl bg-gradient-to-r from-[#581c87] via-[#7e22ce] to-[#6b21a8] hover:from-[#6b21a8] hover:via-[#9333ea] hover:to-[#7e22ce] text-white border border-purple-300/40 px-5 py-3.5 text-base sm:text-lg font-bold shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_30px_rgba(147,51,234,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5"
+        >
+          <Crown size={18} className="text-yellow-300 drop-shadow-[0_0_8px_rgba(253,224,71,0.6)]" />
+          <span>إنشاء روم جديد</span>
         </button>
-        
-        <div className="flex gap-2">
-          <button onClick={onJoin} className="flex-1 btn-clean rounded-2xl bg-[#120c1f]/90 hover:bg-[#1e1433] border border-white/10 hover:border-purple-400/40 px-3 py-2.5 text-xs sm:text-sm font-bold text-gray-200 hover:text-white shadow-lg transition-all">
-            الانضمام لروم
+
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={onJoin}
+            className="btn-clean rounded-2xl bg-[#140e24]/85 hover:bg-[#1f1538] border border-white/15 hover:border-purple-400/50 px-3 py-3 text-xs sm:text-sm font-bold text-gray-100 hover:text-white shadow-lg backdrop-blur-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
+          >
+            <Users size={15} className="text-purple-300" />
+            <span>الانضمام لروم</span>
           </button>
-          <button onClick={onEnter} className="flex-1 btn-clean rounded-2xl bg-[#120c1f]/90 hover:bg-[#1e1433] border border-white/10 hover:border-purple-400/40 px-3 py-2.5 text-xs sm:text-sm font-bold text-gray-200 hover:text-white shadow-lg transition-all">
-            ألعاب التحدي
+          
+          <button
+            onClick={onEnter}
+            className="btn-clean rounded-2xl bg-[#140e24]/85 hover:bg-[#1f1538] border border-white/15 hover:border-purple-400/50 px-3 py-3 text-xs sm:text-sm font-bold text-gray-100 hover:text-white shadow-lg backdrop-blur-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
+          >
+            <Gamepad2 size={15} className="text-pink-300" />
+            <span>ألعاب التحدي</span>
           </button>
         </div>
       </div>

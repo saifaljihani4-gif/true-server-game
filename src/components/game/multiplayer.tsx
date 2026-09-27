@@ -110,7 +110,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   // --- 1. LOGIN SCREEN ---
   if (!room) {
     return (
-      <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-center p-4 sm:p-6 bg-black relative">
+      <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-center p-4 sm:p-6 relative">
         <button onClick={onBack} className="absolute start-4 top-4 sm:start-5 sm:top-6 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-gray-400 hover:text-white transition-colors">
           <ChevronRight size={14} /> رجوع
         </button>
