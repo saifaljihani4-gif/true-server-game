@@ -392,28 +392,32 @@ export function checkHoroofWinner(board, rows = 5, cols = 5) {
     }
   }
 
-  // 2. فحص البرتقالي (رأسي: row 0 إلى row rows-1)
-  const orangeStarts = [];
+  // 2. فحص الأزرق / البرتقالي (رأسي: row 0 إلى row rows-1)
+  const verticalStarts = [];
   for (let c = 0; c < cols; c++) {
-    if (grid[0][c] === 'orange') orangeStarts.push({ r: 0, c, path: [`0-${c}`] });
+    const owner = grid[0][c];
+    if (owner === 'blue' || owner === 'orange') {
+      verticalStarts.push({ r: 0, c, path: [`0-${c}`] });
+    }
   }
 
-  const orangeVisited = new Set();
-  while (orangeStarts.length > 0) {
-    const curr = orangeStarts.shift();
+  const verticalVisited = new Set();
+  while (verticalStarts.length > 0) {
+    const curr = verticalStarts.shift();
     const key = `${curr.r}-${curr.c}`;
-    if (orangeVisited.has(key)) continue;
-    orangeVisited.add(key);
+    if (verticalVisited.has(key)) continue;
+    verticalVisited.add(key);
 
     if (curr.r === rows - 1) {
-      return { winner: 'orange', winningPath: curr.path };
+      return { winner: 'blue', winningPath: curr.path };
     }
 
     const nbrs = getHexNeighbors(curr.r, curr.c, rows, cols);
     for (const n of nbrs) {
       const nKey = `${n.r}-${n.c}`;
-      if (!orangeVisited.has(nKey) && grid[n.r][n.c] === 'orange') {
-        orangeStarts.push({ r: n.r, c: n.c, path: [...curr.path, nKey] });
+      const owner = grid[n.r][n.c];
+      if (!verticalVisited.has(nKey) && (owner === 'blue' || owner === 'orange')) {
+        verticalStarts.push({ r: n.r, c: n.c, path: [...curr.path, nKey] });
       }
     }
   }

@@ -485,14 +485,14 @@ io.on('connection', (socket) => {
       room.gameData = {
         mode: 'horoof',
         teams: {},
-        scores: { green: 0, orange: 0 },
+        scores: { green: 0, blue: 0, orange: 0 },
         round: 1,
         usedQuestions: []
       };
-      // Distribute only non-host contestants into green and orange teams
+      // Distribute only non-host contestants into green and blue teams
       const nonHostPlayers = room.players.filter(p => p.id !== room.hostId);
       nonHostPlayers.forEach((p, i) => {
-        room.gameData.teams[p.id] = i % 2 === 0 ? 'green' : 'orange';
+        room.gameData.teams[p.id] = i % 2 === 0 ? 'green' : 'blue';
       });
       delete room.gameData.teams[room.hostId];
       io.to(room.code).emit('room_state_update', room);
@@ -504,8 +504,19 @@ io.on('connection', (socket) => {
     if (room && room.state === 'horoof_lobby') {
       // The host is the referee/presenter and must not play or join a team
       if (socket.id === room.hostId) return;
-      if (team === 'green' || team === 'orange') {
-        room.gameData.teams[socket.id] = team;
+      const normalizedTeam = (team === 'blue' || team === 'orange') ? 'blue' : (team === 'green' ? 'green' : null);
+      if (normalizedTeam) {
+        room.gameData.teams[socket.id] = normalizedTeam;
+        io.to(room.code).emit('room_state_update', room);
+      }
+    }
+  });
+
+  socket.on('horoof_leave_team', ({ code }) => {
+    const room = getRoom(code);
+    if (room && room.state === 'horoof_lobby') {
+      if (room.gameData?.teams) {
+        delete room.gameData.teams[socket.id];
         io.to(room.code).emit('room_state_update', room);
       }
     }
@@ -524,7 +535,7 @@ io.on('connection', (socket) => {
       room.gameData.winner = null;
       room.gameData.winningPath = null;
       room.gameData.round = room.gameData.round || 1;
-      room.gameData.scores = room.gameData.scores || { green: 0, orange: 0 };
+      room.gameData.scores = room.gameData.scores || { green: 0, blue: 0, orange: 0 };
       room.gameData.usedQuestions = room.gameData.usedQuestions || [];
       io.to(room.code).emit('room_state_update', room);
     }
@@ -574,18 +585,20 @@ io.on('connection', (socket) => {
     const room = getRoom(code);
     if (room && room.hostId === socket.id && room.state === 'horoof_playing' && room.gameData.activeCell) {
       const cell = room.gameData.board.find(c => c.id === room.gameData.activeCell);
-      if (cell && (outcome === 'green' || outcome === 'orange')) {
-        cell.owner = outcome;
+      const normalizedOutcome = (outcome === 'blue' || outcome === 'orange') ? 'blue' : (outcome === 'green' ? 'green' : null);
+      if (cell && normalizedOutcome) {
+        cell.owner = normalizedOutcome;
         const winResult = checkHoroofWinner(room.gameData.board);
         if (winResult) {
-          room.gameData.winner = winResult.winner;
+          const winnerKey = winResult.winner === 'orange' ? 'blue' : winResult.winner;
+          room.gameData.winner = winnerKey;
           room.gameData.winningPath = winResult.winningPath;
-          room.gameData.scores[winResult.winner] = (room.gameData.scores[winResult.winner] || 0) + 1;
+          room.gameData.scores[winnerKey] = (room.gameData.scores[winnerKey] || 0) + 1;
           room.state = 'horoof_winner';
         }
       }
       if (!room.gameData.winner) {
-        room.gameData.turn = room.gameData.turn === 'green' ? 'orange' : 'green';
+        room.gameData.turn = room.gameData.turn === 'green' ? 'blue' : 'green';
       }
       room.gameData.activeCell = null;
       room.gameData.activeQuestion = null;
@@ -600,7 +613,7 @@ io.on('connection', (socket) => {
       room.state = 'horoof_playing';
       room.gameData.round = (room.gameData.round || 1) + 1;
       room.gameData.board = generateHoroofBoard();
-      room.gameData.turn = room.gameData.round % 2 === 1 ? 'green' : 'orange';
+      room.gameData.turn = room.gameData.round % 2 === 1 ? 'green' : 'blue';
       room.gameData.activeCell = null;
       room.gameData.activeQuestion = null;
       room.gameData.buzzedPlayer = null;
