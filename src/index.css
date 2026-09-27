@@ -100,7 +100,7 @@ input::placeholder { color: rgba(156,163,175,.72); }
 }
 .global-overlay {
   position: fixed; inset: 0; z-index: -2;
-  background: radial-gradient(circle at 50% 35%, rgba(18, 12, 32, 0.45) 0%, rgba(6, 7, 10, 0.88) 100%), linear-gradient(180deg, rgba(8,8,10,0.3) 0%, rgba(6,7,10,0.92) 100%);
+  background: linear-gradient(180deg, rgba(8, 9, 12, 0.82) 0%, rgba(6, 7, 10, 0.94) 100%);
   pointer-events: none;
 }
 .grain {
@@ -201,7 +201,7 @@ input::placeholder { color: rgba(156,163,175,.72); }
     background: #08080a url('/images/banner.gif') center center / cover no-repeat !important;
   }
   .global-overlay {
-    background: radial-gradient(circle at 50% 30%, rgba(18, 12, 32, 0.4) 0%, rgba(6, 7, 10, 0.9) 100%), linear-gradient(180deg, rgba(8,8,10,0.15) 0%, rgba(6,7,10,0.95) 100%) !important;
+    background: linear-gradient(180deg, rgba(8, 9, 12, 0.85) 0%, rgba(6, 7, 10, 0.96) 100%) !important;
   }
   .game-scroll { padding: 1rem .8rem 6rem !important; }
   .glass-nav { align-items: center; }
