@@ -108,6 +108,32 @@ const barraCategories = {
   'وظائف': ['طيار', 'دكتور', 'حلاق', 'سباك', 'محامي', 'طباخ'],
   'حيوانات': ['أسد', 'فيل', 'زرافة', 'قرد', 'تمساح', 'بطريق']
 };
+function generateBarraQuestions(players) {
+  if (!players || players.length < 2) return [];
+  const shuffled = [...players].sort(() => Math.random() - 0.5);
+  const n = shuffled.length;
+  if (n === 2) {
+    return [
+      { asker: shuffled[0].name, askerId: shuffled[0].id, answerer: shuffled[1].name, answererId: shuffled[1].id },
+      { asker: shuffled[1].name, askerId: shuffled[1].id, answerer: shuffled[0].name, answererId: shuffled[0].id }
+    ];
+  }
+  const questions = [];
+  for (let step = 1; step < n; step++) {
+    const startIndex = (step - 1) % n;
+    for (let i = 0; i < n; i++) {
+      const askerIdx = (startIndex + i) % n;
+      const answererIdx = (askerIdx + step) % n;
+      questions.push({
+        asker: shuffled[askerIdx].name,
+        askerId: shuffled[askerIdx].id,
+        answerer: shuffled[answererIdx].name,
+        answererId: shuffled[answererIdx].id
+      });
+    }
+  }
+  return questions;
+}
 
 io.on('connection', (socket) => {
   socket.on('get_public_rooms', (callback) => {
@@ -161,31 +187,7 @@ io.on('connection', (socket) => {
       const spyIndex = Math.floor(Math.random() * room.players.length);
       const spyId = room.players[spyIndex]?.id || room.players[0]?.id;
 
-      const players = [...room.players];
-      const allPairs = [];
-      for (let i = 0; i < players.length; i++) {
-        for (let j = 0; j < players.length; j++) {
-          if (i !== j) {
-            allPairs.push({
-              asker: players[i].name,
-              askerId: players[i].id,
-              answerer: players[j].name,
-              answererId: players[j].id
-            });
-          }
-        }
-      }
-
-      const questionOrder = [];
-      const pool = [...allPairs];
-      let lastAsker = null;
-      while (pool.length > 0) {
-        let idx = pool.findIndex(p => p.asker !== lastAsker);
-        if (idx === -1) idx = 0;
-        const [picked] = pool.splice(idx, 1);
-        questionOrder.push(picked);
-        lastAsker = picked.asker;
-      }
+      const questionOrder = generateBarraQuestions(room.players);
 
       room.gameData = {
         mode: 'barra',
@@ -217,6 +219,24 @@ io.on('connection', (socket) => {
         io.to(room.code).emit('start_voting', { players: room.players });
         return;
       }
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('host_skip_question', ({ code }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id && room.state === 'barra_playing') {
+      const order = room.gameData.questionOrder || [];
+      const current = room.gameData.currentQuestion || 0;
+
+      if (current >= order.length - 1) {
+        const extraQuestions = generateBarraQuestions(room.players);
+        if (extraQuestions && extraQuestions.length > 0) {
+          order.push(...extraQuestions);
+        }
+      }
+
+      room.gameData.currentQuestion = (room.gameData.currentQuestion || 0) + 1;
       io.to(room.code).emit('room_state_update', room);
     }
   });
@@ -1028,31 +1048,7 @@ io.on('connection', (socket) => {
       const spyIndex = Math.floor(Math.random() * room.players.length);
       const spyId = room.players[spyIndex]?.id || room.players[0]?.id;
 
-      const players = [...room.players];
-      const allPairs = [];
-      for (let i = 0; i < players.length; i++) {
-        for (let j = 0; j < players.length; j++) {
-          if (i !== j) {
-            allPairs.push({
-              asker: players[i].name,
-              askerId: players[i].id,
-              answerer: players[j].name,
-              answererId: players[j].id
-            });
-          }
-        }
-      }
-
-      const questionOrder = [];
-      const pool = [...allPairs];
-      let lastAsker = null;
-      while (pool.length > 0) {
-        let idx = pool.findIndex(p => p.asker !== lastAsker);
-        if (idx === -1) idx = 0;
-        const [picked] = pool.splice(idx, 1);
-        questionOrder.push(picked);
-        lastAsker = picked.asker;
-      }
+      const questionOrder = generateBarraQuestions(room.players);
 
       room.gameData = {
         mode: 'barra',
