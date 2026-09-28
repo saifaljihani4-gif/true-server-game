@@ -138,6 +138,15 @@ io.on('connection', (socket) => {
     if (isPublic) broadcastPublicRooms();
   });
 
+  socket.on('host_toggle_room_privacy', ({ code }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id) {
+      room.isPublic = !room.isPublic;
+      io.to(room.code).emit('room_state_update', room);
+      broadcastPublicRooms();
+    }
+  });
+
   /* =========================================
      BARRA AL SALFA LOGIC
      ========================================= */
@@ -464,7 +473,37 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('host_start_codenames', ({ code }) => {
+  const startCodenamesTurnTimer = (room) => {
+    if (!room || room.state !== 'codenames_playing') return;
+    if (room.gameData.turnTimeoutId) {
+      clearTimeout(room.gameData.turnTimeoutId);
+      room.gameData.turnTimeoutId = null;
+    }
+
+    const duration = room.gameData.turnDuration || 60;
+    room.gameData.turnExpiresAt = Date.now() + duration * 1000;
+
+    room.gameData.turnTimeoutId = setTimeout(() => {
+      if (!room || room.state !== 'codenames_playing') return;
+      const currentTurn = room.gameData.turn;
+      const nextTurn = currentTurn === 'red' ? 'blue' : 'red';
+      room.gameData.turn = nextTurn;
+      room.gameData.clue = null;
+      io.to(room.code).emit('cn_turn_timed_out', { previousTurn: currentTurn, newTurn: nextTurn });
+      startCodenamesTurnTimer(room);
+      io.to(room.code).emit('room_state_update', room);
+    }, duration * 1000);
+  };
+
+  socket.on('host_set_codenames_turn_duration', ({ code, duration }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id) {
+      room.gameData.turnDuration = Math.min(180, Math.max(20, Number(duration) || 60));
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('host_start_codenames', ({ code, turnDuration }) => {
     const room = getRoom(code);
     if (room && room.hostId === socket.id) {
       const shuffledWords = [...codenamesWords].sort(() => Math.random() - 0.5).slice(0, 25);
@@ -491,7 +530,9 @@ io.on('connection', (socket) => {
         red: board.filter(c => c.color === 'red').length,
         blue: board.filter(c => c.color === 'blue').length,
       };
+      room.gameData.turnDuration = Math.min(180, Math.max(20, Number(turnDuration) || room.gameData.turnDuration || 60));
 
+      startCodenamesTurnTimer(room);
       io.to(room.code).emit('room_state_update', room);
     }
   });
@@ -502,6 +543,7 @@ io.on('connection', (socket) => {
       const turn = room.gameData.turn;
       if (room.gameData.spymasters?.[turn] !== socket.id) return;
       room.gameData.clue = { word: String(clueWord || '').slice(0, 20), number: Number(clueNum) || 1 };
+      startCodenamesTurnTimer(room);
       io.to(room.code).emit('room_state_update', room);
     }
   });
@@ -522,10 +564,13 @@ io.on('connection', (socket) => {
       if (card.color === 'blue') room.gameData.left.blue--;
 
       if (card.color === 'black') {
+        if (room.gameData.turnTimeoutId) clearTimeout(room.gameData.turnTimeoutId);
         room.gameData.winner = turn === 'red' ? 'blue' : 'red';
       } else if (room.gameData.left.red === 0) {
+        if (room.gameData.turnTimeoutId) clearTimeout(room.gameData.turnTimeoutId);
         room.gameData.winner = 'red';
       } else if (room.gameData.left.blue === 0) {
+        if (room.gameData.turnTimeoutId) clearTimeout(room.gameData.turnTimeoutId);
         room.gameData.winner = 'blue';
       }
 
@@ -534,6 +579,7 @@ io.on('connection', (socket) => {
       } else if (card.color !== turn) {
         room.gameData.turn = turn === 'red' ? 'blue' : 'red';
         room.gameData.clue = null;
+        startCodenamesTurnTimer(room);
       }
 
       io.to(room.code).emit('room_state_update', room);
@@ -546,6 +592,7 @@ io.on('connection', (socket) => {
       if (room.gameData.teams?.[socket.id] !== room.gameData.turn && room.hostId !== socket.id) return;
       room.gameData.turn = room.gameData.turn === 'red' ? 'blue' : 'red';
       room.gameData.clue = null;
+      startCodenamesTurnTimer(room);
       io.to(room.code).emit('room_state_update', room);
     }
   });
