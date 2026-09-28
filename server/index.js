@@ -623,8 +623,16 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('host_horoof_toggle_hint', ({ code }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id && room.state === 'horoof_playing' && room.gameData?.activeQuestion) {
+      room.gameData.showHint = !room.gameData.showHint;
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
   /* =========================================
-     ADED (عدّد - مين يعدد أكثر بـ 30 ثانية) LOGIC
+     ADED (عدّد - نظام المزايدة والتحدي بـ 30 ثانية) LOGIC
      ========================================= */
   socket.on('host_start_aded', ({ code }) => {
     const room = getRoom(code);
@@ -633,11 +641,18 @@ io.on('connection', (socket) => {
       room.gameData = {
         mode: 'aded',
         contestants: room.players.map(p => p.id),
-        currentTurnIdx: 0,
         round: 1,
         scores: {},
         history: [],
-        usedTopics: []
+        usedTopics: [],
+        phase: 'bidding', // 'bidding' | 'counting'
+        currentBid: 0,
+        highestBidderId: null,
+        highestBidderName: null,
+        targetCount: 0,
+        count: 0,
+        isRunning: false,
+        timerStartedAt: null
       };
       io.to(room.code).emit('room_state_update', room);
     }
@@ -660,26 +675,119 @@ io.on('connection', (socket) => {
   socket.on('host_aded_start_game', ({ code }) => {
     const room = getRoom(code);
     if (room && room.hostId === socket.id && (room.state === 'aded_lobby' || room.state === 'aded_results')) {
-      // Ensure contestants list has all players if none were toggled
-      if (!room.gameData.contestants || room.gameData.contestants.length === 0) {
-        room.gameData.contestants = room.players.map(p => p.id);
-      }
-      // Filter out any disconnected players
-      room.gameData.contestants = room.gameData.contestants.filter(id => room.players.some(p => p.id === id));
-      if (room.gameData.contestants.length === 0) {
-        room.gameData.contestants = room.players.map(p => p.id);
-      }
-
       room.state = 'aded_playing';
-      room.gameData.currentTurnIdx = 0;
-      room.gameData.activePlayerId = room.gameData.contestants[0] || room.players[0]?.id;
-      const topic = getRandomAdedTopic(room.gameData.usedTopics || []);
-      room.gameData.topic = topic;
-      room.gameData.usedTopics = room.gameData.usedTopics || [];
-      room.gameData.usedTopics.push(topic);
+      const topic = getRandomAdedTopic(room.gameData?.usedTopics || []);
+      room.gameData = {
+        ...room.gameData,
+        topic,
+        usedTopics: [...(room.gameData?.usedTopics || []), topic],
+        phase: 'bidding',
+        currentBid: 0,
+        highestBidderId: null,
+        highestBidderName: null,
+        activePlayerId: null,
+        targetCount: 0,
+        count: 0,
+        isRunning: false,
+        timerStartedAt: null,
+        scores: room.gameData?.scores || {},
+        history: room.gameData?.history || [],
+        round: (room.gameData?.round || 0) + 1
+      };
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  // مزايدة المتسابقين (+1 أو رفع الرقم)
+  socket.on('aded_place_bid', ({ code, amount }) => {
+    const room = getRoom(code);
+    if (room && room.state === 'aded_playing') {
+      const player = room.players.find(p => p.id === socket.id);
+      if (!player) return;
+      const num = parseInt(amount, 10);
+      if (isNaN(num) || num <= (room.gameData.currentBid || 0)) return;
+
+      room.gameData.currentBid = num;
+      room.gameData.highestBidderId = socket.id;
+      room.gameData.highestBidderName = player.name;
+      room.gameData.activePlayerId = socket.id;
+      room.gameData.targetCount = num;
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  // تحكم الهوست بالمزايدة واختيار المتحدي يدوياً بدون إجبار
+  socket.on('host_aded_set_bid', ({ code, playerId, amount }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id && room.state === 'aded_playing') {
+      const player = room.players.find(p => p.id === playerId);
+      const num = Math.max(1, parseInt(amount, 10) || 1);
+      room.gameData.currentBid = num;
+      room.gameData.targetCount = num;
+      room.gameData.highestBidderId = playerId;
+      room.gameData.highestBidderName = player ? player.name : 'متسابق';
+      room.gameData.activePlayerId = playerId;
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  // بدء التحدي والعد للمزايد الأعلى (الانتقال لمرحلة الـ 30 ثانية)
+  socket.on('host_aded_start_challenge', ({ code, playerId, targetCount }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id && room.state === 'aded_playing') {
+      const finalPlayerId = playerId || room.gameData.highestBidderId || room.players[0]?.id;
+      const finalTarget = parseInt(targetCount, 10) || room.gameData.currentBid || 5;
+
+      room.gameData.phase = 'counting';
+      room.gameData.activePlayerId = finalPlayerId;
+      room.gameData.targetCount = finalTarget;
       room.gameData.count = 0;
       room.gameData.isRunning = false;
       room.gameData.timerStartedAt = null;
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  // إنهاء التحدي وتحديد الفائز بالنقاط (نجح في المزايدة أو فشل)
+  socket.on('host_aded_finish_challenge', ({ code, outcome }) => {
+    const room = getRoom(code);
+    if (room && room.hostId === socket.id && room.state === 'aded_playing') {
+      const pId = room.gameData.activePlayerId;
+      const player = room.players.find(p => p.id === pId);
+      const won = outcome === 'win';
+      const target = room.gameData.targetCount || room.gameData.currentBid || 0;
+      const count = room.gameData.count || 0;
+
+      if (pId && won) {
+        room.gameData.scores = room.gameData.scores || {};
+        room.gameData.scores[pId] = (room.gameData.scores[pId] || 0) + 1;
+      }
+
+      room.gameData.history = room.gameData.history || [];
+      room.gameData.history.unshift({
+        playerId: pId,
+        playerName: player ? player.name : 'مجهول',
+        won,
+        count,
+        target,
+        topic: room.gameData.topic,
+        time: new Date().toLocaleTimeString('ar-SA')
+      });
+
+      // الرجوع لمرحلة المزايدة بموضوع جديد
+      const newTopic = getRandomAdedTopic(room.gameData.usedTopics || []);
+      room.gameData.topic = newTopic;
+      room.gameData.usedTopics = [...(room.gameData.usedTopics || []), newTopic];
+      room.gameData.phase = 'bidding';
+      room.gameData.currentBid = 0;
+      room.gameData.highestBidderId = null;
+      room.gameData.highestBidderName = null;
+      room.gameData.activePlayerId = null;
+      room.gameData.targetCount = 0;
+      room.gameData.count = 0;
+      room.gameData.isRunning = false;
+      room.gameData.timerStartedAt = null;
+      room.gameData.round = (room.gameData.round || 1) + 1;
 
       io.to(room.code).emit('room_state_update', room);
     }
@@ -690,8 +798,11 @@ io.on('connection', (socket) => {
     if (room && room.hostId === socket.id && room.state === 'aded_playing') {
       const newTopic = getRandomAdedTopic(room.gameData.usedTopics || []);
       room.gameData.topic = newTopic;
-      room.gameData.usedTopics = room.gameData.usedTopics || [];
-      room.gameData.usedTopics.push(newTopic);
+      room.gameData.usedTopics = [...(room.gameData.usedTopics || []), newTopic];
+      room.gameData.phase = 'bidding';
+      room.gameData.currentBid = 0;
+      room.gameData.highestBidderId = null;
+      room.gameData.highestBidderName = null;
       room.gameData.count = 0;
       room.gameData.isRunning = false;
       room.gameData.timerStartedAt = null;
@@ -703,19 +814,10 @@ io.on('connection', (socket) => {
     const room = getRoom(code);
     if (room && room.hostId === socket.id && room.state === 'aded_playing' && customTopic) {
       room.gameData.topic = String(customTopic).trim().slice(0, 120);
-      room.gameData.count = 0;
-      room.gameData.isRunning = false;
-      room.gameData.timerStartedAt = null;
-      io.to(room.code).emit('room_state_update', room);
-    }
-  });
-
-  socket.on('host_aded_set_player', ({ code, playerId }) => {
-    const room = getRoom(code);
-    if (room && room.hostId === socket.id && room.state === 'aded_playing') {
-      room.gameData.activePlayerId = playerId;
-      const idx = (room.gameData.contestants || []).indexOf(playerId);
-      if (idx !== -1) room.gameData.currentTurnIdx = idx;
+      room.gameData.phase = 'bidding';
+      room.gameData.currentBid = 0;
+      room.gameData.highestBidderId = null;
+      room.gameData.highestBidderName = null;
       room.gameData.count = 0;
       room.gameData.isRunning = false;
       room.gameData.timerStartedAt = null;
@@ -758,48 +860,12 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('host_aded_save_score', ({ code }) => {
+  socket.on('host_aded_end_game', ({ code }) => {
     const room = getRoom(code);
     if (room && room.hostId === socket.id && room.state === 'aded_playing') {
-      const pId = room.gameData.activePlayerId;
-      const count = room.gameData.count || 0;
-      if (pId) {
-        room.gameData.scores = room.gameData.scores || {};
-        room.gameData.scores[pId] = Math.max(room.gameData.scores[pId] || 0, count);
-
-        const player = room.players.find(p => p.id === pId);
-        room.gameData.history = room.gameData.history || [];
-        room.gameData.history.unshift({
-          playerId: pId,
-          playerName: player ? player.name : 'مجهول',
-          count,
-          topic: room.gameData.topic,
-          time: new Date().toLocaleTimeString('ar-SA')
-        });
-      }
-
-      // Advance turn in contestants list
-      const contestants = room.gameData.contestants || room.players.map(p => p.id);
-      const nextIdx = (room.gameData.currentTurnIdx || 0) + 1;
-
-      if (nextIdx >= contestants.length) {
-        // Round Finished! Everyone completed their turn!
-        room.state = 'aded_results';
-        room.gameData.isRunning = false;
-        room.gameData.timerStartedAt = null;
-      } else {
-        // Next contestant's turn
-        room.gameData.currentTurnIdx = nextIdx;
-        room.gameData.activePlayerId = contestants[nextIdx] || room.players[0]?.id;
-        room.gameData.count = 0;
-        room.gameData.isRunning = false;
-        room.gameData.timerStartedAt = null;
-        const nextTopic = getRandomAdedTopic(room.gameData.usedTopics || []);
-        room.gameData.topic = nextTopic;
-        room.gameData.usedTopics = room.gameData.usedTopics || [];
-        room.gameData.usedTopics.push(nextTopic);
-      }
-
+      room.state = 'aded_results';
+      room.gameData.isRunning = false;
+      room.gameData.timerStartedAt = null;
       io.to(room.code).emit('room_state_update', room);
     }
   });

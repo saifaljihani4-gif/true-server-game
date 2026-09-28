@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronRight, Users, Bell, Check, X, RotateCcw, Crown, Sparkles, LogOut } from 'lucide-react';
+import { ChevronRight, Users, Bell, Check, X, RotateCcw, Crown, Sparkles, LogOut, HelpCircle, ArrowRightLeft, ArrowUpDown, Info } from 'lucide-react';
 import { sfx } from '@/game/sfx';
 
 export function HoroofLobby({ room, socket, onBack, isHost }: { room: any; socket: any; onBack: () => void; isHost: boolean }) {
@@ -8,6 +8,8 @@ export function HoroofLobby({ room, socket, onBack, isHost }: { room: any; socke
   const hostPlayer = room.players.find((p: any) => p.id === room.hostId);
   const greenPlayers = room.players.filter((p: any) => room.gameData?.teams?.[p.id] === 'green' && p.id !== room.hostId);
   const bluePlayers = room.players.filter((p: any) => (room.gameData?.teams?.[p.id] === 'blue' || room.gameData?.teams?.[p.id] === 'orange') && p.id !== room.hostId);
+
+  const [showRules, setShowRules] = useState(false);
 
   return (
     <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col pt-14 sm:pt-6 px-3 sm:px-6 pb-8 items-center">
@@ -138,12 +140,48 @@ export function HoroofLobby({ room, socket, onBack, isHost }: { room: any; socke
         </div>
       </div>
 
+      {/* Rules & Explanation Card */}
+      <div className="w-full max-w-4xl glass-panel p-4 sm:p-5 rounded-2xl border border-white/10 mb-5 text-start">
+        <div className="flex items-center gap-2 mb-3 text-amber-400 font-bold text-sm sm:text-base border-b border-white/10 pb-2">
+          <Info size={18} />
+          <span>طريقة الحل وقواعد الفوز لكل فريق:</span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs sm:text-sm">
+          <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/20">
+            <div className="flex items-center gap-2 font-bold text-emerald-400 mb-1">
+              <ArrowRightLeft size={16} />
+              <span>طريقة فوز الفريق الأخضر (أفقي):</span>
+            </div>
+            <p className="text-gray-300 leading-relaxed text-[11px] sm:text-xs">
+              هدفكم ربط الشبكة من أقصى اليمين إلى أقصى اليسار. جاوبوا على الحروف المتجاورة لتشكيل جسر أخضر متصل من الطرف الأيمن للطرف الأيسر!
+            </p>
+          </div>
+
+          <div className="p-3 rounded-xl bg-sky-950/30 border border-sky-500/20">
+            <div className="flex items-center gap-2 font-bold text-sky-400 mb-1">
+              <ArrowUpDown size={16} />
+              <span>طريقة فوز الفريق الأزرق (رأسي):</span>
+            </div>
+            <p className="text-gray-300 leading-relaxed text-[11px] sm:text-xs">
+              هدفكم ربط الشبكة من أعلى نقطة إلى أسفل نقطة. جاوبوا على الحروف المتجاورة لتشكيل جسر أزرق متصل من الشريط العلوي إلى الشريط السفلي!
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-2.5 pt-2 border-t border-white/5 flex flex-wrap items-center justify-between text-[11px] text-gray-400 gap-2">
+          <span>نظام الإجابة: من يضغط الجرس أولاً يحق له الإجابة صوتياً.</span>
+          <span>التلميح: يتوفر تلميح ذكي لعدد الحروف عند الحاجة.</span>
+          <span>التكتيك: اقطعوا الحروف التي يحتاجها الفريق الآخر لمنعه من إكمال خطه!</span>
+        </div>
+      </div>
+
       {isHost ? (
         <div className="flex flex-col items-center gap-2">
           <button
             onClick={() => socket.emit('host_start_horoof', { code })}
             disabled={greenPlayers.length === 0 || bluePlayers.length === 0}
-            className="btn-clean font-kufi bg-gradient-to-b from-purple-700 to-purple-900 hover:from-purple-600 hover:to-purple-800 text-white border border-purple-400/40 px-8 sm:px-10 py-3 sm:py-3.5 rounded-2xl text-base sm:text-lg font-bold shadow-[0_0_25px_rgba(168,85,247,0.4)] disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 transition-all"
+            className="btn-clean font-kufi bg-gradient-to-r from-purple-700 to-purple-900 hover:from-purple-600 hover:to-purple-800 text-white border border-purple-400/40 px-8 sm:px-10 py-3 sm:py-3.5 rounded-2xl text-base sm:text-lg font-bold shadow-[0_0_25px_rgba(168,85,247,0.4)] disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 transition-all"
           >
             بدء المسابقة
           </button>
@@ -176,6 +214,9 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
   const round = gd.round || 1;
   const scores = gd.scores || { green: 0, blue: 0, orange: 0 };
   const blueScore = scores.blue ?? scores.orange ?? 0;
+  const showHint = gd.showHint;
+
+  const [rulesModalOpen, setRulesModalOpen] = useState(false);
 
   const handleCellClick = (cell: any) => {
     if (cell.owner) return;
@@ -190,12 +231,23 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
     <main className="fade-screen relative flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-between pt-14 sm:pt-6 px-2 sm:px-5 pb-6">
       {/* 1. TOP HEADER & SCOREBOARD */}
       <div className="w-full max-w-4xl flex items-center justify-between gap-2 mb-3 px-1">
-        <button
-          onClick={() => { if (isHost) socket.emit('host_back_to_lobby', { code }); onBack(); }}
-          className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-gray-400 hover:text-white shrink-0 transition-colors"
-        >
-          <ChevronRight size={14} /> {isHost ? 'اللوبي' : 'خروج'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => { if (isHost) socket.emit('host_back_to_lobby', { code }); onBack(); }}
+            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-gray-400 hover:text-white shrink-0 transition-colors"
+          >
+            <ChevronRight size={14} /> {isHost ? 'اللوبي' : 'خروج'}
+          </button>
+
+          <button
+            onClick={() => setRulesModalOpen(true)}
+            className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-bold text-amber-300 hover:text-white transition-colors"
+            title="طريقة الحل والشرح"
+          >
+            <HelpCircle size={14} />
+            <span className="hidden sm:inline">شرح اللعبة</span>
+          </button>
+        </div>
 
         <div className="flex items-center gap-2 sm:gap-4 shrink-0">
           <div className="flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-500/50 px-3.5 py-1.5 rounded-full text-xs font-bold text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
@@ -325,6 +377,15 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
               {activeQuestion.q}
             </h3>
 
+            {/* Hint Box (تلميح للحل) */}
+            {activeQuestion.hint && (showHint || isHost) && (
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs sm:text-sm font-bold shadow-md fade-in-up">
+                <Sparkles size={14} className="text-amber-400 shrink-0" />
+                <span>تلميح للحل:</span>
+                <span className="text-white font-medium">{activeQuestion.hint}</span>
+              </div>
+            )}
+
             {/* Buzzer Status or Button */}
             {buzzedPlayer ? (
               <div className={`px-4 py-2 rounded-xl border text-xs sm:text-sm font-bold winner-explosion ${buzzedPlayer.team === 'green' ? 'bg-emerald-950/80 border-emerald-500 text-emerald-300' : 'bg-sky-950/80 border-sky-500 text-sky-300'}`}>
@@ -355,9 +416,19 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
             {/* Host Controls */}
             {isHost && (
               <div className="w-full mt-2 pt-3 border-t border-white/10 flex flex-col items-center gap-2.5">
-                <div className="bg-purple-950/50 border border-purple-500/30 px-4 py-1.5 rounded-xl text-xs sm:text-sm">
-                  <span className="text-gray-400">الإجابة الصحيحة: </span>
-                  <span className="text-purple-300 font-bold font-mono">{activeQuestion.a}</span>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <div className="bg-purple-950/50 border border-purple-500/30 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm">
+                    <span className="text-gray-400">الإجابة الصحيحة: </span>
+                    <span className="text-purple-300 font-bold font-mono">{activeQuestion.a}</span>
+                  </div>
+
+                  <button
+                    onClick={() => socket.emit('host_horoof_toggle_hint', { code })}
+                    className="btn-clean px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-amber-300 font-bold text-xs flex items-center gap-1.5 transition-colors"
+                  >
+                    <Sparkles size={13} />
+                    <span>{showHint ? 'إخفاء التلميح عن المتسابقين' : 'كشف التلميح للمتسابقين'}</span>
+                  </button>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center gap-2 w-full">
@@ -402,6 +473,63 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
           </div>
         )}
       </div>
+
+      {/* Rules Modal */}
+      {rulesModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm fade-screen">
+          <div className="w-full max-w-lg glass-panel p-5 sm:p-6 rounded-3xl border border-white/20 text-start shadow-2xl relative">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/10">
+              <div className="flex items-center gap-2 text-amber-400 font-kufi font-bold text-lg">
+                <Info size={20} />
+                <h2>دليل وقواعد لعبة حروف:</h2>
+              </div>
+              <button
+                onClick={() => setRulesModalOpen(false)}
+                className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs sm:text-sm">
+              <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/30">
+                <div className="flex items-center gap-2 font-bold text-emerald-400 mb-1.5 text-sm">
+                  <ArrowRightLeft size={16} />
+                  <span>طريقة فوز الفريق الأخضر (المسار الأفقي):</span>
+                </div>
+                <p className="text-gray-300 leading-relaxed text-xs">
+                  يبدأ الفريق الأخضر من الطرف الأيمن ويتحرك نحو الطرف الأيسر. هدفكم الإجابة على الحروف المتجاورة لتشكيل خط أو جسر متصل بالكامل من اليمين إلى اليسار ↔.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-sky-950/40 border border-sky-500/30">
+                <div className="flex items-center gap-2 font-bold text-sky-400 mb-1.5 text-sm">
+                  <ArrowUpDown size={16} />
+                  <span>طريقة فوز الفريق الأزرق (المسار الرأسي):</span>
+                </div>
+                <p className="text-gray-300 leading-relaxed text-xs">
+                  يبدأ الفريق الأزرق من الشريط العلوي ويتحرك نحو الشريط السفلي. هدفكم الإجابة على الحروف المتجاورة لتشكيل خط أو جسر متصل بالكامل من الأعلى إلى الأسفل ↕.
+                </p>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-xs text-gray-300 space-y-1.5">
+                <div className="font-bold text-white mb-1">خطوات الجولة والتنافس:</div>
+                <p>1. الفريق صاحب الدور يختار الحرف المطلوب لفتحه.</p>
+                <p>2. يظهر السؤال والتلميح، وأسرع متسابق يضغط الجرس يحصل على حق الإجابة شفهياً.</p>
+                <p>3. إذا أجاب صح يلوّن الحكم الحرف بلون فريقه! وإذا أخطأ يُعاد فتح الجرس.</p>
+                <p>4. بإمكانك اختيار حروف لقطع الطريق على الفريق الآخر ومنعه من إكمال خطه!</p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setRulesModalOpen(false)}
+              className="mt-5 w-full py-3 rounded-2xl bg-white text-black font-kufi font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-transform"
+            >
+              فهمت، متابعة اللعبة
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

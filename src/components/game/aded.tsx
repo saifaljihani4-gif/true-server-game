@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { ChevronRight, Crown, Play, Square, RotateCcw, Plus, Minus, Shuffle, Trophy, Users, Edit3, ArrowLeft, Sparkles, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, Crown, Play, Square, RotateCcw, Plus, Minus, Shuffle, Trophy, Users, Edit3, ArrowLeft, Sparkles, CheckCircle2, XCircle, Gavel, Flame } from 'lucide-react';
 import { sfx } from '@/game/sfx';
 
 // -------------------------------------------------------------
-// 1. ADED LOBBY VIEW (تجهيز ودخول المتسابقين قبل بدء الدور)
+// 1. ADED LOBBY VIEW (تجهيز ودخول المتسابقين قبل بدء المزايدة)
 // -------------------------------------------------------------
 export function AdedLobbyView({ room, socket, onBack, isHost }: { room: any; socket: any; onBack: () => void; isHost: boolean }) {
   const code = room.code;
@@ -36,15 +36,15 @@ export function AdedLobbyView({ room, socket, onBack, isHost }: { room: any; soc
 
       {/* Main Container */}
       <div className="w-full max-w-xl flex flex-col items-center text-center my-auto py-3 pop-in-bouncy">
-        <div className="inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-full text-xs font-bold mb-3">
-          <Trophy size={14} /> تحدي الـ 30 ثانية
+        <div className="inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3.5 py-1 rounded-full text-xs font-bold mb-3">
+          <Gavel size={14} /> نظام المزايدة والتحدي بـ 30 ثانية
         </div>
 
         <h1 className="font-kufi text-2xl sm:text-4xl font-black text-white mb-2">
-          لعبة عدّد
+          لعبة عدّد (المزايدة)
         </h1>
-        <p className="text-xs sm:text-sm text-gray-300 max-w-md mx-auto mb-4 sm:mb-6 font-medium">
-          ادخلوا كلكم بالروم، والمسابقة بتمشي بالدور عليكم واحد ورا الثاني!
+        <p className="text-xs sm:text-sm text-gray-300 max-w-md mx-auto mb-4 sm:mb-6 font-medium leading-relaxed">
+          يطرح الهوست التحدي، والكل يزايد على أكبر رقم يقدر يعده في 30 ثانية! صاحب أعلى مزايدة ينزل للميدان ليثبت رقمه ويكسب النقطة!
         </p>
 
         {/* Contestants List Box */}
@@ -53,7 +53,7 @@ export function AdedLobbyView({ room, socket, onBack, isHost }: { room: any; soc
             <div className="flex items-center gap-2">
               <Users size={18} className="text-amber-400" />
               <h2 className="font-kufi text-base sm:text-lg font-bold text-white">
-                ترتيب المتسابقين بالدور ({contestantPlayers.length})
+                المتسابقون المشاركون ({contestantPlayers.length})
               </h2>
             </div>
 
@@ -93,43 +93,45 @@ export function AdedLobbyView({ room, socket, onBack, isHost }: { room: any; soc
             disabled={contestantPlayers.length === 0}
             className="btn-clean font-kufi bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-black px-8 sm:px-10 py-3 sm:py-3.5 rounded-2xl text-base sm:text-lg font-black shadow-[0_8px_25px_rgba(245,158,11,0.35)] disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 active:scale-95 transition-all"
           >
-            بدء المسابقة بالدور
+            بدء مرحلة المزايدة والتحدي
           </button>
         ) : (
           <div className="bg-white/5 border border-white/10 text-gray-300 px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold animate-pulse">
-            بانتظار الهوست لبدء المسابقة بعد اكتمال المتسابقين...
+            بانتظار الهوست لبدء المزايدة بعد اكتمال المتسابقين...
           </div>
         )}
       </div>
 
       <div className="text-xs text-gray-500 font-bold">
-        بإمكان أي شخص الانضمام أو التفرج قبل بدء التحدي
+        المزايدة مفتوحة للجميع ولا يشترط التقيد بترتيب مسبق
       </div>
     </main>
   );
 }
 
 // -------------------------------------------------------------
-// 2. ADED GAME VIEW (واجهة اللعب المكبرة مع الترتيب والعداد الضخم)
+// 2. ADED GAME VIEW (مرحلة المزايدة الحية + مرحلة العد بالـ 30 ثانية)
 // -------------------------------------------------------------
 export function AdedGameView({ room, socket, onBack, isHost }: { room: any; socket: any; onBack: () => void; isHost: boolean }) {
   const code = room.code;
   const gd = room.gameData || {};
   const topic = gd.topic || 'كم تقدر تعدّد في 30 ثانية؟';
   const count = gd.count || 0;
-  const activePlayerId = gd.activePlayerId;
-  const isRunning = gd.isRunning || false;
-  const timerStartedAt = gd.timerStartedAt;
-  const contestants = gd.contestants || room.players.map((p: any) => p.id);
-  const currentTurnIdx = gd.currentTurnIdx || 0;
-  const scores = gd.scores || {};
+  const phase = gd.phase || 'bidding'; // 'bidding' | 'counting'
+  const isCountingPhase = phase === 'counting';
 
-  const activePlayer = room.players.find((p: any) => p.id === activePlayerId) || room.players[0];
+  const currentBid = gd.currentBid || 0;
+  const highestBidderId = gd.highestBidderId;
+  const highestBidderName = gd.highestBidderName;
+  const targetCount = gd.targetCount || currentBid || 5;
+  const activePlayerId = gd.activePlayerId || highestBidderId;
+  const activePlayer = room.players.find((p: any) => p.id === activePlayerId);
   const isMeActive = activePlayer?.id === socket.id;
 
-  // Next player in turn
-  const nextPlayerId = contestants[currentTurnIdx + 1];
-  const nextPlayer = nextPlayerId ? room.players.find((p: any) => p.id === nextPlayerId) : null;
+  const isRunning = gd.isRunning || false;
+  const timerStartedAt = gd.timerStartedAt;
+  const scores = gd.scores || {};
+  const round = gd.round || 1;
 
   // Local synchronized timer
   const [timeLeft, setTimeLeft] = useState(30);
@@ -147,7 +149,7 @@ export function AdedGameView({ room, socket, onBack, isHost }: { room: any; sock
       const remaining = Math.max(0, 30 - elapsed);
       setTimeLeft(remaining);
 
-      // Play tick sound on last 5 seconds
+      // Play tick every second in last 5 seconds
       if (remaining <= 5 && remaining > 0 && remaining !== lastTickRef.current) {
         lastTickRef.current = remaining;
         sfx.tick();
@@ -186,10 +188,32 @@ export function AdedGameView({ room, socket, onBack, isHost }: { room: any; sock
     setShowCustomTopic(false);
   };
 
+  // Custom bid input
+  const [customBidInput, setCustomBidInput] = useState('');
+  const handleCustomBid = (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = parseInt(customBidInput, 10);
+    if (val > currentBid) {
+      sfx.select();
+      socket.emit('aded_place_bid', { code, amount: val });
+      setCustomBidInput('');
+    }
+  };
+
+  const handleQuickBid = (increment: number) => {
+    sfx.select();
+    const newBid = (currentBid || 0) + increment;
+    socket.emit('aded_place_bid', { code, amount: newBid });
+  };
+
+  // Host manual challenger picker state
+  const [selectedChallengerId, setSelectedChallengerId] = useState('');
+  const [manualTarget, setManualTarget] = useState(5);
+
   return (
     <main className="fade-screen relative flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-between pt-14 sm:pt-6 px-3 sm:px-6 pb-6">
-      {/* 1. TOP HEADER & QUEUE STATUS */}
-      <div className="w-full max-w-4xl flex items-center justify-between gap-2 mb-2 sm:mb-4">
+      {/* 1. TOP HEADER & STATUS */}
+      <div className="w-full max-w-4xl flex items-center justify-between gap-2 mb-2 sm:mb-3">
         <button
           onClick={() => { if (isHost) socket.emit('host_back_to_lobby', { code }); onBack(); }}
           className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3.5 py-2 text-xs sm:text-sm font-bold text-gray-400 hover:text-white shrink-0 transition-colors"
@@ -197,30 +221,38 @@ export function AdedGameView({ room, socket, onBack, isHost }: { room: any; sock
           <ChevronRight size={15} /> {isHost ? 'العودة للوبي' : 'خروج'}
         </button>
 
-        {/* Turn Progress Badge */}
-        <div className="flex items-center gap-2 bg-white/10 border border-white/15 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold text-white">
-          <span className="text-amber-400 font-mono font-black text-sm sm:text-base">{currentTurnIdx + 1} / {contestants.length}</span>
-          <span className="text-gray-400">| الدور على:</span>
-          <span className="text-amber-300 font-black text-sm sm:text-base">{activePlayer?.name || 'مجهول'}</span>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 px-3.5 py-1.5 rounded-full text-xs font-bold text-amber-400">
+            <Gavel size={14} />
+            <span>جولة {round}</span>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-1.5 bg-white/10 border border-white/15 px-3 py-1.5 rounded-full text-xs font-bold text-gray-300">
+            <span>الحالة:</span>
+            <span className="text-white font-black">{isCountingPhase ? 'مرحلة العد والتحدي' : 'مرحلة المزايدة'}</span>
+          </div>
         </div>
 
-        <div className="text-xs font-mono font-bold bg-white/10 px-3.5 py-1.5 rounded-full border border-white/15 text-white shrink-0">
-          كود: <span className="font-black text-amber-400">{code}</span>
+        <div className="flex items-center gap-2">
+          {isHost && (
+            <button
+              onClick={() => socket.emit('host_aded_end_game', { code })}
+              className="text-xs font-bold bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full border border-white/15 text-gray-300 transition-colors"
+            >
+              إنهاء اللعبة
+            </button>
+          )}
+          <div className="text-xs font-mono font-bold bg-white/10 px-3.5 py-1.5 rounded-full border border-white/15 text-white shrink-0">
+            كود: <span className="font-black text-amber-400">{code}</span>
+          </div>
         </div>
       </div>
 
-      {/* 2. THE TOPIC CARD & COUNTER */}
+      {/* 2. THE TOPIC CARD */}
       <div className="w-full max-w-xl flex flex-col items-center gap-3 sm:gap-4 my-auto py-1">
-        {/* Active Challenger Banner */}
-        <div className={`w-full max-w-sm py-1.5 px-4 rounded-xl border text-center font-bold text-xs sm:text-sm transition-all ${isMeActive ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.25)] animate-pulse' : 'bg-white/5 border-white/10 text-gray-300'}`}>
-          المتحدي الحالي: <span className="text-white font-black text-sm sm:text-base">{activePlayer?.name}</span> {isMeActive && '(دورك الآن!)'}
-          {nextPlayer && <div className="text-[10px] text-gray-400 font-normal mt-0.5">التالي بعده: {nextPlayer.name}</div>}
-        </div>
-
-        {/* Topic Card */}
-        <div className="w-full glass-panel p-4 sm:p-6 rounded-2xl border border-purple-500/30 text-center relative overflow-hidden shadow-xl">
+        <div className="w-full glass-panel p-4 sm:p-5 rounded-2xl border border-amber-500/30 text-center relative overflow-hidden shadow-xl">
           <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
-          
+
           <span className="text-[10px] sm:text-xs font-bold text-amber-400 uppercase tracking-widest block mb-1.5">
             التحدي المطلوب
           </span>
@@ -230,7 +262,7 @@ export function AdedGameView({ room, socket, onBack, isHost }: { room: any; sock
           </h2>
 
           {isHost && (
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-3.5 pt-3 border-t border-white/10">
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-3 pt-2.5 border-t border-white/10">
               <button
                 onClick={() => socket.emit('host_aded_next_topic', { code })}
                 className="btn-clean flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-gray-200"
@@ -252,7 +284,7 @@ export function AdedGameView({ room, socket, onBack, isHost }: { room: any; sock
                 type="text"
                 value={customTopicInput}
                 onChange={(e) => setCustomTopicInput(e.target.value)}
-                placeholder="اكتب التحدي (مثال: شخصية كرتونية...)"
+                placeholder="اكتب التحدي (مثال: دول تبدأ بحرف الميم...)"
                 className="flex-1 bg-black/70 border border-white/25 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
               />
               <button type="submit" className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl text-xs">
@@ -262,119 +294,258 @@ export function AdedGameView({ room, socket, onBack, isHost }: { room: any; sock
           )}
         </div>
 
-        {/* TIMER AND LIVE COUNTER */}
-        <div className="w-full flex items-center justify-center gap-4 sm:gap-8 my-1">
-          {/* 30s Timer */}
-          <div className="flex flex-col items-center">
-            <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full border-3 sm:border-4 flex flex-col items-center justify-center transition-all ${timeLeft <= 5 ? 'border-red-500 bg-red-950/50 text-red-400 animate-pulse shadow-[0_0_25px_rgba(239,68,68,0.5)]' : 'border-amber-500/50 bg-black/60 text-white'}`}>
-              <span className="font-mono text-2xl sm:text-3xl font-black">{timeLeft}</span>
-              <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">ثانية</span>
-            </div>
-          </div>
+        {/* PHASE A: BIDDING PHASE (المزايدة) */}
+        {!isCountingPhase ? (
+          <div className="w-full flex flex-col items-center gap-3 fade-in-up">
+            {/* Live Highest Bid Box */}
+            <div className="w-full glass-panel p-5 rounded-2xl border border-amber-400/40 text-center shadow-2xl relative overflow-hidden bg-gradient-to-b from-amber-950/30 to-black/60">
+              <div className="text-xs font-bold text-amber-400 mb-1 flex items-center justify-center gap-1.5">
+                <Gavel size={15} />
+                <span>أعلى مزايدة حالية في الروم</span>
+              </div>
 
-          {/* Live Counter */}
-          <div className="flex flex-col items-center">
-            <div className={`px-6 sm:px-10 py-2.5 sm:py-3.5 rounded-2xl bg-gradient-to-b from-purple-950/90 via-[#18112e] to-black border border-purple-400/50 shadow-[0_0_30px_rgba(168,85,247,0.35)] flex flex-col items-center justify-center transition-transform duration-150 ${bumping ? 'scale-110 border-amber-400' : 'scale-100'}`}>
-              <span className="font-mono text-4xl sm:text-6xl font-black text-white drop-shadow-[0_0_20px_rgba(168,85,247,0.8)]">
-                {count}
-              </span>
-              <span className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider">
-                العدد الحالي
-              </span>
-            </div>
-          </div>
-        </div>
+              <div className="font-mono text-5xl sm:text-6xl font-black text-amber-300 my-1 drop-shadow-[0_0_25px_rgba(245,158,11,0.6)]">
+                {currentBid > 0 ? currentBid : '0'}
+              </div>
 
-        {/* 3. HOST CONTROLS */}
-        {isHost ? (
-          <div className="w-full flex flex-col items-center gap-2.5 mt-1 fade-in-up">
-            {/* The Main Count Button */}
-            <div className="flex items-center gap-2.5 w-full max-w-sm justify-center">
-              <button
-                onClick={() => {
-                  sfx.select();
-                  socket.emit('host_aded_increment', { code });
-                }}
-                className="flex-1 btn-clean font-kufi bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-400 hover:to-green-400 text-white py-3 sm:py-3.5 px-6 rounded-2xl text-xl sm:text-2xl font-black shadow-[0_8px_30px_rgba(16,185,129,0.4)] border border-emerald-300/40 flex items-center justify-center gap-2 active:scale-95 transition-all"
-              >
-                <Plus size={24} strokeWidth={3} /> عِدّ (+1)
-              </button>
-
-              <button
-                onClick={() => socket.emit('host_aded_decrement', { code })}
-                disabled={count === 0}
-                className="btn-clean bg-white/10 hover:bg-white/20 text-gray-300 p-3 sm:p-3.5 rounded-2xl border border-white/15 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                title="إنقاص (-1)"
-              >
-                <Minus size={20} />
-              </button>
+              <div className="text-xs sm:text-sm font-bold text-gray-300">
+                {highestBidderName ? (
+                  <span>صاحب المزايدة: <span className="text-white font-black text-sm sm:text-base">{highestBidderName}</span></span>
+                ) : (
+                  <span className="text-gray-400">لا توجد مزايدات بعد - زايدوا الآن!</span>
+                )}
+              </div>
             </div>
 
-            {/* Timer & Finish Controls */}
-            <div className="flex flex-wrap items-center justify-center gap-2 w-full max-w-md">
-              {!isRunning ? (
+            {/* Quick Bid Buttons for Players */}
+            <div className="w-full flex flex-col items-center gap-2">
+              <div className="text-[11px] font-bold text-gray-400">كم تقدر تعدّ في 30 ثانية؟ اضغط لترفع المزايدة:</div>
+
+              <div className="flex flex-wrap items-center justify-center gap-2 w-full max-w-sm">
                 <button
-                  onClick={() => socket.emit('host_aded_start_timer', { code })}
-                  className="btn-clean flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black text-xs sm:text-sm shadow-md"
+                  onClick={() => handleQuickBid(1)}
+                  className="btn-clean px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black text-xs sm:text-sm shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-1"
                 >
-                  <Play size={14} fill="black" /> ابدأ الـ 30 ثانية
+                  <Plus size={14} /> +1 ({currentBid + 1})
                 </button>
-              ) : (
                 <button
-                  onClick={() => socket.emit('host_aded_stop_timer', { code })}
-                  className="btn-clean flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs sm:text-sm shadow-md"
+                  onClick={() => handleQuickBid(2)}
+                  className="btn-clean px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black text-xs sm:text-sm shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-1"
                 >
-                  <Square size={14} fill="white" /> إيقاف المؤقت
+                  <Plus size={14} /> +2 ({currentBid + 2})
                 </button>
-              )}
+                <button
+                  onClick={() => handleQuickBid(5)}
+                  className="btn-clean px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black text-xs sm:text-sm shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-1"
+                >
+                  <Plus size={14} /> +5 ({currentBid + 5})
+                </button>
+              </div>
 
-              <button
-                onClick={() => socket.emit('host_aded_save_score', { code })}
-                className="btn-clean flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs sm:text-sm shadow-md"
-              >
-                <CheckCircle2 size={14} /> حفظ الدور والانتقال للتالي
-              </button>
+              <form onSubmit={handleCustomBid} className="flex gap-1.5 w-full max-w-xs mt-1">
+                <input
+                  type="number"
+                  min={currentBid + 1}
+                  value={customBidInput}
+                  onChange={(e) => setCustomBidInput(e.target.value)}
+                  placeholder={`اكتب رقم أعلى من ${currentBid}`}
+                  className="flex-1 bg-black/60 border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white text-center font-bold font-mono focus:outline-none focus:border-amber-400"
+                />
+                <button type="submit" className="px-3.5 py-1.5 bg-white text-black font-bold text-xs rounded-xl hover:scale-105 transition-transform">
+                  زايد
+                </button>
+              </form>
             </div>
+
+            {/* Host Execution Control */}
+            {isHost && (
+              <div className="w-full mt-2 pt-3 border-t border-white/10 flex flex-col items-center gap-2.5">
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full max-w-sm justify-center">
+                  {/* Option to select any player manually without order */}
+                  <select
+                    value={selectedChallengerId || highestBidderId || ''}
+                    onChange={(e) => setSelectedChallengerId(e.target.value)}
+                    className="bg-black/80 border border-white/20 text-white text-xs font-bold rounded-xl px-3 py-2 outline-none w-full sm:w-auto"
+                  >
+                    <option value="">{highestBidderName ? `المزايد الأعلى: ${highestBidderName}` : 'اختر المتحدي يدوياً'}</option>
+                    {room.players.map((p: any) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+
+                  <input
+                    type="number"
+                    min="1"
+                    value={manualTarget || currentBid || 5}
+                    onChange={(e) => setManualTarget(parseInt(e.target.value, 10) || 1)}
+                    className="w-20 bg-black/80 border border-white/20 text-amber-300 font-mono text-center text-sm font-black rounded-xl px-2 py-1.5"
+                    title="الرقم المطلوب"
+                  />
+                </div>
+
+                <button
+                  onClick={() => socket.emit('host_aded_start_challenge', {
+                    code,
+                    playerId: selectedChallengerId || highestBidderId || room.players[0]?.id,
+                    targetCount: manualTarget || currentBid || 5
+                  })}
+                  className="w-full max-w-sm btn-clean font-kufi bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-400 hover:to-green-400 text-white py-3 px-6 rounded-2xl text-base sm:text-lg font-black shadow-[0_8px_30px_rgba(16,185,129,0.4)] border border-emerald-300/40 flex items-center justify-center gap-2 active:scale-95 transition-all"
+                >
+                  <Play size={18} fill="white" />
+                  <span>تثبيت المزايدة وبدء الـ 30 ثانية</span>
+                </button>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="text-center py-2">
-            <p className="text-sm sm:text-base font-bold text-gray-300">
-              {isMeActive ? 'دورك الحين! سمّع الهوست أكبر عدد تقدر عليه' : `الهوست قاعد يحسب لـ ${activePlayer?.name || 'المتسابق'}`}
-            </p>
+          /* PHASE B: COUNTING & EXECUTION PHASE (مرحلة العد والتحدي) */
+          <div className="w-full flex flex-col items-center gap-3 fade-in-up">
+            {/* Active Challenger & Target Pill */}
+            <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-2 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center sm:text-start">
+              <div className="flex items-center gap-2">
+                <Flame size={18} className="text-amber-400" />
+                <span className="text-xs sm:text-sm font-bold text-gray-200">
+                  المتحدي: <span className="text-white font-black text-sm sm:text-base">{activePlayer?.name || 'مجهول'}</span>
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 px-3.5 py-1 rounded-xl bg-amber-500/20 text-amber-300 text-xs sm:text-sm font-bold border border-amber-500/30">
+                <span>المطلوب عَدّه:</span>
+                <span className="font-mono text-base sm:text-lg font-black text-white">{targetCount}</span>
+              </div>
+            </div>
+
+            {/* Timer and Live Counter */}
+            <div className="w-full flex items-center justify-center gap-4 sm:gap-8 my-1">
+              {/* 30s Timer */}
+              <div className="flex flex-col items-center">
+                <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full border-3 sm:border-4 flex flex-col items-center justify-center transition-all ${timeLeft <= 5 ? 'border-red-500 bg-red-950/50 text-red-400 animate-pulse shadow-[0_0_25px_rgba(239,68,68,0.5)]' : 'border-amber-500/50 bg-black/60 text-white'}`}>
+                  <span className="font-mono text-2xl sm:text-3xl font-black">{timeLeft}</span>
+                  <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">ثانية</span>
+                </div>
+              </div>
+
+              {/* Live Counter (Progress against target) */}
+              <div className="flex flex-col items-center">
+                <div className={`px-6 sm:px-10 py-2.5 sm:py-3.5 rounded-2xl bg-gradient-to-b from-purple-950/90 via-[#18112e] to-black border border-purple-400/50 shadow-[0_0_30px_rgba(168,85,247,0.35)] flex flex-col items-center justify-center transition-transform duration-150 ${bumping ? 'scale-110 border-amber-400' : 'scale-100'}`}>
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-mono text-4xl sm:text-6xl font-black text-white drop-shadow-[0_0_20px_rgba(168,85,247,0.8)]">
+                      {count}
+                    </span>
+                    <span className="text-xs sm:text-sm font-mono text-gray-400 font-bold">
+                      / {targetCount}
+                    </span>
+                  </div>
+                  <span className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider">
+                    {count >= targetCount ? 'تم الوصول للمطلوب!' : 'العدد المحسوب'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Host Counting & Judging Controls */}
+            {isHost ? (
+              <div className="w-full flex flex-col items-center gap-2.5 mt-1 fade-in-up">
+                {/* The Main Count Button */}
+                <div className="flex items-center gap-2.5 w-full max-w-sm justify-center">
+                  <button
+                    onClick={() => {
+                      sfx.select();
+                      socket.emit('host_aded_increment', { code });
+                    }}
+                    className="flex-1 btn-clean font-kufi bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-400 hover:to-green-400 text-white py-3 sm:py-3.5 px-6 rounded-2xl text-xl sm:text-2xl font-black shadow-[0_8px_30px_rgba(16,185,129,0.4)] border border-emerald-300/40 flex items-center justify-center gap-2 active:scale-95 transition-all"
+                  >
+                    <Plus size={24} strokeWidth={3} /> عِدّ (+1)
+                  </button>
+
+                  <button
+                    onClick={() => socket.emit('host_aded_decrement', { code })}
+                    disabled={count === 0}
+                    className="btn-clean bg-white/10 hover:bg-white/20 text-gray-300 p-3 sm:p-3.5 rounded-2xl border border-white/15 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    title="إنقاص (-1)"
+                  >
+                    <Minus size={20} />
+                  </button>
+                </div>
+
+                {/* Timer Controls */}
+                <div className="flex items-center gap-2 w-full max-w-sm justify-center">
+                  {!isRunning ? (
+                    <button
+                      onClick={() => socket.emit('host_aded_start_timer', { code })}
+                      className="flex-1 btn-clean flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black text-xs sm:text-sm shadow-md"
+                    >
+                      <Play size={14} fill="black" /> ابدأ الـ 30 ثانية
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => socket.emit('host_aded_stop_timer', { code })}
+                      className="flex-1 btn-clean flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs sm:text-sm shadow-md"
+                    >
+                      <Square size={14} fill="white" /> إيقاف المؤقت
+                    </button>
+                  )}
+                </div>
+
+                {/* Judgement Buttons */}
+                <div className="flex items-center gap-2 w-full max-w-sm justify-center mt-1">
+                  <button
+                    onClick={() => socket.emit('host_aded_finish_challenge', { code, outcome: 'win' })}
+                    className="flex-1 btn-clean flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs sm:text-sm shadow-md"
+                  >
+                    <CheckCircle2 size={16} /> نجح في التحدي (+نقطة)
+                  </button>
+                  <button
+                    onClick={() => socket.emit('host_aded_finish_challenge', { code, outcome: 'lose' })}
+                    className="flex-1 btn-clean flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs sm:text-sm shadow-md"
+                  >
+                    <XCircle size={16} /> فشل في التحدي
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-2">
+                <p className="text-sm sm:text-base font-bold text-gray-200">
+                  {isMeActive ? 'دورك الحين! سمّع الهوست وعِدّ أسرع ما عندك!' : `الهوست قاعد يحسب لـ ${activePlayer?.name || 'المتسابق'}`}
+                </p>
+              </div>
+            )}
           </div>
         )}
-      </div>
 
-      {/* Bottom turn reminder */}
-      <div className="text-xs text-gray-500 font-bold">
-        ينتقل الدور تلقائياً بالترتيب لكل المتسابقين حتى نهاية الجولة
+        {/* Live Scoreboard Pill Strip */}
+        <div className="w-full flex items-center justify-center gap-2 flex-wrap pt-2 border-t border-white/10 text-xs">
+          <span className="text-gray-400 font-bold">لوحة النقاط:</span>
+          {room.players.map((p: any) => (
+            <span key={p.id} className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-200 font-bold">
+              {p.name}: <span className="text-amber-400 font-mono font-black">{scores[p.id] || 0}</span>
+            </span>
+          ))}
+        </div>
       </div>
     </main>
   );
 }
 
 // -------------------------------------------------------------
-// 3. ADED RESULTS VIEW (تتويج الفائز ولوحة الترتيب النهائية)
+// 3. ADED RESULTS VIEW (لوحة الشرف وتتويج الفائز)
 // -------------------------------------------------------------
-export function AdedResultsView({ room, socket, isHost, onBack }: { room: any; socket: any; isHost: boolean; onBack: () => void }) {
+export function AdedResultsView({ room, socket, onBack, isHost }: { room: any; socket: any; onBack: () => void; isHost: boolean }) {
   const code = room.code;
   const gd = room.gameData || {};
   const scores = gd.scores || {};
   const history = gd.history || [];
-  const contestants = gd.contestants || room.players.map((p: any) => p.id);
 
   useEffect(() => {
     sfx.win();
   }, []);
 
-  // Sort contestants by score
-  const ranked = contestants
-    .map((id: string) => ({
-      id,
-      player: room.players.find((p: any) => p.id === id),
-      score: scores[id] || 0
+  // Sort players by score
+  const ranked = room.players
+    .map((p: any) => ({
+      ...p,
+      score: scores[p.id] || 0
     }))
-    .filter((item: any) => item.player)
     .sort((a: any, b: any) => b.score - a.score);
 
   const champion = ranked[0];
@@ -402,78 +573,61 @@ export function AdedResultsView({ room, socket, isHost, onBack }: { room: any; s
           <Crown size={28} className="text-yellow-400" />
         </div>
 
-        <h1 className="font-kufi text-2xl sm:text-4xl font-black text-white mb-1.5">
-          انتهت الجولة!
+        <h1 className="font-kufi text-2xl sm:text-4xl font-black text-white mb-1.5 winner-explosion">
+          بطل تحدي المزايدة!
         </h1>
-        <p className="text-xs sm:text-sm text-gray-400 mb-4 font-medium">
-          تمت مشاركة جميع المتسابقين بالدور
+        <p className="text-xs sm:text-sm text-gray-400 mb-5">
+          أكثر من حقق تحديات المزايدة بنجاح في الـ 30 ثانية
         </p>
 
         {/* Champion Card */}
         {champion && (
-          <div className="w-full glass-panel p-4 sm:p-6 rounded-2xl border border-amber-500/50 shadow-[0_0_30px_rgba(245,158,11,0.25)] mb-4 winner-explosion">
-            <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest block mb-1">
-              المركز الأول (بطل التعداد)
-            </span>
-            <div className="text-xl sm:text-3xl font-black text-white font-kufi mb-1">
-              {champion.player.name}
-            </div>
-            <div className="text-3xl sm:text-5xl font-mono font-black text-amber-400">
-              {champion.score} <span className="text-sm text-gray-300 font-sans font-bold">عنصر</span>
+          <div className="w-full p-5 rounded-2xl bg-gradient-to-b from-amber-500/20 via-black/40 to-black/60 border-2 border-amber-400 shadow-[0_0_40px_rgba(245,158,11,0.3)] mb-5">
+            <div className="text-xs text-amber-300 font-bold mb-1">الفائز بالمركز الأول</div>
+            <div className="font-kufi text-2xl sm:text-3xl font-black text-white">{champion.name}</div>
+            <div className="font-mono text-xl sm:text-2xl font-black text-amber-400 mt-1">
+              {champion.score} نقطة
             </div>
           </div>
         )}
 
         {/* Leaderboard Table */}
         <div className="w-full bg-black/60 border border-white/15 rounded-2xl p-3 sm:p-5 mb-5 text-start">
-          <h3 className="text-xs sm:text-sm font-bold text-gray-400 mb-2.5 px-1 flex items-center gap-1.5">
-            <Trophy size={14} className="text-amber-400" /> الترتيب النهائي للجولة:
-          </h3>
-          <div className="space-y-1.5">
+          <h2 className="font-kufi text-sm sm:text-base font-bold text-white mb-3">ترتيب جميع المتسابقين:</h2>
+          <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
             {ranked.map((item: any, idx: number) => (
-              <div
-                key={item.id}
-                className={`flex items-center justify-between p-2.5 sm:p-3 rounded-xl border text-xs sm:text-sm font-bold ${idx === 0 ? 'bg-amber-500/15 border-amber-500/40 text-amber-300' : 'bg-white/5 border-white/5 text-gray-200'}`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center font-mono text-[11px] font-black ${idx === 0 ? 'bg-amber-400 text-black' : 'bg-white/10 text-gray-400'}`}>
+              <div key={item.id} className="flex items-center justify-between p-2 rounded-xl bg-white/5 text-xs sm:text-sm font-bold text-white">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-white/10 text-gray-300 text-xs flex items-center justify-center font-mono">
                     {idx + 1}
                   </span>
-                  <span>{item.player.name}</span>
+                  <span>{item.name}</span>
                 </div>
-                <span className="font-mono font-black text-base text-white">
-                  {item.score}
-                </span>
+                <span className="font-mono text-amber-400 font-black">{item.score} نقطة</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Host Control Actions */}
+        {/* Host Actions */}
         {isHost ? (
-          <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+          <div className="flex flex-col sm:flex-row gap-2.5 w-full max-w-sm">
             <button
-              onClick={() => socket.emit('host_aded_new_round', { code })}
-              className="flex-1 btn-clean font-kufi bg-gradient-to-r from-amber-500 to-yellow-500 text-black px-6 py-4 rounded-2xl text-base sm:text-lg font-black shadow-lg hover:scale-105 transition-all"
+              onClick={() => socket.emit('host_aded_start_game', { code })}
+              className="flex-1 btn-clean font-kufi bg-gradient-to-r from-amber-500 to-yellow-500 text-black py-3 rounded-xl font-black text-sm shadow-lg hover:scale-105 transition-all"
             >
-              جولة جديدة بنفس المتسابقين
+              جولة مزايدة جديدة
             </button>
             <button
-              onClick={() => socket.emit('host_start_aded', { code })}
-              className="btn-clean font-kufi bg-white/10 text-white border border-white/20 px-6 py-4 rounded-2xl text-sm sm:text-base font-bold hover:bg-white/20 transition-colors"
+              onClick={() => socket.emit('host_back_to_lobby', { code })}
+              className="flex-1 btn-clean font-kufi bg-white/10 hover:bg-white/20 text-white border border-white/20 py-3 rounded-xl font-bold text-sm transition-colors"
             >
-              تجهيز المتسابقين
+              العودة للوبي الرئيسي
             </button>
           </div>
         ) : (
-          <div className="bg-white/5 border border-white/10 text-gray-300 px-6 py-3 rounded-full text-xs sm:text-sm font-bold animate-pulse">
-            بانتظار الهوست لبدء جولة جديدة أو العودة...
-          </div>
+          <div className="text-xs text-gray-400 font-bold">بانتظار الهوست لبدء جولة جديدة...</div>
         )}
-      </div>
-
-      <div className="text-xs text-gray-500 font-bold">
-        True Server Gaming Activity
       </div>
     </main>
   );

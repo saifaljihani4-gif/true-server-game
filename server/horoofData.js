@@ -308,11 +308,21 @@ export function generateHoroofBoard(usedQuestions = new Set()) {
   return board;
 }
 
-// جلب سؤال عشوائي للحرف لم يُستخدم من قبل
+export function generateSmartHint(ans, letter) {
+  if (!ans) return `كلمة تبدأ بحرف (${letter})`;
+  const primary = String(ans).split('(')[0].split('/')[0].split('أو')[0].trim();
+  const clean = primary.replace(/^(ال|الـ)/, '').trim();
+  const len = clean.length;
+  if (len <= 1) return `تبدأ بحرف (${letter})`;
+  const lastChar = clean[clean.length - 1];
+  return `مكونة من ${len} حروف (تنتهي بحرف "${lastChar}")`;
+}
+
+// جلب سؤال عشوائي للحرف لم يُستخدم من قبل مع تلميح ذكي للحل
 export function getQuestionForLetter(letter, usedQIds = new Set()) {
   const questions = HOROOF_QUESTIONS[letter] || [];
   if (questions.length === 0) {
-    return { q: `كلمة تبدأ بحرف (${letter})؟`, a: letter };
+    return { q: `كلمة تبدأ بحرف (${letter})؟`, a: letter, hint: `حرف ${letter}` };
   }
   // استبعاد الأسئلة المستعملة
   const available = questions.filter((_, i) => !usedQIds.has(`${letter}-${i}`));
@@ -323,8 +333,9 @@ export function getQuestionForLetter(letter, usedQIds = new Set()) {
   // نحفظ المفتاح المميز
   const realIdx = questions.indexOf(qObj);
   const qId = `${letter}-${realIdx}`;
+  const hint = qObj.hint || generateSmartHint(qObj.a, letter);
   
-  return { ...qObj, id: qId };
+  return { ...qObj, id: qId, hint };
 }
 
 // الجيران في الشبكة السداسية (أفقي Staggered Rows)
