@@ -24,6 +24,62 @@ const io = new Server(httpServer, {
 });
 
 const rooms = new Map();
+const voiceRooms = new Map();
+
+const DEFAULT_PUBLIC_ROOMS = [
+  { code: 'PUB1', name: 'غرفة الألعاب والتحديات 1', isPermanent: true, isPublic: true },
+  { code: 'PUB2', name: 'مجلس الفويس والمنافسات 2', isPermanent: true, isPublic: true },
+  { code: 'PUB3', name: 'ديوانية برا السالفة ومافيا', isPermanent: true, isPublic: true }
+];
+
+DEFAULT_PUBLIC_ROOMS.forEach(pr => {
+  rooms.set(pr.code, {
+    hostId: null,
+    code: pr.code,
+    name: pr.name,
+    isPermanent: true,
+    isPublic: true,
+    players: [],
+    state: 'lobby',
+    gameData: {},
+    voting: { active: false, votes: {}, endTime: null }
+  });
+});
+
+const getGameDisplayName = (state, gameData) => {
+  if (!state || state === 'lobby') return 'في صالة الانتظار';
+  if (state.startsWith('barra')) return 'برا السالفة';
+  if (state.startsWith('mafia')) return 'مافيا';
+  if (state.startsWith('codenames')) return 'كود نيمز';
+  if (state.startsWith('horoof')) return 'تحدي الحروف';
+  if (state.startsWith('aded')) return 'عدّد';
+  return 'جاري اللعب';
+};
+
+const getPublicRoomsList = () => {
+  const list = [];
+  rooms.forEach((r, c) => {
+    if (r.isPublic) {
+      const vr = voiceRooms.get(c);
+      list.push({
+        code: r.code,
+        name: r.name || `غرفة ${r.code}`,
+        playersCount: r.players.length,
+        state: r.state,
+        gameName: getGameDisplayName(r.state, r.gameData),
+        isPermanent: !!r.isPermanent,
+        hostName: r.players.find(p => p.id === r.hostId)?.name || (r.players.length === 0 ? 'متاحة للجميع' : 'مقدم الروم'),
+        hasVoice: true,
+        voiceCount: vr ? vr.size : 0
+      });
+    }
+  });
+  return list;
+};
+
+const broadcastPublicRooms = () => {
+  io.emit('public_rooms_update', getPublicRoomsList());
+};
 
 const getRoom = (code) => {
   if (!code || typeof code !== 'string') return null;
@@ -54,13 +110,32 @@ const barraCategories = {
 };
 
 io.on('connection', (socket) => {
-  socket.on('host_create_room', (callback) => {
+  socket.on('get_public_rooms', (callback) => {
+    safeCallback(callback, { success: true, rooms: getPublicRoomsList() });
+  });
+
+  socket.on('host_create_room', (payload, callback) => {
+    const cb = typeof payload === 'function' ? payload : callback;
+    const options = typeof payload === 'object' && payload !== null ? payload : {};
+    const isPublic = options.isPublic !== undefined ? Boolean(options.isPublic) : true;
+    const name = options.name ? String(options.name).trim().slice(0, 30) : null;
+
     const code = generateCode();
-    const newRoom = { hostId: socket.id, code, players: [], state: 'lobby', gameData: {} };
+    const newRoom = {
+      hostId: socket.id,
+      code,
+      name: name || `غرفة ${code}`,
+      isPublic,
+      players: [],
+      state: 'lobby',
+      gameData: {},
+      voting: { active: false, votes: {}, endTime: null }
+    };
     rooms.set(code, newRoom);
     socket.join(code);
-    safeCallback(callback, { success: true, code });
+    safeCallback(cb, { success: true, code });
     io.to(code).emit('room_state_update', newRoom);
+    if (isPublic) broadcastPublicRooms();
   });
 
   /* =========================================
@@ -890,6 +965,301 @@ io.on('connection', (socket) => {
   });
 
   /* =========================================
+     GAME VOTING SYSTEM
+     ========================================= */
+  const triggerGameStart = (room, gameId) => {
+    if (!room) return;
+    if (room.voting?.timeoutId) clearTimeout(room.voting.timeoutId);
+    room.voting = { active: false, votes: {}, endTime: null };
+
+    if (gameId === 'barra') {
+      room.state = 'barra_playing';
+      const categories = Object.keys(barraCategories);
+      const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+      const words = barraCategories[randomCategory];
+      const secretWord = words[Math.floor(Math.random() * words.length)];
+      const spyIndex = Math.floor(Math.random() * room.players.length);
+      const spyId = room.players[spyIndex]?.id || room.players[0]?.id;
+
+      const players = [...room.players];
+      const allPairs = [];
+      for (let i = 0; i < players.length; i++) {
+        for (let j = 0; j < players.length; j++) {
+          if (i !== j) {
+            allPairs.push({
+              asker: players[i].name,
+              askerId: players[i].id,
+              answerer: players[j].name,
+              answererId: players[j].id
+            });
+          }
+        }
+      }
+
+      const questionOrder = [];
+      const pool = [...allPairs];
+      let lastAsker = null;
+      while (pool.length > 0) {
+        let idx = pool.findIndex(p => p.asker !== lastAsker);
+        if (idx === -1) idx = 0;
+        const [picked] = pool.splice(idx, 1);
+        questionOrder.push(picked);
+        lastAsker = picked.asker;
+      }
+
+      room.gameData = {
+        mode: 'barra',
+        category: randomCategory,
+        word: secretWord,
+        spyId,
+        votes: {},
+        questionOrder,
+        currentQuestion: 0
+      };
+
+      room.players.forEach((p) => {
+        const isSpy = p.id === spyId;
+        const role = isSpy ? 'برا السالفة!' : `السالفة: ${secretWord}`;
+        const hint = isSpy ? `التصنيف: ${randomCategory}` : 'أنت من عامة الشعب، اسأل بذكاء!';
+        io.to(p.id).emit('game_started', { mode: 'barra', role, hint, roleType: isSpy ? 'spy' : 'town' });
+      });
+      io.to(room.code).emit('room_state_update', room);
+      broadcastPublicRooms();
+    } else if (gameId === 'horoof') {
+      room.state = 'horoof_lobby';
+      const teams = {};
+      room.players.forEach((p, idx) => {
+        teams[p.id] = idx % 2 === 0 ? 'green' : 'blue';
+      });
+      room.gameData = {
+        mode: 'horoof',
+        teams,
+        scores: { green: 0, blue: 0, orange: 0 },
+        round: 1,
+        board: generateHoroofBoard(),
+        turn: 'green',
+        activeCell: null,
+        activeQuestion: null,
+        buzzedPlayer: null,
+        winningPath: null,
+        showHint: false
+      };
+      io.to(room.code).emit('room_state_update', room);
+      broadcastPublicRooms();
+    } else if (gameId === 'aded') {
+      room.state = 'aded_lobby';
+      room.gameData = {
+        mode: 'aded',
+        round: 1,
+        scores: {},
+        contestants: room.players.map(p => p.id),
+        targetGoal: 10,
+        topic: getRandomAdedTopic([]),
+        usedTopics: [],
+        phase: 'bidding',
+        currentBid: 0,
+        highestBidderId: null,
+        highestBidderName: null,
+        count: 0,
+        isRunning: false,
+        timerStartedAt: null
+      };
+      io.to(room.code).emit('room_state_update', room);
+      broadcastPublicRooms();
+    } else if (gameId === 'codenames') {
+      room.state = 'codenames_lobby';
+      const teams = {};
+      room.players.forEach((p, idx) => {
+        teams[p.id] = idx % 2 === 0 ? 'red' : 'blue';
+      });
+      room.gameData = {
+        mode: 'codenames',
+        teams,
+        spymasters: { red: null, blue: null }
+      };
+      io.to(room.code).emit('room_state_update', room);
+      broadcastPublicRooms();
+    } else if (gameId === 'mafia') {
+      room.state = 'mafia_playing';
+      const numPlayers = room.players.length;
+      const numMafia = Math.max(1, Math.floor(numPlayers / 3));
+      const shuffled = [...room.players].sort(() => Math.random() - 0.5);
+      const roles = {};
+      const alive = {};
+      room.players.forEach(p => alive[p.id] = true);
+      for (let i = 0; i < shuffled.length; i++) {
+        if (i < numMafia) roles[shuffled[i].id] = 'mafia';
+        else if (i === numMafia) roles[shuffled[i].id] = 'doctor';
+        else if (i === numMafia + 1) roles[shuffled[i].id] = 'detective';
+        else roles[shuffled[i].id] = 'town';
+      }
+      room.gameData = {
+        mode: 'mafia',
+        roles,
+        alive,
+        phase: 'night',
+        nightActions: {},
+        dayNumber: 1,
+        votes: {}
+      };
+      room.players.forEach(p => {
+        const r = roles[p.id];
+        let roleName = 'مواطن صالح';
+        let hint = 'حاول معرفة المافيا بالتصويت في النهار!';
+        if (r === 'mafia') { roleName = 'مافيا'; hint = 'اقتلوا المواطنين في الليل بدون ما تكشفون أنفسكم!'; }
+        else if (r === 'doctor') { roleName = 'طبيب'; hint = 'اختر شخصا لحمايته من القتل كل ليلة!'; }
+        else if (r === 'detective') { roleName = 'محقق'; hint = 'تحقق من هوية لاعب واحد كل ليلة!'; }
+        io.to(p.id).emit('game_started', { mode: 'mafia', role: roleName, hint, roleType: r });
+      });
+      io.to(room.code).emit('room_state_update', room);
+      io.to(room.code).emit('start_night', { alive });
+      broadcastPublicRooms();
+    }
+  };
+
+  const resolveVoting = (code) => {
+    const room = getRoom(code);
+    if (!room || !room.voting || !room.voting.active) return;
+    if (room.voting.timeoutId) clearTimeout(room.voting.timeoutId);
+
+    const counts = { barra: 0, horoof: 0, aded: 0, codenames: 0, mafia: 0 };
+    Object.values(room.voting.votes || {}).forEach(v => {
+      if (counts[v] !== undefined) counts[v]++;
+    });
+
+    let topGame = 'horoof';
+    let maxCount = -1;
+    Object.entries(counts).forEach(([g, c]) => {
+      if (c > maxCount) {
+        maxCount = c;
+        topGame = g;
+      }
+    });
+
+    io.to(room.code).emit('game_vote_finished', { winningGame: topGame, counts });
+    triggerGameStart(room, topGame);
+  };
+
+  socket.on('host_start_game_voting', ({ code, duration = 30 }) => {
+    const room = getRoom(code);
+    if (room && (room.hostId === socket.id || !room.hostId)) {
+      const validDuration = Math.min(60, Math.max(10, Number(duration) || 30));
+      if (room.voting?.timeoutId) clearTimeout(room.voting.timeoutId);
+      room.voting = {
+        active: true,
+        votes: {},
+        endTime: Date.now() + validDuration * 1000,
+        timeoutId: setTimeout(() => {
+          resolveVoting(code);
+        }, validDuration * 1000)
+      };
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('player_cast_game_vote', ({ code, gameId }) => {
+    const room = getRoom(code);
+    if (room && room.voting && room.voting.active) {
+      room.voting.votes[socket.id] = gameId;
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  socket.on('host_end_game_voting', ({ code }) => {
+    const room = getRoom(code);
+    if (room && (room.hostId === socket.id || !room.hostId) && room.voting?.active) {
+      resolveVoting(code);
+    }
+  });
+
+  socket.on('host_cancel_game_voting', ({ code }) => {
+    const room = getRoom(code);
+    if (room && (room.hostId === socket.id || !room.hostId)) {
+      if (room.voting?.timeoutId) clearTimeout(room.voting.timeoutId);
+      room.voting = { active: false, votes: {}, endTime: null };
+      io.to(room.code).emit('room_state_update', room);
+    }
+  });
+
+  /* =========================================
+     VOICE CHAT (WebRTC Signaling)
+     ========================================= */
+  socket.on('voice_join', ({ code, name, isMuted }) => {
+    if (!code) return;
+    const roomCode = code.trim().toUpperCase();
+    if (!voiceRooms.has(roomCode)) {
+      voiceRooms.set(roomCode, new Map());
+    }
+    const vr = voiceRooms.get(roomCode);
+    vr.set(socket.id, {
+      name: name || 'لاعب',
+      isMuted: Boolean(isMuted),
+      isSpeaking: false
+    });
+
+    socket.to(roomCode).emit('voice_user_joined', {
+      peerId: socket.id,
+      name: name || 'لاعب',
+      isMuted: Boolean(isMuted)
+    });
+
+    const existingUsers = [];
+    vr.forEach((u, id) => {
+      if (id !== socket.id) {
+        existingUsers.push({ peerId: id, name: u.name, isMuted: u.isMuted, isSpeaking: u.isSpeaking });
+      }
+    });
+    socket.emit('voice_current_users', existingUsers);
+    broadcastPublicRooms();
+  });
+
+  socket.on('voice_offer', ({ targetPeerId, offer }) => {
+    if (targetPeerId) {
+      io.to(targetPeerId).emit('voice_offer', { senderPeerId: socket.id, offer });
+    }
+  });
+
+  socket.on('voice_answer', ({ targetPeerId, answer }) => {
+    if (targetPeerId) {
+      io.to(targetPeerId).emit('voice_answer', { senderPeerId: socket.id, answer });
+    }
+  });
+
+  socket.on('voice_ice_candidate', ({ targetPeerId, candidate }) => {
+    if (targetPeerId) {
+      io.to(targetPeerId).emit('voice_ice_candidate', { senderPeerId: socket.id, candidate });
+    }
+  });
+
+  socket.on('voice_state_update', ({ code, isMuted, isSpeaking }) => {
+    if (!code) return;
+    const roomCode = code.trim().toUpperCase();
+    const vr = voiceRooms.get(roomCode);
+    if (vr && vr.has(socket.id)) {
+      const user = vr.get(socket.id);
+      if (isMuted !== undefined) user.isMuted = Boolean(isMuted);
+      if (isSpeaking !== undefined) user.isSpeaking = Boolean(isSpeaking);
+      io.to(roomCode).emit('voice_user_state_changed', {
+        peerId: socket.id,
+        isMuted: user.isMuted,
+        isSpeaking: user.isSpeaking
+      });
+    }
+  });
+
+  socket.on('voice_leave', ({ code }) => {
+    if (!code) return;
+    const roomCode = code.trim().toUpperCase();
+    const vr = voiceRooms.get(roomCode);
+    if (vr && vr.has(socket.id)) {
+      vr.delete(socket.id);
+      io.to(roomCode).emit('voice_user_left', { peerId: socket.id });
+      if (vr.size === 0) voiceRooms.delete(roomCode);
+      broadcastPublicRooms();
+    }
+  });
+
+  /* =========================================
      CORE LOBBY
      ========================================= */
   socket.on('player_join_room', ({ code, name }, callback) => {
@@ -903,21 +1273,53 @@ io.on('connection', (socket) => {
     }
     const room = rooms.get(roomCode);
     if (!room) return safeCallback(callback, { success: false, error: 'الروم غير موجود!' });
-    if (room.state !== 'lobby') return safeCallback(callback, { success: false, error: 'اللعبة بدأت بالفعل!' });
-    if (room.players.find(p => p.name === cleanName)) return safeCallback(callback, { success: false, error: 'الاسم مستخدم!' });
+
+    if (!room.hostId || !room.players.some(p => p.id === room.hostId)) {
+      room.hostId = socket.id;
+    }
+
+    if (room.players.find(p => p.name === cleanName)) {
+      return safeCallback(callback, { success: false, error: 'الاسم مستخدم!' });
+    }
 
     const newPlayer = { id: socket.id, name: cleanName };
     room.players.push(newPlayer);
     socket.join(roomCode);
     io.to(roomCode).emit('room_state_update', room);
+    broadcastPublicRooms();
     safeCallback(callback, { success: true, room: roomCode, state: room.state });
   });
 
   socket.on('disconnect', () => {
+    voiceRooms.forEach((vr, code) => {
+      if (vr.has(socket.id)) {
+        vr.delete(socket.id);
+        io.to(code).emit('voice_user_left', { peerId: socket.id });
+        if (vr.size === 0) voiceRooms.delete(code);
+      }
+    });
+
     rooms.forEach((room, code) => {
       if (room.hostId === socket.id) {
-        io.to(code).emit('host_disconnected');
-        rooms.delete(code);
+        if (room.isPermanent) {
+          const playerIndex = room.players.findIndex(p => p.id === socket.id);
+          if (playerIndex !== -1) room.players.splice(playerIndex, 1);
+          if (room.players.length > 0) {
+            room.hostId = room.players[0].id;
+            io.to(code).emit('room_state_update', room);
+          } else {
+            room.hostId = null;
+            room.state = 'lobby';
+            room.gameData = {};
+            if (room.voting?.timeoutId) clearTimeout(room.voting.timeoutId);
+            room.voting = { active: false, votes: {}, endTime: null };
+          }
+          broadcastPublicRooms();
+        } else {
+          io.to(code).emit('host_disconnected');
+          rooms.delete(code);
+          broadcastPublicRooms();
+        }
       } else {
         const playerIndex = room.players.findIndex(p => p.id === socket.id);
         if (playerIndex !== -1) {
@@ -932,8 +1334,12 @@ io.on('connection', (socket) => {
           if (room.gameData?.teams) {
             delete room.gameData.teams[socket.id];
           }
+          if (room.voting?.votes?.[socket.id]) {
+            delete room.voting.votes[socket.id];
+          }
           io.to(room.hostId).emit('player_left', p);
           io.to(code).emit('room_state_update', room);
+          broadcastPublicRooms();
         }
       }
     });

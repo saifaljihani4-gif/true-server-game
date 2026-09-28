@@ -289,16 +289,16 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
         </div>
 
         {/* Board Arena with Green Side Rails */}
-        <div className="relative flex items-center justify-center w-full px-1 sm:px-2">
+        <div className="relative flex items-center justify-center w-full max-w-full overflow-hidden px-0.5 sm:px-2">
           {/* Right Green Rail (Start for RTL) */}
-          <div className="flex flex-col items-center justify-center h-full px-1.5 sm:px-2 py-4 rounded-xl bg-gradient-to-b from-emerald-950/60 via-green-900/50 to-emerald-950/60 border border-emerald-400/40 shadow-[0_0_15px_rgba(16,185,129,0.3)] shrink-0 self-stretch my-1 select-none">
-            <span className="text-emerald-300 font-black text-[11px] sm:text-xs writing-vertical tracking-widest">
+          <div className="flex flex-col items-center justify-center h-full px-1 sm:px-2 py-2 sm:py-4 rounded-lg sm:rounded-xl bg-gradient-to-b from-emerald-950/60 via-green-900/50 to-emerald-950/60 border border-emerald-400/40 shadow-[0_0_15px_rgba(16,185,129,0.3)] shrink-0 self-stretch my-1 select-none">
+            <span className="text-emerald-300 font-black text-[9px] sm:text-xs writing-vertical tracking-widest">
               ◀ بداية الأخضر
             </span>
           </div>
 
           {/* Hexagon Letter Grid */}
-          <div className="flex flex-col gap-1.5 sm:gap-2.5 items-center mx-2 sm:mx-3 flex-1">
+          <div className="flex flex-col gap-1 sm:gap-2 items-center mx-1 sm:mx-2.5 flex-1 max-w-full overflow-hidden">
             {[0, 1, 2, 3, 4].map((r) => {
               const rowCells = board.filter((c: any) => c.row === r).sort((a: any, b: any) => a.col - b.col);
               const isStaggered = r % 2 === 1;
@@ -306,7 +306,7 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
               return (
                 <div
                   key={r}
-                  className={`flex gap-1.5 sm:gap-2.5 transition-transform ${isStaggered ? 'translate-x-2 sm:translate-x-3' : '-translate-x-2 sm:-translate-x-3'}`}
+                  className={`flex gap-1 sm:gap-2 transition-transform ${isStaggered ? 'translate-x-1 sm:translate-x-2.5' : '-translate-x-1 sm:-translate-x-2.5'}`}
                 >
                   {rowCells.map((cell: any) => {
                     const isWinning = winningPathSet.has(cell.id);
@@ -335,7 +335,7 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
                         key={cell.id}
                         onClick={() => handleCellClick(cell)}
                         disabled={!canClick && !isActive}
-                        className={`w-10 h-10 sm:w-13 sm:h-13 md:w-15 md:h-15 rounded-xl sm:rounded-2xl border flex items-center justify-center font-kufi font-black text-base sm:text-xl md:text-2xl transition-all duration-200 select-none ${bgClass} active:scale-95 disabled:cursor-not-allowed`}
+                        className={`w-7 h-7 sm:w-11 sm:h-11 md:w-14 md:h-14 rounded-lg sm:rounded-2xl border flex items-center justify-center font-kufi font-black text-xs sm:text-lg md:text-2xl transition-all duration-200 select-none ${bgClass} active:scale-95 disabled:cursor-not-allowed`}
                       >
                         {cell.letter}
                       </button>
@@ -347,8 +347,8 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
           </div>
 
           {/* Left Green Rail (Finish for RTL) */}
-          <div className="flex flex-col items-center justify-center h-full px-1.5 sm:px-2 py-4 rounded-xl bg-gradient-to-b from-emerald-950/60 via-green-900/50 to-emerald-950/60 border border-emerald-400/40 shadow-[0_0_15px_rgba(16,185,129,0.3)] shrink-0 self-stretch my-1 select-none">
-            <span className="text-emerald-300 font-black text-[11px] sm:text-xs writing-vertical tracking-widest">
+          <div className="flex flex-col items-center justify-center h-full px-1 sm:px-2 py-2 sm:py-4 rounded-lg sm:rounded-xl bg-gradient-to-b from-emerald-950/60 via-green-900/50 to-emerald-950/60 border border-emerald-400/40 shadow-[0_0_15px_rgba(16,185,129,0.3)] shrink-0 self-stretch my-1 select-none">
+            <span className="text-emerald-300 font-black text-[9px] sm:text-xs writing-vertical tracking-widest">
               هدف الأخضر ◀
             </span>
           </div>

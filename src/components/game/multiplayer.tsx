@@ -1,8 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { socket } from '@/lib/socket';
-import { ChevronRight, Users, Eye, EyeOff, Trophy, Crown } from 'lucide-react';
+import { ChevronRight, Users, Eye, EyeOff, Trophy, Crown, Vote, Radio, Globe, Lock, RefreshCw, CheckCircle2, Play } from 'lucide-react';
 import { HoroofLobby, HoroofBoardView, HoroofWinnerView } from './horoof';
 import { AdedLobbyView, AdedGameView, AdedResultsView } from './aded';
+import { VoiceBar } from './voice-bar';
+
+const VOTABLE_GAMES = [
+  { id: 'barra', name: 'Ø¨Ø±Ø§ Ø§Ù„Ø³Ø§Ù„ÙØ©', min: 3, desc: 'ÙˆØ§Ø­Ø¯ Ø¨Ø±Ø§ Ø§Ù„Ø³Ø§Ù„ÙØ© ÙˆÙ…Ø­Ø¯ ÙŠØ¯Ø±ÙŠ Ù…ÙŠÙ†!' },
+  { id: 'horoof', name: 'ØªØ­Ø¯ÙŠ Ø§Ù„Ø­Ø±ÙˆÙ', min: 2, desc: 'Ù…Ø³Ø§Ø¨Ù‚Ø© Ø­Ø±ÙˆÙ Ù…ØªØµÙ„Ø© Ø£Ø®Ø¶Ø± Ø¶Ø¯ Ø£Ø²Ø±Ù‚' },
+  { id: 'aded', name: 'Ø¹Ø¯Ù‘Ø¯', min: 1, desc: 'Ù…Ø²Ø§ÙŠØ¯Ø© Ø­ÙŠØ© ÙˆØ³Ø±Ø¹Ø© ÙÙŠ Ø°ÙƒØ± Ø§Ù„ÙƒÙ„Ù…Ø§Øª' },
+  { id: 'codenames', name: 'ÙƒÙˆØ¯ Ù†ÙŠÙ…Ø²', min: 4, desc: 'ÙØ±ÙŠÙ‚ÙŠÙ† ÙˆÙƒÙ„Ù…Ø§Øª Ø³Ø±ÙŠØ© ÙˆØªÙ„Ù…ÙŠØ­Ø§Øª Ø°ÙƒÙŠØ©' },
+  { id: 'mafia', name: 'Ù…Ø§ÙÙŠØ§', min: 4, desc: 'ØµØ±Ø§Ø¹ Ø§Ù„Ù…Ø§ÙÙŠØ§ ÙˆØ§Ù„Ù…ÙˆØ§Ø·Ù†ÙŠÙ† ÙˆØ®Ø¯Ø§Ø¹ Ø§Ù„Ù„ÙŠÙ„' },
+];
 
 function DiscussionTimer({ duration = 60 }: { duration?: number }) {
   const [timeLeft, setTimeLeft] = useState(duration);
@@ -24,6 +33,13 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [room, setRoom] = useState<any>(null);
+
+  // Public Rooms Browser State
+  const [activeTab, setActiveTab] = useState<'public' | 'code'>(initialHost ? 'code' : 'public');
+  const [publicRooms, setPublicRooms] = useState<any[]>([]);
+  const [loadingRooms, setLoadingRooms] = useState(false);
+  const [isPublicRoom, setIsPublicRoom] = useState(true);
+  const [customRoomName, setCustomRoomName] = useState('');
   
   // Personal State
   const [roleData, setRoleData] = useState({ role: '', hint: '', type: '' });
@@ -41,10 +57,28 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
     return () => { socket.disconnect(); };
   }, []);
 
+  // Fetch Public Rooms
+  const fetchPublicRooms = () => {
+    setLoadingRooms(true);
+    socket.emit('get_public_rooms', (res: any) => {
+      setLoadingRooms(false);
+      if (res?.success) setPublicRooms(res.rooms || []);
+    });
+  };
+
+  useEffect(() => {
+    fetchPublicRooms();
+    const onPublicRoomsUpdate = (rooms: any[]) => setPublicRooms(rooms);
+    socket.on('public_rooms_update', onPublicRoomsUpdate);
+    return () => {
+      socket.off('public_rooms_update', onPublicRoomsUpdate);
+    };
+  }, []);
+
   // Listeners
   useEffect(() => {
     const onRoomUpdate = (r: any) => setRoom(r);
-    const onHostDisconnected = () => { setError('المضيف أنهى الروم.'); setRoom(null); setCode(''); };
+    const onHostDisconnected = () => { setError('Ø§Ù„Ù…Ø¶ÙŠÙ Ø£Ù†Ù‡Ù‰ Ø§Ù„Ø±ÙˆÙ….'); setRoom(null); setCode(''); };
     
     // Personal Updates
     const onGameStarted = (data: any) => {
@@ -81,11 +115,11 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
 
   const handleCreateAndJoin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name) return;
-    socket.emit('host_create_room', (res: any) => {
+    if (!name.trim()) return;
+    socket.emit('host_create_room', { isPublic: isPublicRoom, name: customRoomName.trim() || undefined }, (res: any) => {
       if (res.success) {
         setCode(res.code);
-        socket.emit('player_join_room', { code: res.code, name }, (joinRes: any) => {
+        socket.emit('player_join_room', { code: res.code, name: name.trim() }, (joinRes: any) => {
           if (!joinRes.success) setError(joinRes.error);
         });
       }
@@ -94,39 +128,228 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
 
   const handleJoinOnly = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!code || !name) return;
-    socket.emit('player_join_room', { code, name }, (res: any) => {
+    if (!code || !name.trim()) return;
+    socket.emit('player_join_room', { code, name: name.trim() }, (res: any) => {
       if (!res.success) setError(res.error);
     });
   };
 
+  const handleQuickJoinPublic = (roomCode: string) => {
+    if (!name.trim()) {
+      setError('ÙŠØ±Ø¬Ù‰ ÙƒØªØ§Ø¨Ø© Ø§Ø³Ù…Ùƒ Ø£ÙˆÙ„Ø§Ù‹ Ù„Ù„Ø¯Ø®ÙˆÙ„ Ù„Ù„Ø±ÙˆÙ…');
+      return;
+    }
+    setError('');
+    socket.emit('player_join_room', { code: roomCode, name: name.trim() }, (res: any) => {
+      if (!res.success) {
+        setError(res.error || 'ØªØ¹Ø°Ø± Ø§Ù„Ø¯Ø®ÙˆÙ„ Ù„Ù„Ø±ÙˆÙ…');
+      } else {
+        setCode(roomCode);
+      }
+    });
+  };
+
   const isHost = room?.hostId === socket.id;
-  const isDead = room?.gameData?.alive && !room.gameData.alive[socket.id];
+  const isDead = room?.gameData?.alive && socket.id ? !room.gameData.alive[socket.id] : false;
   const playersToVote = room?.players.filter((p: any) => p.id !== socket.id && (!room.gameData?.alive || room.gameData.alive[p.id])) || [];
 
   const castVote = (id: string) => { setVotedFor(id); socket.emit('player_vote', { code, votedForId: id }); };
   const castMafiaAction = (id: string) => { setVotedFor(id); socket.emit('mafia_action', { code, targetId: id, roleType: roleData.type }); };
 
-  // --- 1. LOGIN SCREEN ---
+  // --- 1. LOGIN SCREEN WITH PUBLIC ROOMS BROWSER ---
   if (!room) {
     return (
-      <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-center p-4 sm:p-6 relative">
-        <button onClick={onBack} className="absolute start-4 top-4 sm:start-5 sm:top-6 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-gray-400 hover:text-white transition-colors">
-          <ChevronRight size={14} /> رجوع
+      <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-center p-3 sm:p-6 relative">
+        <button onClick={onBack} className="absolute start-3 top-3 sm:start-5 sm:top-6 flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-gray-400 hover:text-white transition-colors">
+          <ChevronRight size={14} /> Ø±Ø¬ÙˆØ¹
         </button>
-        <form onSubmit={initialHost ? handleCreateAndJoin : handleJoinOnly} className="w-full max-w-sm flex flex-col gap-4 sm:gap-5 glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl">
-          <div className="text-center mb-1"><h2 className="font-kufi text-2xl sm:text-3xl font-bold text-white">{initialHost ? 'إنشاء روم جديد' : 'الانضمام لروم'}</h2></div>
-          {error && <div className="bg-red-500/20 text-red-300 px-3 py-2 sm:px-4 sm:py-3 rounded-xl text-xs sm:text-sm font-bold border border-red-500/30 text-center">{error}</div>}
-          
-          {!initialHost && (
-            <input type="text" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={4} placeholder="كود الروم" className="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3 sm:px-5 sm:py-4 text-center text-2xl sm:text-3xl font-bold tracking-widest text-white uppercase focus:outline-none focus:border-white/30 transition-colors" required />
-          )}
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} maxLength={12} placeholder="اسمك" className="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3 sm:px-5 sm:py-4 text-base sm:text-xl font-bold text-center text-white focus:outline-none focus:border-white/30 transition-colors" required dir="auto" />
-          
-          <button type="submit" className="mt-2 w-full bg-white text-black font-kufi font-bold text-lg sm:text-xl py-3 sm:py-4 rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-[1.02] transition-transform">
-            {initialHost ? 'إنشاء ودخول' : 'ادخل الروم'}
-          </button>
-        </form>
+
+        {initialHost ? (
+          /* Host Create Form */
+          <form onSubmit={handleCreateAndJoin} className="w-full max-w-sm flex flex-col gap-3.5 sm:gap-4 glass-panel p-5 sm:p-7 rounded-3xl border border-white/10 shadow-2xl">
+            <div className="text-center mb-1">
+              <h2 className="font-kufi text-xl sm:text-2xl font-bold text-white">Ø¥Ù†Ø´Ø§Ø¡ Ø±ÙˆÙ… Ø¬Ø¯ÙŠØ¯</h2>
+              <p className="text-xs text-gray-400 mt-1">Ø§Ø¨Ø¯Ø£ Ø±ÙˆÙ… Ø£Ù„Ø¹Ø§Ø¨ Ø¬Ù…Ø§Ø¹ÙŠ Ø¨Ø§Ù„ÙÙˆÙŠØ³ Ø§Ù„Ù…Ø¨Ø§Ø´Ø±</p>
+            </div>
+            {error && <div className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-xs font-bold border border-red-500/30 text-center">{error}</div>}
+
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={12}
+              placeholder="Ø§Ø³Ù…Ùƒ"
+              className="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3 text-sm sm:text-base font-bold text-center text-white focus:outline-none focus:border-white/30 transition-colors"
+              required
+              dir="auto"
+            />
+
+            <input
+              type="text"
+              value={customRoomName}
+              onChange={(e) => setCustomRoomName(e.target.value)}
+              maxLength={25}
+              placeholder="Ø§Ø³Ù… Ø§Ù„Ø±ÙˆÙ… (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)"
+              className="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3 text-xs sm:text-sm font-bold text-center text-white focus:outline-none focus:border-white/30 transition-colors"
+              dir="auto"
+            />
+
+            <label className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer">
+              <div className="flex items-center gap-2">
+                <Globe size={16} className="text-emerald-400" />
+                <span className="text-xs sm:text-sm font-bold text-gray-200">Ø±ÙˆÙ… Ø¹Ø§Ù… (ÙŠØ¸Ù‡Ø± Ù„Ù„Ø¬Ù…ÙŠØ¹)</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={isPublicRoom}
+                onChange={(e) => setIsPublicRoom(e.target.checked)}
+                className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
+              />
+            </label>
+
+            <button type="submit" className="mt-2 w-full bg-white text-black font-kufi font-bold text-base sm:text-lg py-3 rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all">
+              Ø¥Ù†Ø´Ø§Ø¡ ÙˆØ¯Ø®ÙˆÙ„ Ø§Ù„Ø±ÙˆÙ…
+            </button>
+          </form>
+        ) : (
+          /* Player Join with Tabs */
+          <div className="w-full max-w-md flex flex-col gap-3 glass-panel p-4 sm:p-6 rounded-3xl border border-white/10 shadow-2xl">
+            <div className="text-center mb-1">
+              <h2 className="font-kufi text-xl sm:text-2xl font-bold text-white">Ø§Ù„Ø§Ù†Ø¶Ù…Ø§Ù… Ù„Ù„Ø±ÙˆÙ…Ø§Øª</h2>
+              <p className="text-xs text-gray-400 mt-1">Ø±ÙˆÙ…Ø§Øª Ø¹Ø§Ù…Ø© Ø£ÙˆÙ†Ù„Ø§ÙŠÙ† Ø´ØºØ§Ù„Ø© Ø¨Ø§Ù„ÙÙˆÙŠØ³ Ø£Ùˆ Ø¯Ø®ÙˆÙ„ Ø¨ÙƒÙˆØ¯</p>
+            </div>
+            {error && <div className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-xs font-bold border border-red-500/30 text-center">{error}</div>}
+
+            {/* Name Input */}
+            <div className="w-full">
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                maxLength={12}
+                placeholder="Ø§ÙƒØªØ¨ Ø§Ø³Ù…Ùƒ Ø£ÙˆÙ„Ø§Ù‹ Ù„Ù„Ø¯Ø®ÙˆÙ„"
+                className="w-full bg-black/60 border border-white/15 rounded-2xl px-4 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-center text-white focus:outline-none focus:border-emerald-400 transition-colors"
+                required
+                dir="auto"
+              />
+            </div>
+
+            {/* Tab Selector */}
+            <div className="grid grid-cols-2 gap-1.5 p-1 bg-black/40 rounded-2xl border border-white/10">
+              <button
+                type="button"
+                onClick={() => setActiveTab('public')}
+                className={`py-2 px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  activeTab === 'public'
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <Globe size={14} />
+                <span>Ø±ÙˆÙ…Ø§Øª Ø¹Ø§Ù…Ø© Ø£ÙˆÙ†Ù„Ø§ÙŠÙ†</span>
+                {publicRooms.length > 0 && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200">
+                    {publicRooms.length}
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('code')}
+                className={`py-2 px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  activeTab === 'code'
+                    ? 'bg-white/20 text-white border border-white/30 shadow-sm'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <Lock size={14} />
+                <span>Ø¯Ø®ÙˆÙ„ Ø¨ÙƒÙˆØ¯ Ø®Ø§Øµ</span>
+              </button>
+            </div>
+
+            {/* Public Rooms List */}
+            {activeTab === 'public' && (
+              <div className="flex flex-col gap-2 mt-1">
+                <div className="flex items-center justify-between px-1 text-xs text-gray-400">
+                  <span>Ø§Ù„Ø±ÙˆÙ…Ø§Øª Ø§Ù„Ù…ØªØ§Ø­Ø© Ø­Ø§Ù„ÙŠØ§Ù‹ Ù…Ø¹ Ø§Ù„ÙÙˆÙŠØ³:</span>
+                  <button
+                    type="button"
+                    onClick={fetchPublicRooms}
+                    className="flex items-center gap-1 text-[11px] text-gray-300 hover:text-white transition-colors"
+                  >
+                    <RefreshCw size={12} className={loadingRooms ? 'animate-spin' : ''} /> ØªØ­Ø¯ÙŠØ«
+                  </button>
+                </div>
+
+                <div className="max-h-64 overflow-y-auto flex flex-col gap-2 pr-1">
+                  {publicRooms.length === 0 ? (
+                    <div className="p-6 text-center text-gray-400 text-xs font-bold rounded-2xl bg-black/30 border border-white/5">
+                      Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø±ÙˆÙ…Ø§Øª Ø§Ù„Ø¹Ø§Ù…Ø© Ø§Ù„Ù…ØªØ§Ø­Ø©...
+                    </div>
+                  ) : (
+                    publicRooms.map((pr: any) => (
+                      <div
+                        key={pr.code}
+                        className="flex items-center justify-between p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all gap-2"
+                      >
+                        <div className="flex flex-col gap-0.5 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs sm:text-sm font-bold text-white truncate">{pr.name}</span>
+                            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300">
+                              {pr.code}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[11px] text-gray-400">
+                            <span className="flex items-center gap-1">
+                              <Users size={12} /> {pr.playersCount} Ù„Ø§Ø¹Ø¨ÙŠÙ†
+                            </span>
+                            <span>â€¢</span>
+                            <span className="text-emerald-400 font-bold">{pr.gameName}</span>
+                            <span>â€¢</span>
+                            <span className="flex items-center gap-1 text-sky-400">
+                              <Radio size={11} /> ÙÙˆÙŠØ³ Ù†Ø´Ø·
+                            </span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleQuickJoinPublic(pr.code)}
+                          className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shrink-0 shadow-md hover:scale-105 active:scale-95 transition-all"
+                        >
+                          Ø¯Ø®ÙˆÙ„
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Join via Code */}
+            {activeTab === 'code' && (
+              <form onSubmit={handleJoinOnly} className="flex flex-col gap-3 mt-1">
+                <input
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.toUpperCase())}
+                  maxLength={4}
+                  placeholder="ÙƒÙˆØ¯ Ø§Ù„Ø±ÙˆÙ… (4 Ø£Ø­Ø±Ù)"
+                  className="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3 text-center text-xl sm:text-2xl font-bold tracking-widest text-white uppercase focus:outline-none focus:border-white/30 transition-colors font-mono"
+                  required
+                />
+
+                <button
+                  type="submit"
+                  className="w-full bg-white text-black font-kufi font-bold text-base sm:text-lg py-3 rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                  Ø§Ø¯Ø®Ù„ Ø§Ù„Ø±ÙˆÙ…
+                </button>
+              </form>
+            )}
+          </div>
+        )}
       </main>
     );
   }
@@ -135,23 +358,123 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   if (room.state === 'lobby') {
     return (
       <main className="fade-screen relative flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col pt-14 sm:pt-6 px-3 sm:px-6 pb-6">
-        <header className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 max-w-5xl mx-auto w-full gap-3 sm:gap-4">
+        {/* Voice Bar Inside Room */}
+        <VoiceBar socket={socket} code={room.code} playerName={name} />
+
+        <header className="flex flex-col sm:flex-row justify-between items-center my-3 sm:my-4 max-w-5xl mx-auto w-full gap-3 sm:gap-4">
           <div className="flex items-center justify-between w-full sm:w-auto gap-3">
             <button onClick={() => { socket.disconnect(); onBack(); }} className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-gray-400 hover:text-white transition-colors shrink-0">
-              <ChevronRight size={14} /> خروج
+              <ChevronRight size={14} /> Ø®Ø±ÙˆØ¬
             </button>
             <img src="/images/info.png" alt="True Server" className="h-7 sm:h-10 w-auto object-contain drop-shadow-md" />
           </div>
           <div className="flex items-center justify-center gap-2 px-5 py-2 bg-white/10 border border-white/20 rounded-2xl shadow-lg">
-            <span className="text-xs sm:text-sm font-bold text-gray-400">كود الروم:</span>
+            <span className="text-xs sm:text-sm font-bold text-gray-400">ÙƒÙˆØ¯ Ø§Ù„Ø±ÙˆÙ…:</span>
             <span className="text-xl sm:text-2xl font-black tracking-widest text-amber-400 font-mono">{room.code}</span>
           </div>
         </header>
 
+        {/* GAME VOTING SECTION IN LOBBY */}
+        {room.voting?.active && (
+          <div className="w-full max-w-5xl mx-auto glass-panel p-4 sm:p-6 rounded-3xl border border-purple-500/40 bg-gradient-to-b from-purple-950/40 via-black/80 to-black mb-5 shadow-2xl fade-in-up">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4 border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2">
+                <Vote size={22} className="text-purple-400" />
+                <div>
+                  <h3 className="font-kufi text-base sm:text-lg font-bold text-white">ØªØµÙˆÙŠØª Ø¹Ù„Ù‰ Ø§Ù„Ù„Ø¹Ø¨Ø© Ø§Ù„Ù‚Ø§Ø¯Ù…Ø©</h3>
+                  <p className="text-xs text-gray-400">ØµÙˆÙ‘Øª Ù„Ù„Ø¹Ø¨Ø© Ø§Ù„ØªÙŠ ØªØ±ØºØ¨ Ø¨Ù„Ø¹Ø¨Ù‡Ø§ Ù…Ø¹ Ø§Ù„Ø±ÙˆÙ… Ø§Ù„Ø¢Ù†</p>
+                </div>
+              </div>
+
+              {room.voting.endTime && (
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-bold font-mono">
+                  <span>Ø§Ù„ÙˆÙ‚Øª Ø§Ù„Ù…ØªØ¨Ù‚ÙŠ:</span>
+                  <span>{Math.max(0, Math.ceil((room.voting.endTime - Date.now()) / 1000))} Ø«Ø§Ù†ÙŠØ©</span>
+                </div>
+              )}
+            </div>
+
+            {/* List of Votable Games */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 mb-4">
+              {VOTABLE_GAMES.map((g) => {
+                const votes = Object.values(room.voting?.votes || {}).filter((v: any) => v === g.id).length;
+                const total = Object.keys(room.voting?.votes || {}).length;
+                const pct = total > 0 ? Math.round((votes / total) * 100) : 0;
+                const myVote = socket.id ? room.voting?.votes?.[socket.id] === g.id : false;
+
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => socket.emit('player_cast_game_vote', { code: room.code, gameId: g.id })}
+                    className={`p-3 rounded-2xl border text-start flex flex-col justify-between transition-all relative overflow-hidden ${
+                      myVote
+                        ? 'bg-purple-600/30 border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.4)] scale-[1.02]'
+                        : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
+                    }`}
+                  >
+                    {/* Progress Background */}
+                    <div
+                      className="absolute top-0 bottom-0 start-0 bg-purple-500/15 pointer-events-none transition-all duration-300"
+                      style={{ width: `${pct}%` }}
+                    />
+
+                    <div className="relative z-10 flex items-center justify-between gap-1 mb-1">
+                      <span className="font-kufi text-sm sm:text-base font-bold text-white">{g.name}</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-gray-300">
+                        {g.min}+ Ù„Ø§Ø¹Ø¨ÙŠÙ†
+                      </span>
+                    </div>
+
+                    <p className="relative z-10 text-[11px] text-gray-400 mb-2">{g.desc}</p>
+
+                    <div className="relative z-10 flex items-center justify-between text-xs font-bold">
+                      <span className={myVote ? 'text-purple-300' : 'text-gray-400'}>
+                        {votes} {votes === 1 ? 'ØµÙˆØª' : 'Ø£ØµÙˆØ§Øª'} ({pct}%)
+                      </span>
+                      {myVote ? (
+                        <span className="flex items-center gap-1 text-emerald-400 text-xs">
+                          <CheckCircle2 size={13} /> ØªÙ… Ø§Ø®ØªÙŠØ§Ø±Ùƒ
+                        </span>
+                      ) : (
+                        <span className="text-gray-500 text-xs">Ø§Ø¶ØºØ· Ù„Ù„ØªØµÙˆÙŠØª</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Host Voting Controls */}
+            {isHost ? (
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-2 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => socket.emit('host_end_game_voting', { code: room.code })}
+                  className="btn-clean font-kufi px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center gap-1.5"
+                >
+                  <Play size={14} /> Ø¨Ø¯Ø¡ Ø§Ù„Ù„Ø¹Ø¨Ø© Ø§Ù„Ø£ÙƒØ«Ø± ØªØµÙˆÙŠØªØ§Ù‹ Ø§Ù„Ø¢Ù†
+                </button>
+                <button
+                  type="button"
+                  onClick={() => socket.emit('host_cancel_game_voting', { code: room.code })}
+                  className="btn-clean px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 font-bold text-xs transition-all"
+                >
+                  Ø¥Ù„ØºØ§Ø¡ Ø§Ù„ØªØµÙˆÙŠØª
+                </button>
+              </div>
+            ) : (
+              <div className="text-center text-xs text-gray-400 animate-pulse">
+                Ø¨Ø§Ù†ØªØ¸Ø§Ø± ØªØµÙˆÙŠØª Ø¨Ø§Ù‚ÙŠ Ø§Ù„Ù„Ø§Ø¹Ø¨ÙŠÙ† Ø£Ùˆ Ø¨Ø¯Ø¡ Ø§Ù„Ù…Ø¶ÙŠÙ...
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex-1 flex flex-col md:flex-row gap-6 max-w-5xl mx-auto w-full">
           <div className="flex-1 glass-panel p-6 rounded-3xl flex flex-col border border-white/10 bg-white/5">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="font-kufi text-2xl font-bold text-white">اللاعبين ({room.players.length})</h2>
+              <h2 className="font-kufi text-2xl font-bold text-white">Ø§Ù„Ù„Ø§Ø¹Ø¨ÙŠÙ† ({room.players.length})</h2>
               <Users size={24} className="text-white/20" />
             </div>
             <div className="flex-1 bg-black/40 rounded-2xl p-4 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-3 content-start">
@@ -166,31 +489,43 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
           {isHost ? (
             <div className="w-full md:w-80 flex flex-col gap-4">
               <div className="glass-panel p-6 rounded-3xl border border-white/10 bg-white/5">
-                <h3 className="font-kufi text-xl font-bold mb-4 text-white">إعدادات اللعبة</h3>
+                <h3 className="font-kufi text-xl font-bold mb-4 text-white">Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù„Ø¹Ø¨Ø©</h3>
                 <div className="flex flex-col gap-3">
+                  {!room.voting?.active && (
+                    <button
+                      onClick={() => socket.emit('host_start_game_voting', { code: room.code, duration: 30 })}
+                      className="py-3 px-4 rounded-2xl font-bold transition-all bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 shadow-md flex justify-between items-center text-xs sm:text-sm"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <Vote size={15} /> Ø¨Ø¯Ø¡ ØªØµÙˆÙŠØª Ø¹Ù„Ù‰ Ø§Ù„Ù„Ø¹Ø¨Ø©
+                      </span>
+                      <span className="text-[10px] bg-black/40 px-2 py-0.5 rounded-full">30 Ø«Ø§Ù†ÙŠØ©</span>
+                    </button>
+                  )}
+
                   <button onClick={() => socket.emit('host_start_barra', { code: room.code })} disabled={room.players.length < 3} className="py-4 px-5 rounded-2xl font-bold transition-all bg-white text-black hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 flex justify-between items-center">
-                    برا السالفة <span className="w-3 h-3 rounded-full bg-green-500" />
+                    Ø¨Ø±Ø§ Ø§Ù„Ø³Ø§Ù„ÙØ© <span className="w-3 h-3 rounded-full bg-green-500" />
                   </button>
                   <button onClick={() => socket.emit('host_start_mafia', { code: room.code })} disabled={room.players.length < 3} className="py-4 px-5 rounded-2xl font-bold transition-all bg-white text-black hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 flex justify-between items-center">
-                    مافيا <span className="w-3 h-3 rounded-full bg-red-500" />
+                    Ù…Ø§ÙÙŠØ§ <span className="w-3 h-3 rounded-full bg-red-500" />
                   </button>
                   <button onClick={() => socket.emit('host_start_codenames_lobby', { code: room.code })} disabled={room.players.length < 3} className="py-4 px-5 rounded-2xl font-bold transition-all bg-white text-black hover:scale-105 disabled:opacity-50 flex justify-between items-center">
-                    كود نيمز <span className="w-3 h-3 rounded-full bg-blue-500" />
+                    ÙƒÙˆØ¯ Ù†ÙŠÙ…Ø² <span className="w-3 h-3 rounded-full bg-blue-500" />
                   </button>
                   <button onClick={() => socket.emit('host_start_horoof_lobby', { code: room.code })} disabled={room.players.length < 3} className="py-4 px-5 rounded-2xl font-bold transition-all bg-white text-black hover:scale-105 disabled:opacity-50 flex justify-between items-center">
-                    تحدي الحروف <span className="w-3 h-3 rounded-full bg-emerald-500" />
+                    ØªØ­Ø¯ÙŠ Ø§Ù„Ø­Ø±ÙˆÙ <span className="w-3 h-3 rounded-full bg-emerald-500" />
                   </button>
                   <button onClick={() => socket.emit('host_start_aded', { code: room.code })} disabled={room.players.length < 1} className="py-4 px-5 rounded-2xl font-bold transition-all bg-white text-black hover:scale-105 disabled:opacity-50 flex justify-between items-center">
-                    عدّد <span className="w-3 h-3 rounded-full bg-amber-500" />
+                    Ø¹Ø¯Ù‘Ø¯ <span className="w-3 h-3 rounded-full bg-amber-500" />
                   </button>
                 </div>
-                {room.players.length < 2 && <p className="text-sm text-red-400 mt-4 text-center font-bold">تحتاج لاعبين على الأقل لبدء اللعبة</p>}
+                {room.players.length < 2 && <p className="text-sm text-red-400 mt-4 text-center font-bold">ØªØ­ØªØ§Ø¬ Ù„Ø§Ø¹Ø¨ÙŠÙ† Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„ Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ù„Ø¹Ø¨Ø©</p>}
               </div>
             </div>
           ) : (
             <div className="w-full md:w-80 glass-panel p-6 rounded-3xl border border-white/10 bg-white/5 flex flex-col items-center justify-center text-center">
               <div className="w-12 h-12 rounded-full border-4 border-white/20 border-t-white mx-auto mb-4 animate-spin" />
-              <p className="text-gray-400 font-bold text-lg">بانتظار المضيف يبدأ اللعبة...</p>
+              <p className="text-gray-400 font-bold text-lg">Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ù…Ø¶ÙŠÙ ÙŠØ¨Ø¯Ø£ Ø§Ù„Ù„Ø¹Ø¨Ø©...</p>
             </div>
           )}
         </div>
@@ -204,17 +539,17 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   if (room.gameData?.mode === 'mafia' && room.gameData?.winner) {
     return (
       <main className="fade-screen flex min-h-[100dvh] flex-col p-6 items-center justify-center text-center bg-black">
-        <h1 className="font-kufi text-5xl md:text-7xl font-bold mb-6 text-white">انتهت اللعبة!</h1>
+        <h1 className="font-kufi text-5xl md:text-7xl font-bold mb-6 text-white">Ø§Ù†ØªÙ‡Øª Ø§Ù„Ù„Ø¹Ø¨Ø©!</h1>
         <div className="text-4xl md:text-5xl font-black mb-12 p-8 rounded-3xl bg-white/10 border border-white/20 winner-explosion">
-          {room.gameData.winner === 'town' ? <span className="text-green-400">فاز المواطنون</span> : <span className="text-red-500">فازت المافيا</span>}
+          {room.gameData.winner === 'town' ? <span className="text-green-400">ÙØ§Ø² Ø§Ù„Ù…ÙˆØ§Ø·Ù†ÙˆÙ†</span> : <span className="text-red-500">ÙØ§Ø²Øª Ø§Ù„Ù…Ø§ÙÙŠØ§</span>}
         </div>
         {isHost && (
             <div className="flex flex-col md:flex-row gap-4">
               <button onClick={() => socket.emit(room.gameData?.mode === 'barra' ? 'host_start_barra' : 'host_start_mafia', { code })} className="btn-clean font-kufi bg-red-500 text-white px-10 py-4 rounded-2xl text-xl font-bold shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:scale-105 transition-transform">
-                العب راوند جديد
+                Ø§Ù„Ø¹Ø¨ Ø±Ø§ÙˆÙ†Ø¯ Ø¬Ø¯ÙŠØ¯
               </button>
               <button onClick={() => socket.emit('host_back_to_lobby', { code })} className="btn-clean font-kufi bg-white/10 text-white border border-white/20 px-10 py-4 rounded-2xl text-xl font-bold hover:bg-white/20 transition-colors">
-                العودة للوبي
+                Ø§Ù„Ø¹ÙˆØ¯Ø© Ù„Ù„ÙˆØ¨ÙŠ
               </button>
             </div>
           )}
@@ -222,30 +557,60 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
     );
   }
 
-  // --- HOROOF (تحدي الحروف) ---
+  // --- HOROOF (ØªØ­Ø¯ÙŠ Ø§Ù„Ø­Ø±ÙˆÙ) ---
   if (room.state === 'horoof_lobby') {
-    return <HoroofLobby room={room} socket={socket} onBack={onBack} isHost={isHost} />;
+    return (
+      <div className="w-full flex flex-col">
+        <VoiceBar socket={socket} code={room.code} playerName={name} />
+        <HoroofLobby room={room} socket={socket} onBack={onBack} isHost={isHost} />
+      </div>
+    );
   }
 
   if (room.state === 'horoof_playing') {
-    return <HoroofBoardView room={room} socket={socket} onBack={onBack} isHost={isHost} />;
+    return (
+      <div className="w-full flex flex-col">
+        <VoiceBar socket={socket} code={room.code} playerName={name} />
+        <HoroofBoardView room={room} socket={socket} onBack={onBack} isHost={isHost} />
+      </div>
+    );
   }
 
   if (room.state === 'horoof_winner') {
-    return <HoroofWinnerView room={room} socket={socket} isHost={isHost} onBack={onBack} />;
+    return (
+      <div className="w-full flex flex-col">
+        <VoiceBar socket={socket} code={room.code} playerName={name} />
+        <HoroofWinnerView room={room} socket={socket} isHost={isHost} onBack={onBack} />
+      </div>
+    );
   }
 
-  // --- ADED (عدّد - مين يعدد أكثر) ---
+  // --- ADED (Ø¹Ø¯Ù‘Ø¯ - Ù…ÙŠÙ† ÙŠØ¹Ø¯Ø¯ Ø£ÙƒØ«Ø±) ---
   if (room.state === 'aded_lobby') {
-    return <AdedLobbyView room={room} socket={socket} onBack={onBack} isHost={isHost} />;
+    return (
+      <div className="w-full flex flex-col">
+        <VoiceBar socket={socket} code={room.code} playerName={name} />
+        <AdedLobbyView room={room} socket={socket} onBack={onBack} isHost={isHost} />
+      </div>
+    );
   }
 
   if (room.state === 'aded_playing') {
-    return <AdedGameView room={room} socket={socket} onBack={onBack} isHost={isHost} />;
+    return (
+      <div className="w-full flex flex-col">
+        <VoiceBar socket={socket} code={room.code} playerName={name} />
+        <AdedGameView room={room} socket={socket} onBack={onBack} isHost={isHost} />
+      </div>
+    );
   }
 
   if (room.state === 'aded_results') {
-    return <AdedResultsView room={room} socket={socket} isHost={isHost} onBack={onBack} />;
+    return (
+      <div className="w-full flex flex-col">
+        <VoiceBar socket={socket} code={room.code} playerName={name} />
+        <AdedResultsView room={room} socket={socket} isHost={isHost} onBack={onBack} />
+      </div>
+    );
   }
 
   // --- BARRA AL SALFA ---
@@ -257,40 +622,41 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
 
     return (
       <main className="fade-screen relative flex min-h-[100dvh] flex-col bg-black">
+        <VoiceBar socket={socket} code={room.code} playerName={name} />
         {/* PUBLIC TOP HALF */}
         <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 text-center border-b border-white/10 bg-white/5 relative">
-          <h1 className="font-kufi text-2xl sm:text-4xl font-bold mb-3 text-white">وقت الأسئلة!</h1>
+          <h1 className="font-kufi text-2xl sm:text-4xl font-bold mb-3 text-white">ÙˆÙ‚Øª Ø§Ù„Ø£Ø³Ø¦Ù„Ø©!</h1>
           {!isDone ? (
             <div className="w-full max-w-2xl flex flex-col items-center winner-explosion" key={currentIdx}>
               <div className="text-xs sm:text-sm font-bold text-purple-300 mb-4 bg-purple-950/60 border border-purple-500/40 px-3.5 py-1 rounded-full shadow-sm">
-                سؤال {currentIdx + 1} من {order.length}
+                Ø³Ø¤Ø§Ù„ {currentIdx + 1} Ù…Ù† {order.length}
               </div>
-              <p className="text-gray-400 mb-3 font-bold text-sm sm:text-base">الدور الآن على:</p>
+              <p className="text-gray-400 mb-3 font-bold text-sm sm:text-base">Ø§Ù„Ø¯ÙˆØ± Ø§Ù„Ø¢Ù† Ø¹Ù„Ù‰:</p>
               <div className="flex items-center justify-center gap-3 sm:gap-6 font-black mb-6 w-full max-w-lg">
                  <span className="text-xl sm:text-3xl md:text-4xl text-blue-400 flex-1 text-end truncate">{order[currentIdx].asker}</span>
                  <div className="flex flex-col items-center justify-center bg-black/50 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10">
-                   <span className="text-gray-300 text-xs sm:text-sm font-bold">يسأل</span>
-                   <span className="text-purple-400 text-base sm:text-2xl">➔</span>
+                   <span className="text-gray-300 text-xs sm:text-sm font-bold">ÙŠØ³Ø£Ù„</span>
+                   <span className="text-purple-400 text-base sm:text-2xl">âž”</span>
                  </div>
                  <span className="text-xl sm:text-3xl md:text-4xl text-pink-400 flex-1 text-start truncate">{order[currentIdx].answerer}</span>
               </div>
               {isHost && (
                 <div className="flex flex-wrap justify-center gap-3">
                   <button onClick={() => socket.emit('host_next_question', { code })} className="btn-clean font-kufi bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:to-[#2e1056] text-white border border-purple-400/40 px-6 sm:px-8 py-2.5 sm:py-3 rounded-2xl text-sm sm:text-base font-bold shadow-[0_0_20px_rgba(147,51,234,0.35)] hover:scale-105 transition-all">
-                    {currentIdx === order.length - 1 ? 'إنهاء وبدء التصويت' : 'السؤال التالي'}
+                    {currentIdx === order.length - 1 ? 'Ø¥Ù†Ù‡Ø§Ø¡ ÙˆØ¨Ø¯Ø¡ Ø§Ù„ØªØµÙˆÙŠØª' : 'Ø§Ù„Ø³Ø¤Ø§Ù„ Ø§Ù„ØªØ§Ù„ÙŠ'}
                   </button>
                   <button onClick={() => socket.emit('host_start_voting', { code })} className="btn-clean font-kufi bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all">
-                    تخطي وبدء التصويت
+                    ØªØ®Ø·ÙŠ ÙˆØ¨Ø¯Ø¡ Ø§Ù„ØªØµÙˆÙŠØª
                   </button>
                 </div>
               )}
             </div>
           ) : (
             <div className="winner-explosion">
-              <h2 className="text-2xl sm:text-3xl text-white font-bold mb-4">انتهت كل الأسئلة!</h2>
+              <h2 className="text-2xl sm:text-3xl text-white font-bold mb-4">Ø§Ù†ØªÙ‡Øª ÙƒÙ„ Ø§Ù„Ø£Ø³Ø¦Ù„Ø©!</h2>
               {isHost && (
                 <button onClick={() => socket.emit('host_start_voting', { code })} className="btn-clean font-kufi pulse-glow-red bg-red-500 text-white px-8 py-3.5 rounded-2xl text-lg font-bold shadow-[0_0_20px_rgba(239,68,68,0.4)]">
-                  انتقل للتصويت
+                  Ø§Ù†ØªÙ‚Ù„ Ù„Ù„ØªØµÙˆÙŠØª
                 </button>
               )}
             </div>
@@ -300,7 +666,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
         {/* PRIVATE BOTTOM HALF */}
         <div className="p-6 pb-8 flex flex-col items-center justify-center bg-black">
           <div className="w-full max-w-sm glass-panel p-6 rounded-3xl border border-white/10 text-center">
-            <h3 className="text-sm text-gray-400 font-bold mb-4">دورك السري (لا توريه أحد):</h3>
+            <h3 className="text-sm text-gray-400 font-bold mb-4">Ø¯ÙˆØ±Ùƒ Ø§Ù„Ø³Ø±ÙŠ (Ù„Ø§ ØªÙˆØ±ÙŠÙ‡ Ø£Ø­Ø¯):</h3>
             {showRole ? (
               <div className={`border rounded-xl p-6 mb-4 winner-explosion ${isBad ? "bg-red-500/10 border-red-500/30 text-red-400" : "bg-green-500/10 border-green-500/30 text-green-400"}`}>
                 <h1 className="font-kufi text-2xl font-black mb-1">{roleData.role}</h1>
@@ -308,14 +674,14 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
               </div>
             ) : (
               <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-4">
-                <h1 className="font-kufi text-2xl font-black text-white/20">مخفي</h1>
+                <h1 className="font-kufi text-2xl font-black text-white/20">Ù…Ø®ÙÙŠ</h1>
               </div>
             )}
             <button 
               onPointerDown={() => setShowRole(true)} onPointerUp={() => setShowRole(false)} onPointerLeave={() => setShowRole(false)}
               className="w-full flex justify-center items-center gap-2 py-4 rounded-xl bg-white/10 hover:bg-white/20 font-bold text-white transition-all"
             >
-              {showRole ? <EyeOff size={20} /> : <Eye size={20} />} {showRole ? 'ارفع اصبعك للإخفاء' : 'علق هنا عشان تشوف'}
+              {showRole ? <EyeOff size={20} /> : <Eye size={20} />} {showRole ? 'Ø§Ø±ÙØ¹ Ø§ØµØ¨Ø¹Ùƒ Ù„Ù„Ø¥Ø®ÙØ§Ø¡' : 'Ø¹Ù„Ù‚ Ù‡Ù†Ø§ Ø¹Ø´Ø§Ù† ØªØ´ÙˆÙ'}
             </button>
           </div>
         </div>
@@ -329,11 +695,11 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
       <main className="fade-screen relative flex min-h-[100dvh] flex-col bg-black">
         {/* PUBLIC TOP HALF */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center border-b border-white/10 bg-white/5">
-          <h1 className="font-kufi text-4xl font-bold mb-4 text-red-400">وقت التصويت!</h1>
+          <h1 className="font-kufi text-4xl font-bold mb-4 text-red-400">ÙˆÙ‚Øª Ø§Ù„ØªØµÙˆÙŠØª!</h1>
           <div className="text-6xl font-black text-white mb-6">{votesCount} <span className="text-3xl text-white/30">/ {room.players.length}</span></div>
           {isHost && (
             <button onClick={() => socket.emit('host_reveal_results', { code })} disabled={votesCount === 0} className="btn-clean font-kufi bg-[#7c3aed] hover:bg-[#6d28d9] text-white border border-purple-400/40 px-8 py-3 rounded-2xl text-lg font-bold shadow-[0_0_20px_rgba(168,85,247,0.35)] disabled:opacity-50">
-              كشف النتائج
+              ÙƒØ´Ù Ø§Ù„Ù†ØªØ§Ø¦Ø¬
             </button>
           )}
         </div>
@@ -341,7 +707,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
         {/* PRIVATE BOTTOM HALF */}
         <div className="p-6 pb-8 flex flex-col items-center justify-start bg-black overflow-y-auto max-h-[50vh]">
           <div className="w-full max-w-sm">
-            <h3 className="text-gray-400 font-bold mb-4 text-center">مين تتوقع إنه برا السالفة؟</h3>
+            <h3 className="text-gray-400 font-bold mb-4 text-center">Ù…ÙŠÙ† ØªØªÙˆÙ‚Ø¹ Ø¥Ù†Ù‡ Ø¨Ø±Ø§ Ø§Ù„Ø³Ø§Ù„ÙØ©ØŸ</h3>
             <div className="grid grid-cols-2 gap-3">
               {playersToVote.map((p: any) => (
                 <button key={p.id} onClick={() => castVote(p.id)} className={`pop-in-bouncy card-vibrate py-4 px-4 rounded-xl font-bold text-sm transition-all ${votedFor === p.id ? 'bg-red-500 text-white scale-105' : 'bg-white/10 text-gray-300 border border-white/5 hover:bg-white/20'}`}>
@@ -349,7 +715,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                 </button>
               ))}
             </div>
-            {votedFor && <p className="mt-6 text-green-400 font-bold text-center winner-explosion">تم تسجيل تصويتك!</p>}
+            {votedFor && <p className="mt-6 text-green-400 font-bold text-center winner-explosion">ØªÙ… ØªØ³Ø¬ÙŠÙ„ ØªØµÙˆÙŠØªÙƒ!</p>}
           </div>
         </div>
       </main>
@@ -366,16 +732,16 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
     return (
       <main className="fade-screen flex min-h-[100dvh] flex-col items-center justify-center p-4 sm:p-6 bg-black text-center">
         <h1 className="font-kufi text-3xl sm:text-5xl font-bold mb-3 sm:mb-4 text-purple-400 pop-in-bouncy">
-          {spyCaught ? 'صادوك يا اللي برا السالفة!' : 'انتهى التصويت! دور اللي برا السالفة'}
+          {spyCaught ? 'ØµØ§Ø¯ÙˆÙƒ ÙŠØ§ Ø§Ù„Ù„ÙŠ Ø¨Ø±Ø§ Ø§Ù„Ø³Ø§Ù„ÙØ©!' : 'Ø§Ù†ØªÙ‡Ù‰ Ø§Ù„ØªØµÙˆÙŠØª! Ø¯ÙˆØ± Ø§Ù„Ù„ÙŠ Ø¨Ø±Ø§ Ø§Ù„Ø³Ø§Ù„ÙØ©'}
         </h1>
         <div className="text-lg sm:text-2xl text-gray-300 mb-6">
-          اللي برا السالفة هو: <span className="text-purple-300 font-bold">{spy?.name} {isSpyMe && '(أنت)'}</span>
+          Ø§Ù„Ù„ÙŠ Ø¨Ø±Ø§ Ø§Ù„Ø³Ø§Ù„ÙØ© Ù‡Ùˆ: <span className="text-purple-300 font-bold">{spy?.name} {isSpyMe && '(Ø£Ù†Øª)'}</span>
         </div>
         
         {isSpyMe ? (
           <div className="w-full max-w-xl fade-in-up bg-white/5 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-purple-500/30">
-            <h2 className="text-lg sm:text-xl font-bold text-white mb-2">عندك فرصة لتخمين السالفة!</h2>
-            <p className="text-xs sm:text-sm text-gray-400 mb-6">التصنيف: <span className="text-purple-300 font-bold">{room.gameData.category}</span> — خمن الكلمة الصح:</p>
+            <h2 className="text-lg sm:text-xl font-bold text-white mb-2">Ø¹Ù†Ø¯Ùƒ ÙØ±ØµØ© Ù„ØªØ®Ù…ÙŠÙ† Ø§Ù„Ø³Ø§Ù„ÙØ©!</h2>
+            <p className="text-xs sm:text-sm text-gray-400 mb-6">Ø§Ù„ØªØµÙ†ÙŠÙ: <span className="text-purple-300 font-bold">{room.gameData.category}</span> â€” Ø®Ù…Ù† Ø§Ù„ÙƒÙ„Ù…Ø© Ø§Ù„ØµØ­:</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
               {allOptions.map((opt: string) => (
                 <button 
@@ -390,7 +756,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
           </div>
         ) : (
           <div className="text-lg sm:text-xl text-purple-300 font-bold animate-pulse bg-white/5 px-6 py-4 rounded-2xl border border-white/10">
-            {spy?.name} قاعد يحاول يخمن وش السالفة...
+            {spy?.name} Ù‚Ø§Ø¹Ø¯ ÙŠØ­Ø§ÙˆÙ„ ÙŠØ®Ù…Ù† ÙˆØ´ Ø§Ù„Ø³Ø§Ù„ÙØ©...
           </div>
         )}
       </main>
@@ -406,25 +772,25 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
     return (
       <main className="fade-screen flex min-h-[100dvh] flex-col items-center justify-center p-4 sm:p-6 bg-black text-center">
         <h1 className="winner-explosion font-kufi text-3xl sm:text-5xl font-bold mb-4 sm:mb-6 text-white">
-          {spyWon ? <span className="text-purple-400">فاز اللي برا السالفة!</span> : <span className="text-green-400">فاز الشعب!</span>}
+          {spyWon ? <span className="text-purple-400">ÙØ§Ø² Ø§Ù„Ù„ÙŠ Ø¨Ø±Ø§ Ø§Ù„Ø³Ø§Ù„ÙØ©!</span> : <span className="text-green-400">ÙØ§Ø² Ø§Ù„Ø´Ø¹Ø¨!</span>}
         </h1>
         
         <div className="w-full max-w-md bg-white/5 p-5 sm:p-8 rounded-3xl border border-white/10 flex flex-col gap-4 mb-6">
           <div>
-            <div className="text-xs sm:text-sm text-gray-400 mb-1">اللي كان برا السالفة:</div>
-            <div className="text-2xl sm:text-4xl font-black text-purple-300">{spy?.name} {isSpyMe && '(أنت)'}</div>
+            <div className="text-xs sm:text-sm text-gray-400 mb-1">Ø§Ù„Ù„ÙŠ ÙƒØ§Ù† Ø¨Ø±Ø§ Ø§Ù„Ø³Ø§Ù„ÙØ©:</div>
+            <div className="text-2xl sm:text-4xl font-black text-purple-300">{spy?.name} {isSpyMe && '(Ø£Ù†Øª)'}</div>
           </div>
           
           <div className="border-t border-white/10 pt-3">
-            <div className="text-xs sm:text-sm text-gray-400 mb-1">السالفة كانت:</div>
+            <div className="text-xs sm:text-sm text-gray-400 mb-1">Ø§Ù„Ø³Ø§Ù„ÙØ© ÙƒØ§Ù†Øª:</div>
             <div className="text-xl sm:text-2xl font-bold text-green-400">{room.gameData.word}</div>
           </div>
 
           {room.gameData.spyGuessedWord && (
             <div className="border-t border-white/10 pt-3">
-              <div className="text-xs sm:text-sm text-gray-400 mb-1">تخمين اللي برا السالفة:</div>
+              <div className="text-xs sm:text-sm text-gray-400 mb-1">ØªØ®Ù…ÙŠÙ† Ø§Ù„Ù„ÙŠ Ø¨Ø±Ø§ Ø§Ù„Ø³Ø§Ù„ÙØ©:</div>
               <div className={`text-base sm:text-lg font-bold ${spyGuessedCorrect ? 'text-green-400' : 'text-red-400'}`}>
-                {room.gameData.spyGuessedWord} {spyGuessedCorrect ? '(صحيح)' : '(خطأ)'}
+                {room.gameData.spyGuessedWord} {spyGuessedCorrect ? '(ØµØ­ÙŠØ­)' : '(Ø®Ø·Ø£)'}
               </div>
             </div>
           )}
@@ -433,10 +799,10 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
         {isHost && (
           <div className="flex flex-col sm:flex-row gap-3 mt-2">
             <button onClick={() => socket.emit('host_start_barra', { code })} className="btn-clean font-kufi bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:to-[#2e1056] text-white border border-purple-400/40 px-8 py-3.5 rounded-2xl text-base sm:text-lg font-bold shadow-[0_0_20px_rgba(147,51,234,0.35)] hover:scale-105 transition-transform">
-              العب راوند جديد
+              Ø§Ù„Ø¹Ø¨ Ø±Ø§ÙˆÙ†Ø¯ Ø¬Ø¯ÙŠØ¯
             </button>
             <button onClick={() => socket.emit('host_back_to_lobby', { code })} className="btn-clean font-kufi bg-white/10 text-white border border-white/20 px-8 py-3.5 rounded-2xl text-base sm:text-lg font-bold hover:bg-white/20 transition-colors">
-              العودة للوبي
+              Ø§Ù„Ø¹ÙˆØ¯Ø© Ù„Ù„ÙˆØ¨ÙŠ
             </button>
           </div>
         )}
@@ -447,26 +813,27 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   // --- MAFIA ---
   
   if (room.state === 'codenames_lobby') {
-    const myTeam = room.gameData?.teams?.[socket.id];
+    const myTeam = socket.id ? room.gameData?.teams?.[socket.id] : undefined;
     const redSpymaster = room.gameData?.spymasters?.red;
     const blueSpymaster = room.gameData?.spymasters?.blue;
     
     return (
       <main className="fade-screen flex min-h-[100dvh] flex-col p-4 sm:p-6 items-center bg-black">
-        <h1 className="font-kufi text-2xl sm:text-4xl font-bold text-white mb-4 sm:mb-8 pop-in-bouncy">تجهيز كود نيمز</h1>
+        <VoiceBar socket={socket} code={room.code} playerName={name} />
+        <h1 className="font-kufi text-2xl sm:text-4xl font-bold text-white mb-4 sm:mb-8 pop-in-bouncy">ØªØ¬Ù‡ÙŠØ² ÙƒÙˆØ¯ Ù†ÙŠÙ…Ø²</h1>
         
         <div className="flex flex-col md:flex-row gap-4 sm:gap-8 w-full max-w-4xl mb-6 sm:mb-12 fade-in-up">
           {/* Red Team */}
           <div className="flex-1 bg-red-900/20 border border-red-500/30 p-4 sm:p-6 rounded-2xl sm:rounded-3xl flex flex-col items-center">
-            <h2 className="text-xl sm:text-2xl font-bold text-red-500 mb-3 sm:mb-4">الفريق الأحمر</h2>
-            <button onClick={() => socket.emit('cn_join_team', { code, team: 'red' })} className="mb-4 sm:mb-6 px-5 py-1.5 sm:px-6 sm:py-2 rounded-full bg-red-500/20 text-red-400 text-xs sm:text-sm font-bold hover:bg-red-500/40">انضم للأحمر</button>
+            <h2 className="text-xl sm:text-2xl font-bold text-red-500 mb-3 sm:mb-4">Ø§Ù„ÙØ±ÙŠÙ‚ Ø§Ù„Ø£Ø­Ù…Ø±</h2>
+            <button onClick={() => socket.emit('cn_join_team', { code, team: 'red' })} className="mb-4 sm:mb-6 px-5 py-1.5 sm:px-6 sm:py-2 rounded-full bg-red-500/20 text-red-400 text-xs sm:text-sm font-bold hover:bg-red-500/40">Ø§Ù†Ø¶Ù… Ù„Ù„Ø£Ø­Ù…Ø±</button>
             <div className="w-full space-y-2 sm:space-y-3">
               <div className="p-2.5 sm:p-3 bg-black/50 border border-red-500/20 rounded-xl">
-                <span className="text-gray-400 text-xs sm:text-sm block mb-1">الرئيس (Spymaster)</span>
-                {redSpymaster ? <span className="text-white font-bold text-sm sm:text-base">{room.players.find((p:any) => p.id === redSpymaster)?.name}</span> : <button onClick={() => socket.emit('cn_claim_spymaster', { code, team: 'red' })} className="text-red-400 font-bold text-xs bg-red-500/20 px-3 py-1 rounded-full">استلم المنصب</button>}
+                <span className="text-gray-400 text-xs sm:text-sm block mb-1">Ø§Ù„Ø±Ø¦ÙŠØ³ (Spymaster)</span>
+                {redSpymaster ? <span className="text-white font-bold text-sm sm:text-base">{room.players.find((p:any) => p.id === redSpymaster)?.name}</span> : <button onClick={() => socket.emit('cn_claim_spymaster', { code, team: 'red' })} className="text-red-400 font-bold text-xs bg-red-500/20 px-3 py-1 rounded-full">Ø§Ø³ØªÙ„Ù… Ø§Ù„Ù…Ù†ØµØ¨</button>}
               </div>
               <div className="p-2.5 sm:p-3 bg-black/50 border border-red-500/20 rounded-xl min-h-[60px] sm:min-h-[100px]">
-                <span className="text-gray-400 text-xs sm:text-sm block mb-1">العملاء</span>
+                <span className="text-gray-400 text-xs sm:text-sm block mb-1">Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡</span>
                 {room.players.filter((p:any) => room.gameData?.teams?.[p.id] === 'red' && p.id !== redSpymaster).map((p:any) => (
                   <div key={p.id} className="text-white font-bold text-xs sm:text-sm">{p.name}</div>
                 ))}
@@ -476,15 +843,15 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
           
           {/* Blue Team */}
           <div className="flex-1 bg-blue-900/20 border border-blue-500/30 p-4 sm:p-6 rounded-2xl sm:rounded-3xl flex flex-col items-center">
-            <h2 className="text-xl sm:text-2xl font-bold text-blue-500 mb-3 sm:mb-4">الفريق الأزرق</h2>
-            <button onClick={() => socket.emit('cn_join_team', { code, team: 'blue' })} className="mb-4 sm:mb-6 px-5 py-1.5 sm:px-6 sm:py-2 rounded-full bg-blue-500/20 text-blue-400 text-xs sm:text-sm font-bold hover:bg-blue-500/40">انضم للأزرق</button>
+            <h2 className="text-xl sm:text-2xl font-bold text-blue-500 mb-3 sm:mb-4">Ø§Ù„ÙØ±ÙŠÙ‚ Ø§Ù„Ø£Ø²Ø±Ù‚</h2>
+            <button onClick={() => socket.emit('cn_join_team', { code, team: 'blue' })} className="mb-4 sm:mb-6 px-5 py-1.5 sm:px-6 sm:py-2 rounded-full bg-blue-500/20 text-blue-400 text-xs sm:text-sm font-bold hover:bg-blue-500/40">Ø§Ù†Ø¶Ù… Ù„Ù„Ø£Ø²Ø±Ù‚</button>
             <div className="w-full space-y-2 sm:space-y-3">
               <div className="p-2.5 sm:p-3 bg-black/50 border border-blue-500/20 rounded-xl">
-                <span className="text-gray-400 text-xs sm:text-sm block mb-1">الرئيس (Spymaster)</span>
-                {blueSpymaster ? <span className="text-white font-bold text-sm sm:text-base">{room.players.find((p:any) => p.id === blueSpymaster)?.name}</span> : <button onClick={() => socket.emit('cn_claim_spymaster', { code, team: 'blue' })} className="text-blue-400 font-bold text-xs bg-blue-500/20 px-3 py-1 rounded-full">استلم المنصب</button>}
+                <span className="text-gray-400 text-xs sm:text-sm block mb-1">Ø§Ù„Ø±Ø¦ÙŠØ³ (Spymaster)</span>
+                {blueSpymaster ? <span className="text-white font-bold text-sm sm:text-base">{room.players.find((p:any) => p.id === blueSpymaster)?.name}</span> : <button onClick={() => socket.emit('cn_claim_spymaster', { code, team: 'blue' })} className="text-blue-400 font-bold text-xs bg-blue-500/20 px-3 py-1 rounded-full">Ø§Ø³ØªÙ„Ù… Ø§Ù„Ù…Ù†ØµØ¨</button>}
               </div>
               <div className="p-2.5 sm:p-3 bg-black/50 border border-blue-500/20 rounded-xl min-h-[60px] sm:min-h-[100px]">
-                <span className="text-gray-400 text-xs sm:text-sm block mb-1">العملاء</span>
+                <span className="text-gray-400 text-xs sm:text-sm block mb-1">Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡</span>
                 {room.players.filter((p:any) => room.gameData?.teams?.[p.id] === 'blue' && p.id !== blueSpymaster).map((p:any) => (
                   <div key={p.id} className="text-white font-bold text-xs sm:text-sm">{p.name}</div>
                 ))}
@@ -495,7 +862,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
 
         {isHost && (
           <button onClick={() => socket.emit('host_start_codenames', { code })} className="btn-clean font-kufi bg-[#7c3aed] hover:bg-[#6d28d9] text-white border border-purple-400/40 px-8 sm:px-12 py-3 sm:py-4 rounded-2xl text-base sm:text-xl font-bold hover:scale-105 transition-transform shadow-[0_0_25px_rgba(168,85,247,0.4)]">
-            ابدأ اللعبة
+            Ø§Ø¨Ø¯Ø£ Ø§Ù„Ù„Ø¹Ø¨Ø©
           </button>
         )}
       </main>
@@ -505,9 +872,9 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   if (room.state === 'codenames_playing') {
     const gd = room.gameData || {};
     const isRedTurn = gd.turn === 'red';
-    const myTeam = gd.teams?.[socket.id];
+    const myTeam = socket.id ? gd.teams?.[socket.id] : undefined;
     const isMyTurn = myTeam === gd.turn;
-    const isSpymaster = gd.spymasters?.red === socket.id || gd.spymasters?.blue === socket.id;
+    const isSpymaster = socket.id ? (gd.spymasters?.red === socket.id || gd.spymasters?.blue === socket.id) : false;
     const amIActiveSpymaster = isSpymaster && isMyTurn;
     const amIActiveOperative = !isSpymaster && isMyTurn;
     const board = gd.board || [];
@@ -520,17 +887,18 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
 
     return (
       <main className="fade-screen flex h-[100dvh] max-h-[100dvh] flex-col p-2 sm:p-3 items-center bg-black justify-between overflow-y-auto">
+        <VoiceBar socket={socket} code={room.code} playerName={name} />
         {/* Status Bar */}
         <div className={`w-full max-w-xl sm:max-w-2xl p-2 sm:p-3 rounded-xl sm:rounded-2xl flex justify-between items-center mb-1 sm:mb-2 border ${isRedTurn ? 'bg-red-950/40 border-red-500/50' : 'bg-blue-950/40 border-blue-500/50'}`}>
           <div className="text-red-400 font-bold text-sm sm:text-xl bg-black/60 px-2.5 sm:px-3.5 py-1 rounded-lg sm:rounded-xl">{gd.left?.red ?? 0}</div>
           <div className="text-center px-2">
-            <div className={`text-sm sm:text-lg font-bold ${isRedTurn ? 'text-red-400' : 'text-blue-400'}`}>دور الفريق {isRedTurn ? 'الأحمر' : 'الأزرق'}</div>
+            <div className={`text-sm sm:text-lg font-bold ${isRedTurn ? 'text-red-400' : 'text-blue-400'}`}>Ø¯ÙˆØ± Ø§Ù„ÙØ±ÙŠÙ‚ {isRedTurn ? 'Ø§Ù„Ø£Ø­Ù…Ø±' : 'Ø§Ù„Ø£Ø²Ø±Ù‚'}</div>
             {gd.clue ? (
               <div className="text-[11px] sm:text-sm text-white mt-0.5">
-                تلميحة: <span className="font-bold text-purple-300">{gd.clue.word}</span> ({gd.clue.number})
+                ØªÙ„Ù…ÙŠØ­Ø©: <span className="font-bold text-purple-300">{gd.clue.word}</span> ({gd.clue.number})
               </div>
             ) : (
-              <div className="text-gray-400 text-[11px] sm:text-xs mt-0.5">بانتظار الرئيس يعطي تلميحة...</div>
+              <div className="text-gray-400 text-[11px] sm:text-xs mt-0.5">Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ø±Ø¦ÙŠØ³ ÙŠØ¹Ø·ÙŠ ØªÙ„Ù…ÙŠØ­Ø©...</div>
             )}
           </div>
           <div className="text-blue-400 font-bold text-sm sm:text-xl bg-black/60 px-2.5 sm:px-3.5 py-1 rounded-lg sm:rounded-xl">{gd.left?.blue ?? 0}</div>
@@ -569,15 +937,15 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
         <div className="w-full max-w-xl sm:max-w-2xl flex justify-center gap-2 pb-14 sm:pb-4 mt-1">
           {amIActiveSpymaster && !gd.clue && (
             <div className="flex gap-2 w-full max-w-md bg-white/5 p-1.5 sm:p-2 rounded-xl border border-white/10">
-              <input type="text" placeholder="كلمة التلميح" value={clueWord} onChange={e=>setClueWord(e.target.value)} className="flex-1 bg-black/60 text-white text-xs sm:text-sm rounded-lg px-2.5 py-1.5 outline-none focus:border-purple-400 border border-transparent" />
+              <input type="text" placeholder="ÙƒÙ„Ù…Ø© Ø§Ù„ØªÙ„Ù…ÙŠØ­" value={clueWord} onChange={e=>setClueWord(e.target.value)} className="flex-1 bg-black/60 text-white text-xs sm:text-sm rounded-lg px-2.5 py-1.5 outline-none focus:border-purple-400 border border-transparent" />
               <input type="number" min="1" max="9" value={clueNum} onChange={e=>setClueNum(parseInt(e.target.value) || 1)} className="w-12 sm:w-16 bg-black/60 text-white text-xs sm:text-sm rounded-lg px-1.5 py-1.5 text-center outline-none border border-transparent" />
-              <button onClick={submitClue} className="bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:to-[#2e1056] text-white font-bold text-xs sm:text-sm px-3.5 sm:px-5 py-1.5 rounded-lg border border-purple-400/40 transition-all">أرسل</button>
+              <button onClick={submitClue} className="bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:to-[#2e1056] text-white font-bold text-xs sm:text-sm px-3.5 sm:px-5 py-1.5 rounded-lg border border-purple-400/40 transition-all">Ø£Ø±Ø³Ù„</button>
             </div>
           )}
           
           {amIActiveOperative && gd.clue && (
             <button onClick={() => socket.emit('cn_end_turn', { code })} className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold text-xs sm:text-sm px-6 sm:px-8 py-2 rounded-xl hover:scale-105 transition-transform">
-              إنهاء الدور
+              Ø¥Ù†Ù‡Ø§Ø¡ Ø§Ù„Ø¯ÙˆØ±
             </button>
           )}
         </div>
@@ -589,19 +957,19 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
     const winnerIsRed = room.gameData?.winner === 'red';
     return (
       <main className="fade-screen flex min-h-[100dvh] flex-col p-4 sm:p-6 items-center justify-center text-center bg-black">
-        <h1 className="winner-explosion font-kufi text-3xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 text-white">انتهت اللعبة!</h1>
+        <h1 className="winner-explosion font-kufi text-3xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 text-white">Ø§Ù†ØªÙ‡Øª Ø§Ù„Ù„Ø¹Ø¨Ø©!</h1>
         <div className="winner-explosion text-2xl sm:text-4xl md:text-5xl font-black mb-8 sm:mb-12 p-6 sm:p-12 rounded-2xl sm:rounded-3xl bg-white/10 border border-white/20">
           <span className={winnerIsRed ? "text-red-500" : "text-blue-500"}>
-            فاز الفريق {winnerIsRed ? 'الأحمر' : 'الأزرق'}!
+            ÙØ§Ø² Ø§Ù„ÙØ±ÙŠÙ‚ {winnerIsRed ? 'Ø§Ù„Ø£Ø­Ù…Ø±' : 'Ø§Ù„Ø£Ø²Ø±Ù‚'}!
           </span>
         </div>
         {isHost && (
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-sm">
             <button onClick={() => socket.emit('host_start_codenames_lobby', { code })} className="btn-clean font-kufi bg-green-500 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-xl font-bold shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:scale-105 transition-transform">
-              العب راوند جديد
+              Ø§Ù„Ø¹Ø¨ Ø±Ø§ÙˆÙ†Ø¯ Ø¬Ø¯ÙŠØ¯
             </button>
             <button onClick={() => socket.emit('host_back_to_lobby', { code })} className="btn-clean font-kufi bg-white/10 text-white border border-white/20 px-6 sm:px-10 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-xl font-bold hover:bg-white/20 transition-colors">
-              العودة للوبي
+              Ø§Ù„Ø¹ÙˆØ¯Ø© Ù„Ù„ÙˆØ¨ÙŠ
             </button>
           </div>
         )}
@@ -615,11 +983,11 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
       <main className="fade-screen relative flex min-h-[100dvh] flex-col bg-black">
         {/* PUBLIC TOP HALF */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center border-b border-white/10 bg-white/5">
-          <h1 className="font-kufi text-4xl font-bold mb-4 text-white">توزيع الأدوار</h1>
-          <p className="text-xl text-gray-400 mb-8">الكل يشوف دوره الحين... تأكد محد يشوف شاشتك!</p>
+          <h1 className="font-kufi text-4xl font-bold mb-4 text-white">ØªÙˆØ²ÙŠØ¹ Ø§Ù„Ø£Ø¯ÙˆØ§Ø±</h1>
+          <p className="text-xl text-gray-400 mb-8">Ø§Ù„ÙƒÙ„ ÙŠØ´ÙˆÙ Ø¯ÙˆØ±Ù‡ Ø§Ù„Ø­ÙŠÙ†... ØªØ£ÙƒØ¯ Ù…Ø­Ø¯ ÙŠØ´ÙˆÙ Ø´Ø§Ø´ØªÙƒ!</p>
           {isHost && (
             <button onClick={() => socket.emit('host_start_first_night', { code })} className="btn-clean font-kufi bg-blue-500 text-white px-10 py-4 rounded-2xl text-xl font-bold shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:scale-105 transition-transform">
-              الكل شاف دوره؟ ابدأ الليل
+              Ø§Ù„ÙƒÙ„ Ø´Ø§Ù Ø¯ÙˆØ±Ù‡ØŸ Ø§Ø¨Ø¯Ø£ Ø§Ù„Ù„ÙŠÙ„
             </button>
           )}
         </div>
@@ -627,7 +995,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
         {/* PRIVATE BOTTOM HALF */}
         <div className="p-6 pb-8 flex flex-col items-center justify-center bg-black">
           <div className="w-full max-w-sm glass-panel p-6 rounded-3xl border border-white/10 text-center">
-            <h3 className="text-sm text-gray-400 font-bold mb-4">دورك السري (لا توريه أحد):</h3>
+            <h3 className="text-sm text-gray-400 font-bold mb-4">Ø¯ÙˆØ±Ùƒ Ø§Ù„Ø³Ø±ÙŠ (Ù„Ø§ ØªÙˆØ±ÙŠÙ‡ Ø£Ø­Ø¯):</h3>
             {showRole ? (
               <div className={`border rounded-xl p-6 mb-4 winner-explosion ${isBad ? "bg-red-500/10 border-red-500/30 text-red-400" : "bg-green-500/10 border-green-500/30 text-green-400"}`}>
                 <h1 className="font-kufi text-2xl font-black mb-1">{roleData.role}</h1>
@@ -635,14 +1003,14 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
               </div>
             ) : (
               <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-4">
-                <h1 className="font-kufi text-2xl font-black text-white/20">مخفي</h1>
+                <h1 className="font-kufi text-2xl font-black text-white/20">Ù…Ø®ÙÙŠ</h1>
               </div>
             )}
             <button 
               onPointerDown={() => setShowRole(true)} onPointerUp={() => setShowRole(false)} onPointerLeave={() => setShowRole(false)}
               className="w-full flex justify-center items-center gap-2 py-4 rounded-xl bg-white/10 hover:bg-white/20 font-bold text-white transition-all"
             >
-              {showRole ? <EyeOff size={20} /> : <Eye size={20} />} {showRole ? 'ارفع اصبعك للإخفاء' : 'علق هنا عشان تشوف'}
+              {showRole ? <EyeOff size={20} /> : <Eye size={20} />} {showRole ? 'Ø§Ø±ÙØ¹ Ø§ØµØ¨Ø¹Ùƒ Ù„Ù„Ø¥Ø®ÙØ§Ø¡' : 'Ø¹Ù„Ù‚ Ù‡Ù†Ø§ Ø¹Ø´Ø§Ù† ØªØ´ÙˆÙ'}
             </button>
           </div>
         </div>
@@ -657,16 +1025,17 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
 
     return (
       <main className="fade-screen relative flex min-h-[100dvh] flex-col bg-black">
+        <VoiceBar socket={socket} code={room.code} playerName={name} />
         {/* PUBLIC TOP HALF */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center border-b border-white/10 bg-white/5">
-          <h1 className="font-kufi text-5xl font-bold mb-4 text-blue-400">المدينة نايمة</h1>
-          <p className="text-lg text-gray-400 mb-6">المافيا والطبيب يختارون الحين...</p>
+          <h1 className="font-kufi text-5xl font-bold mb-4 text-blue-400">Ø§Ù„Ù…Ø¯ÙŠÙ†Ø© Ù†Ø§ÙŠÙ…Ø©</h1>
+          <p className="text-lg text-gray-400 mb-6">Ø§Ù„Ù…Ø§ÙÙŠØ§ ÙˆØ§Ù„Ø·Ø¨ÙŠØ¨ ÙŠØ®ØªØ§Ø±ÙˆÙ† Ø§Ù„Ø­ÙŠÙ†...</p>
           <div className="flex gap-4 mb-8">
-            <div className={`p-4 rounded-xl border text-sm font-bold ${mafiaDone ? 'border-green-500 bg-green-500/20 text-green-400' : 'border-white/20 bg-white/5 text-gray-500'}`}>المافيا {mafiaDone ? 'جاهز' : 'ينتظر'}</div>
-            <div className={`p-4 rounded-xl border text-sm font-bold ${doctorDone ? 'border-green-500 bg-green-500/20 text-green-400' : 'border-white/20 bg-white/5 text-gray-500'}`}>الطبيب {doctorDone ? 'جاهز' : 'ينتظر'}</div>
+            <div className={`p-4 rounded-xl border text-sm font-bold ${mafiaDone ? 'border-green-500 bg-green-500/20 text-green-400' : 'border-white/20 bg-white/5 text-gray-500'}`}>Ø§Ù„Ù…Ø§ÙÙŠØ§ {mafiaDone ? 'Ø¬Ø§Ù‡Ø²' : 'ÙŠÙ†ØªØ¸Ø±'}</div>
+            <div className={`p-4 rounded-xl border text-sm font-bold ${doctorDone ? 'border-green-500 bg-green-500/20 text-green-400' : 'border-white/20 bg-white/5 text-gray-500'}`}>Ø§Ù„Ø·Ø¨ÙŠØ¨ {doctorDone ? 'Ø¬Ø§Ù‡Ø²' : 'ÙŠÙ†ØªØ¸Ø±'}</div>
           </div>
           {isHost && (
-            <button onClick={() => socket.emit('host_end_night', { code })} className="btn-clean font-kufi bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:to-[#2e1056] text-white border border-purple-400/40 px-8 py-3 rounded-2xl font-bold shadow-[0_0_20px_rgba(147,51,234,0.35)] hover:scale-105 transition-all">إنهاء الليلة</button>
+            <button onClick={() => socket.emit('host_end_night', { code })} className="btn-clean font-kufi bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:to-[#2e1056] text-white border border-purple-400/40 px-8 py-3 rounded-2xl font-bold shadow-[0_0_20px_rgba(147,51,234,0.35)] hover:scale-105 transition-all">Ø¥Ù†Ù‡Ø§Ø¡ Ø§Ù„Ù„ÙŠÙ„Ø©</button>
           )}
         </div>
 
@@ -675,12 +1044,12 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
           <div className="w-full max-w-sm text-center">
             {isDead ? (
               <div className="text-red-500 font-bold mt-10">
-                <h2 className="text-4xl font-black mb-2">أنت ميت</h2>
-                <p className="text-gray-400">تابع اللعب عالصامت</p>
+                <h2 className="text-4xl font-black mb-2">Ø£Ù†Øª Ù…ÙŠØª</h2>
+                <p className="text-gray-400">ØªØ§Ø¨Ø¹ Ø§Ù„Ù„Ø¹Ø¨ Ø¹Ø§Ù„ØµØ§Ù…Øª</p>
               </div>
             ) : roleData.type === 'mafia' || roleData.type === 'doctor' ? (
               <>
-                <h3 className="font-kufi text-xl font-bold mb-4 text-white">{roleData.type === 'mafia' ? 'تبي تقتل مين؟' : 'تبي تعالج مين؟'}</h3>
+                <h3 className="font-kufi text-xl font-bold mb-4 text-white">{roleData.type === 'mafia' ? 'ØªØ¨ÙŠ ØªÙ‚ØªÙ„ Ù…ÙŠÙ†ØŸ' : 'ØªØ¨ÙŠ ØªØ¹Ø§Ù„Ø¬ Ù…ÙŠÙ†ØŸ'}</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {playersToVote.map((p: any) => (
                     <button key={p.id} onClick={() => castMafiaAction(p.id)} className={`pop-in-bouncy card-vibrate py-4 px-4 rounded-xl font-bold text-sm transition-all ${votedFor === p.id ? 'bg-red-500 text-white scale-105' : 'bg-white/10 text-gray-300 border border-white/5 hover:bg-white/20'}`}>
@@ -688,12 +1057,12 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                     </button>
                   ))}
                 </div>
-                {votedFor && <p className="mt-6 text-green-400 font-bold winner-explosion">تم! بانتظار الباقين.</p>}
+                {votedFor && <p className="mt-6 text-green-400 font-bold winner-explosion">ØªÙ…! Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ø¨Ø§Ù‚ÙŠÙ†.</p>}
               </>
             ) : (
               <div className="text-gray-500 font-bold mt-10">
-                <h2 className="text-3xl font-black mb-2 text-gray-400">أنت مواطن</h2>
-                <p>غمض عيونك ولا تتكلم</p>
+                <h2 className="text-3xl font-black mb-2 text-gray-400">Ø£Ù†Øª Ù…ÙˆØ§Ø·Ù†</h2>
+                <p>ØºÙ…Ø¶ Ø¹ÙŠÙˆÙ†Ùƒ ÙˆÙ„Ø§ ØªØªÙƒÙ„Ù…</p>
               </div>
             )}
           </div>
@@ -707,20 +1076,20 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
       <main className="fade-screen relative flex min-h-[100dvh] flex-col bg-black">
         {/* PUBLIC TOP HALF */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center border-b border-white/10 bg-white/5">
-          <h1 className="font-kufi text-5xl font-bold mb-6 text-yellow-500">أشرقت الشمس</h1>
+          <h1 className="font-kufi text-5xl font-bold mb-6 text-yellow-500">Ø£Ø´Ø±Ù‚Øª Ø§Ù„Ø´Ù…Ø³</h1>
           <div className="glass-panel p-6 rounded-3xl border border-white/10 w-full max-w-lg mb-6 winner-explosion">
             {dayData?.killedName ? (
               <>
-                <h3 className="text-gray-400 mb-2">الضحية الليلة:</h3>
+                <h3 className="text-gray-400 mb-2">Ø§Ù„Ø¶Ø­ÙŠØ© Ø§Ù„Ù„ÙŠÙ„Ø©:</h3>
                 <div className="text-4xl font-black text-red-500">{dayData.killedName}</div>
               </>
             ) : (
-              <h3 className="text-3xl font-bold text-green-400">الحمد لله!<br/>محد مات اليوم</h3>
+              <h3 className="text-3xl font-bold text-green-400">Ø§Ù„Ø­Ù…Ø¯ Ù„Ù„Ù‡!<br/>Ù…Ø­Ø¯ Ù…Ø§Øª Ø§Ù„ÙŠÙˆÙ…</h3>
             )}
           </div>
           <DiscussionTimer duration={60} />
           {isHost && (
-            <button onClick={() => socket.emit('host_start_mafia_voting', { code })} className="btn-clean font-kufi bg-red-500 text-white px-8 py-3 rounded-2xl text-lg font-bold mt-6 shadow-[0_0_15px_rgba(239,68,68,0.4)]">تخطي الوقت وبدء التصويت</button>
+            <button onClick={() => socket.emit('host_start_mafia_voting', { code })} className="btn-clean font-kufi bg-red-500 text-white px-8 py-3 rounded-2xl text-lg font-bold mt-6 shadow-[0_0_15px_rgba(239,68,68,0.4)]">ØªØ®Ø·ÙŠ Ø§Ù„ÙˆÙ‚Øª ÙˆØ¨Ø¯Ø¡ Ø§Ù„ØªØµÙˆÙŠØª</button>
           )}
         </div>
 
@@ -728,13 +1097,13 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
         <div className="p-6 pb-8 flex flex-col items-center justify-center bg-black">
            {isDead ? (
              <div className="text-center text-red-500 font-bold">
-               <h2 className="text-3xl font-black mb-2">أنت ميت</h2>
-               <p className="text-gray-400">تابع المحاكمة بصمت</p>
+               <h2 className="text-3xl font-black mb-2">Ø£Ù†Øª Ù…ÙŠØª</h2>
+               <p className="text-gray-400">ØªØ§Ø¨Ø¹ Ø§Ù„Ù…Ø­Ø§ÙƒÙ…Ø© Ø¨ØµÙ…Øª</p>
              </div>
            ) : (
              <div className="text-center">
-               <h3 className="text-2xl font-bold text-white mb-2">وقت السوالف!</h3>
-               <p className="text-gray-400">تناقشوا مين المافيا ودافع عن نفسك.</p>
+               <h3 className="text-2xl font-bold text-white mb-2">ÙˆÙ‚Øª Ø§Ù„Ø³ÙˆØ§Ù„Ù!</h3>
+               <p className="text-gray-400">ØªÙ†Ø§Ù‚Ø´ÙˆØ§ Ù…ÙŠÙ† Ø§Ù„Ù…Ø§ÙÙŠØ§ ÙˆØ¯Ø§ÙØ¹ Ø¹Ù† Ù†ÙØ³Ùƒ.</p>
              </div>
            )}
         </div>
@@ -750,11 +1119,11 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
       <main className="fade-screen relative flex min-h-[100dvh] flex-col bg-black">
         {/* PUBLIC TOP HALF */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center border-b border-white/10 bg-white/5">
-          <h1 className="font-kufi text-4xl font-bold mb-4 text-red-400">تصويت الإعدام!</h1>
+          <h1 className="font-kufi text-4xl font-bold mb-4 text-red-400">ØªØµÙˆÙŠØª Ø§Ù„Ø¥Ø¹Ø¯Ø§Ù…!</h1>
           <div className="text-6xl font-black text-white mb-6">{votesCount} <span className="text-3xl text-white/30">/ {aliveCount}</span></div>
           {isHost && (
             <button onClick={() => socket.emit('host_execute_mafia', { code })} disabled={votesCount === 0} className="btn-clean font-kufi bg-[#7c3aed] hover:bg-[#6d28d9] text-white border border-purple-400/40 px-8 py-3 rounded-2xl text-lg font-bold shadow-[0_0_20px_rgba(168,85,247,0.35)] disabled:opacity-50">
-              إعدام الأعلى تصويتاً
+              Ø¥Ø¹Ø¯Ø§Ù… Ø§Ù„Ø£Ø¹Ù„Ù‰ ØªØµÙˆÙŠØªØ§Ù‹
             </button>
           )}
         </div>
@@ -763,10 +1132,10 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
         <div className="p-6 pb-8 flex flex-col items-center justify-start bg-black overflow-y-auto max-h-[50vh]">
           <div className="w-full max-w-sm">
             {isDead ? (
-               <div className="text-center text-red-500 font-bold mt-10">أنت ميت ولا يمكنك التصويت</div>
+               <div className="text-center text-red-500 font-bold mt-10">Ø£Ù†Øª Ù…ÙŠØª ÙˆÙ„Ø§ ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ù„ØªØµÙˆÙŠØª</div>
             ) : (
               <>
-                <h3 className="text-gray-400 font-bold mb-4 text-center">مين تتوقع المافيا؟ (اختر للإعدام)</h3>
+                <h3 className="text-gray-400 font-bold mb-4 text-center">Ù…ÙŠÙ† ØªØªÙˆÙ‚Ø¹ Ø§Ù„Ù…Ø§ÙÙŠØ§ØŸ (Ø§Ø®ØªØ± Ù„Ù„Ø¥Ø¹Ø¯Ø§Ù…)</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {playersToVote.map((p: any) => (
                     <button key={p.id} onClick={() => castVote(p.id)} className={`pop-in-bouncy card-vibrate py-4 px-4 rounded-xl font-bold text-sm transition-all ${votedFor === p.id ? 'bg-red-500 text-white scale-105' : 'bg-white/10 text-gray-300 border border-white/5 hover:bg-white/20'}`}>
@@ -774,7 +1143,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                     </button>
                   ))}
                 </div>
-                {votedFor && <p className="mt-6 text-green-400 font-bold text-center winner-explosion">تم تسجيل تصويتك!</p>}
+                {votedFor && <p className="mt-6 text-green-400 font-bold text-center winner-explosion">ØªÙ… ØªØ³Ø¬ÙŠÙ„ ØªØµÙˆÙŠØªÙƒ!</p>}
               </>
             )}
           </div>
@@ -788,14 +1157,14 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
       <main className="fade-screen relative flex min-h-[100dvh] flex-col bg-black">
         {/* PUBLIC TOP HALF */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center border-b border-white/10 bg-white/5">
-          <h1 className="font-kufi text-5xl font-bold mb-6 text-red-500">تم الإعدام</h1>
+          <h1 className="font-kufi text-5xl font-bold mb-6 text-red-500">ØªÙ… Ø§Ù„Ø¥Ø¹Ø¯Ø§Ù…</h1>
           <div className="glass-panel p-8 rounded-3xl border border-white/10 w-full max-w-sm mb-8 winner-explosion">
-             <h3 className="text-gray-400 mb-2">الشخص اللي انطرد:</h3>
-             <div className="text-4xl font-black text-red-500">{dayData?.executedName || 'لا أحد'}</div>
+             <h3 className="text-gray-400 mb-2">Ø§Ù„Ø´Ø®Øµ Ø§Ù„Ù„ÙŠ Ø§Ù†Ø·Ø±Ø¯:</h3>
+             <div className="text-4xl font-black text-red-500">{dayData?.executedName || 'Ù„Ø§ Ø£Ø­Ø¯'}</div>
           </div>
           {isHost && (
             <button onClick={() => socket.emit('host_next_night', { code })} className="btn-clean font-kufi bg-blue-500 text-white px-10 py-4 rounded-2xl text-xl font-bold shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:scale-105">
-              العودة لليل
+              Ø§Ù„Ø¹ÙˆØ¯Ø© Ù„Ù„ÙŠÙ„
             </button>
           )}
         </div>
@@ -804,11 +1173,11 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
         <div className="p-6 pb-8 flex flex-col items-center justify-center bg-black">
            {isDead ? (
              <div className="text-center text-red-500 font-bold">
-               <h2 className="text-3xl font-black">أنت ميت</h2>
+               <h2 className="text-3xl font-black">Ø£Ù†Øª Ù…ÙŠØª</h2>
              </div>
            ) : (
              <div className="text-center">
-               <h3 className="text-2xl font-bold text-gray-400">تجهز لليل القادم...</h3>
+               <h3 className="text-2xl font-bold text-gray-400">ØªØ¬Ù‡Ø² Ù„Ù„ÙŠÙ„ Ø§Ù„Ù‚Ø§Ø¯Ù…...</h3>
              </div>
            )}
         </div>
@@ -819,13 +1188,13 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   return (
     <main className="fade-screen flex min-h-[100dvh] flex-col items-center justify-center p-6 bg-black text-center text-white">
       <div className="w-10 h-10 rounded-full border-4 border-white/20 border-t-white mx-auto mb-4 animate-spin" />
-      <p className="text-gray-400 font-bold mb-2">جاري مزامنة حالة اللعبة...</p>
-      <p className="text-xs text-gray-600 mb-6 font-mono">الحالة: {room?.state || 'غير محدد'}</p>
+      <p className="text-gray-400 font-bold mb-2">Ø¬Ø§Ø±ÙŠ Ù…Ø²Ø§Ù…Ù†Ø© Ø­Ø§Ù„Ø© Ø§Ù„Ù„Ø¹Ø¨Ø©...</p>
+      <p className="text-xs text-gray-600 mb-6 font-mono">Ø§Ù„Ø­Ø§Ù„Ø©: {room?.state || 'ØºÙŠØ± Ù…Ø­Ø¯Ø¯'}</p>
       <button
         onClick={() => { socket.disconnect(); onBack(); }}
         className="px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/20 text-sm font-bold text-gray-300 transition-colors"
       >
-        العودة للرئيسية
+        Ø§Ù„Ø¹ÙˆØ¯Ø© Ù„Ù„Ø±Ø¦ÙŠØ³ÙŠØ©
       </button>
     </main>
   );
