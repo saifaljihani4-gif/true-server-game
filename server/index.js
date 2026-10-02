@@ -26,26 +26,6 @@ const io = new Server(httpServer, {
 const rooms = new Map();
 const voiceRooms = new Map();
 
-const DEFAULT_PUBLIC_ROOMS = [
-  { code: 'PUB1', name: 'غرفة الألعاب والتحديات 1', isPermanent: true, isPublic: true },
-  { code: 'PUB2', name: 'مجلس الفويس والمنافسات 2', isPermanent: true, isPublic: true },
-  { code: 'PUB3', name: 'ديوانية برا السالفة ومافيا', isPermanent: true, isPublic: true }
-];
-
-DEFAULT_PUBLIC_ROOMS.forEach(pr => {
-  rooms.set(pr.code, {
-    hostId: null,
-    code: pr.code,
-    name: pr.name,
-    isPermanent: true,
-    isPublic: true,
-    players: [],
-    state: 'lobby',
-    gameData: {},
-    voting: { active: false, votes: {}, endTime: null }
-  });
-});
-
 const getGameDisplayName = (state, gameData) => {
   if (!state || state === 'lobby') return 'في صالة الانتظار';
   if (state.startsWith('barra')) return 'برا السالفة';
@@ -59,18 +39,14 @@ const getGameDisplayName = (state, gameData) => {
 const getPublicRoomsList = () => {
   const list = [];
   rooms.forEach((r, c) => {
-    if (r.isPublic) {
-      const vr = voiceRooms.get(c);
+    if (r.isPublic && r.players && r.players.length > 0) {
       list.push({
         code: r.code,
         name: r.name || `غرفة ${r.code}`,
         playersCount: r.players.length,
         state: r.state,
         gameName: getGameDisplayName(r.state, r.gameData),
-        isPermanent: !!r.isPermanent,
-        hostName: r.players.find(p => p.id === r.hostId)?.name || (r.players.length === 0 ? 'متاحة للجميع' : 'مقدم الروم'),
-        hasVoice: true,
-        voiceCount: vr ? vr.size : 0
+        hostName: r.players.find(p => p.id === r.hostId)?.name || 'مقدم الروم'
       });
     }
   });
@@ -1344,25 +1320,9 @@ io.on('connection', (socket) => {
 
     rooms.forEach((room, code) => {
       if (room.hostId === socket.id) {
-        if (room.isPermanent) {
-          const playerIndex = room.players.findIndex(p => p.id === socket.id);
-          if (playerIndex !== -1) room.players.splice(playerIndex, 1);
-          if (room.players.length > 0) {
-            room.hostId = room.players[0].id;
-            io.to(code).emit('room_state_update', room);
-          } else {
-            room.hostId = null;
-            room.state = 'lobby';
-            room.gameData = {};
-            if (room.voting?.timeoutId) clearTimeout(room.voting.timeoutId);
-            room.voting = { active: false, votes: {}, endTime: null };
-          }
-          broadcastPublicRooms();
-        } else {
-          io.to(code).emit('host_disconnected');
-          rooms.delete(code);
-          broadcastPublicRooms();
-        }
+        io.to(code).emit('host_disconnected');
+        rooms.delete(code);
+        broadcastPublicRooms();
       } else {
         const playerIndex = room.players.findIndex(p => p.id === socket.id);
         if (playerIndex !== -1) {

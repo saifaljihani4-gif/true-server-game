@@ -71,7 +71,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   const [room, setRoom] = useState<any>(null);
 
   // Public/Private Room State
-  const [activeTab, setActiveTab] = useState<'public' | 'code'>(initialHost ? 'code' : 'public');
+  const [activeTab, setActiveTab] = useState<'public' | 'code'>('code');
   const [publicRooms, setPublicRooms] = useState<any[]>([]);
   const [loadingRooms, setLoadingRooms] = useState(false);
   const [isPublicRoom, setIsPublicRoom] = useState(true);
@@ -273,8 +273,8 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
           /* Player Join with Tabs */
           <div className="w-full max-w-md flex flex-col gap-3 glass-panel p-4 sm:p-6 rounded-3xl border border-white/10 shadow-2xl">
             <div className="text-center mb-1">
-              <h2 className="font-kufi text-xl sm:text-2xl font-bold text-white">الانضمام للرومات</h2>
-              <p className="text-xs text-gray-400 mt-1">اختر روماً عاماً مفتوحاً أو ادخل بكود خاص</p>
+              <h2 className="font-kufi text-xl sm:text-2xl font-bold text-white">الانضمام للعبة</h2>
+              <p className="text-xs text-gray-400 mt-1">ادخل كود الروم واسمك للبدء</p>
             </div>
             {error && <div className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-xs font-bold border border-red-500/30 text-center">{error}</div>}
 
@@ -296,24 +296,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
             <div className="grid grid-cols-2 gap-1.5 p-1 bg-black/40 rounded-2xl border border-white/10">
               <button
                 type="button"
-                onClick={() => setActiveTab('public')}
-                className={`py-2 px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all ${
-                  activeTab === 'public'
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                <Globe size={14} />
-                <span>رومات عامة أونلاين</span>
-                {publicRooms.length > 0 && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200">
-                    {publicRooms.length}
-                  </span>
-                )}
-              </button>
-
-              <button
-                type="button"
                 onClick={() => setActiveTab('code')}
                 className={`py-2 px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all ${
                   activeTab === 'code'
@@ -323,6 +305,24 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
               >
                 <Lock size={14} />
                 <span>دخول بكود خاص</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('public')}
+                className={`py-2 px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  activeTab === 'public'
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <Globe size={14} />
+                <span>رومات عامة نشطة</span>
+                {publicRooms.length > 0 && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200">
+                    {publicRooms.length}
+                  </span>
+                )}
               </button>
             </div>
 
@@ -343,7 +343,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                 <div className="max-h-64 overflow-y-auto flex flex-col gap-2 pr-1">
                   {publicRooms.length === 0 ? (
                     <div className="p-6 text-center text-gray-400 text-xs font-bold rounded-2xl bg-black/30 border border-white/5">
-                      جاري تحميل الرومات العامة المتاحة...
+                      لا توجد رومات عامة نشطة حالياً. يمكنك إنشاء روم جديد أو الدخول بكود خاص.
                     </div>
                   ) : (
                     publicRooms.map((pr: any) => (
