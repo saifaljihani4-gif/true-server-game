@@ -3,7 +3,6 @@ import { socket } from '@/lib/socket';
 import { ChevronRight, Users, Eye, EyeOff, Trophy, Crown, Vote, Radio, Globe, Lock, RefreshCw, CheckCircle2, Play, Timer, Clock } from 'lucide-react';
 import { HoroofLobby, HoroofBoardView, HoroofWinnerView } from './horoof';
 import { AdedLobbyView, AdedGameView, AdedResultsView } from './aded';
-import { VoiceBar } from './voice-bar';
 
 const VOTABLE_GAMES = [
   { id: 'barra', name: 'برا السالفة', min: 3, desc: 'واحد برا السالفة ومحد يدري مين!' },
@@ -207,7 +206,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
           <form onSubmit={handleCreateAndJoin} className="w-full max-w-sm flex flex-col gap-3.5 sm:gap-4 glass-panel p-5 sm:p-7 rounded-3xl border border-white/10 shadow-2xl">
             <div className="text-center mb-1">
               <h2 className="font-kufi text-xl sm:text-2xl font-bold text-white">إنشاء روم جديد</h2>
-              <p className="text-xs text-gray-400 mt-1">اختر نوع الروم وابدأ اللعب بالفويس المباشر</p>
+              <p className="text-xs text-gray-400 mt-1">اختر نوع الروم وابدأ اللعب أونلاين</p>
             </div>
             {error && <div className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-xs font-bold border border-red-500/30 text-center">{error}</div>}
 
@@ -275,7 +274,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
           <div className="w-full max-w-md flex flex-col gap-3 glass-panel p-4 sm:p-6 rounded-3xl border border-white/10 shadow-2xl">
             <div className="text-center mb-1">
               <h2 className="font-kufi text-xl sm:text-2xl font-bold text-white">الانضمام للرومات</h2>
-              <p className="text-xs text-gray-400 mt-1">اختر روماً عاماً مفتوحاً بالفويس أو ادخل بكود خاص</p>
+              <p className="text-xs text-gray-400 mt-1">اختر روماً عاماً مفتوحاً أو ادخل بكود خاص</p>
             </div>
             {error && <div className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-xs font-bold border border-red-500/30 text-center">{error}</div>}
 
@@ -331,7 +330,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
             {activeTab === 'public' && (
               <div className="flex flex-col gap-2 mt-1">
                 <div className="flex items-center justify-between px-1 text-xs text-gray-400">
-                  <span>الرومات المتاحة حالياً مع الفويس:</span>
+                  <span>الرومات العامة المتاحة حالياً:</span>
                   <button
                     type="button"
                     onClick={fetchPublicRooms}
@@ -367,7 +366,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                             <span className="text-emerald-400 font-bold">{pr.gameName}</span>
                             <span>•</span>
                             <span className="flex items-center gap-1 text-sky-400">
-                              <Radio size={11} /> فويس نشط
+                              <Globe size={11} /> روم عام
                             </span>
                           </div>
                         </div>
@@ -417,8 +416,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   if (room.state === 'lobby') {
     return (
       <main className="fade-screen relative flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col pt-14 sm:pt-6 px-3 sm:px-6 pb-6">
-        {/* Voice Bar Inside Room */}
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
 
         <header className="flex flex-col sm:flex-row justify-between items-center my-3 sm:my-4 max-w-5xl mx-auto w-full gap-3 sm:gap-4">
           <div className="flex items-center justify-between w-full sm:w-auto gap-3">
@@ -614,7 +611,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   if (room.gameData?.mode === 'mafia' && room.gameData?.winner) {
     return (
       <main className="fade-screen flex min-h-[100dvh] flex-col p-6 items-center justify-center text-center bg-black">
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
         <h1 className="font-kufi text-5xl md:text-7xl font-bold mb-6 text-white">انتهت اللعبة!</h1>
         <div className="text-4xl md:text-5xl font-black mb-12 p-8 rounded-3xl bg-white/10 border border-white/20 winner-explosion">
           {room.gameData.winner === 'town' ? <span className="text-green-400">فاز المواطنون</span> : <span className="text-red-500">فازت المافيا</span>}
@@ -637,7 +633,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   if (room.state === 'horoof_lobby') {
     return (
       <div className="w-full flex flex-col">
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
         <HoroofLobby room={room} socket={socket} onBack={onBack} isHost={isHost} />
       </div>
     );
@@ -646,7 +641,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   if (room.state === 'horoof_playing') {
     return (
       <div className="w-full flex flex-col">
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
         <HoroofBoardView room={room} socket={socket} onBack={onBack} isHost={isHost} />
       </div>
     );
@@ -655,7 +649,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   if (room.state === 'horoof_winner') {
     return (
       <div className="w-full flex flex-col">
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
         <HoroofWinnerView room={room} socket={socket} isHost={isHost} onBack={onBack} />
       </div>
     );
@@ -665,7 +658,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   if (room.state === 'aded_lobby') {
     return (
       <div className="w-full flex flex-col">
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
         <AdedLobbyView room={room} socket={socket} onBack={onBack} isHost={isHost} />
       </div>
     );
@@ -674,7 +666,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   if (room.state === 'aded_playing') {
     return (
       <div className="w-full flex flex-col">
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
         <AdedGameView room={room} socket={socket} onBack={onBack} isHost={isHost} />
       </div>
     );
@@ -683,7 +674,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   if (room.state === 'aded_results') {
     return (
       <div className="w-full flex flex-col">
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
         <AdedResultsView room={room} socket={socket} isHost={isHost} onBack={onBack} />
       </div>
     );
@@ -698,7 +688,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
 
     return (
       <main className="fade-screen relative flex min-h-[100dvh] flex-col bg-black">
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
         {/* PUBLIC TOP HALF */}
         <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 text-center border-b border-white/10 bg-white/5 relative">
           <h1 className="font-kufi text-2xl sm:text-4xl font-bold mb-3 text-white">وقت الأسئلة!</h1>
@@ -777,7 +766,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
     
     return (
       <main className="fade-screen flex min-h-[100dvh] flex-col p-3 sm:p-6 items-center bg-black">
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
         <h1 className="font-kufi text-2xl sm:text-4xl font-bold text-white my-3 sm:my-5 pop-in-bouncy">تجهيز كود نيمز</h1>
         
         {/* Turn Duration Picker for Host */}
@@ -877,7 +865,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
 
     return (
       <main className="fade-screen flex h-[100dvh] max-h-[100dvh] flex-col p-2 sm:p-3 items-center bg-black justify-between overflow-y-auto">
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
 
         {/* Status Bar with Turn Countdown Timer */}
         <div className={`w-full max-w-xl sm:max-w-2xl p-2 sm:p-3 rounded-xl sm:rounded-2xl flex justify-between items-center mb-1 sm:mb-2 border ${isRedTurn ? 'bg-red-950/40 border-red-500/50' : 'bg-blue-950/40 border-blue-500/50'}`}>
@@ -956,7 +943,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
     const winnerIsRed = room.gameData?.winner === 'red';
     return (
       <main className="fade-screen flex min-h-[100dvh] flex-col p-4 sm:p-6 items-center justify-center text-center bg-black">
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
         <h1 className="winner-explosion font-kufi text-3xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 text-white">انتهت اللعبة!</h1>
         <div className="winner-explosion text-2xl sm:text-4xl md:text-5xl font-black mb-8 sm:mb-12 p-6 sm:p-12 rounded-2xl sm:rounded-3xl bg-white/10 border border-white/20">
           {winnerIsRed ? <span className="text-red-500">فاز الفريق الأحمر</span> : <span className="text-blue-500">فاز الفريق الأزرق</span>}
@@ -979,7 +965,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   if (room.state === 'mafia_playing') {
     return (
       <main className="fade-screen relative flex min-h-[100dvh] flex-col bg-black">
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
         {/* PUBLIC TOP HALF */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center border-b border-white/10 bg-white/5">
           <h1 className="font-kufi text-4xl sm:text-6xl font-bold mb-4 text-red-500 pop-in-bouncy">بداية اللعبة</h1>
@@ -1024,7 +1009,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
 
     return (
       <main className="fade-screen relative flex min-h-[100dvh] flex-col bg-black">
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
         {/* PUBLIC TOP HALF */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center border-b border-white/10 bg-white/5">
           <h1 className="font-kufi text-4xl sm:text-5xl font-bold mb-4 text-blue-400">المدينة نايمة</h1>
@@ -1073,7 +1057,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   if (room.state === 'mafia_day_reveal') {
     return (
       <main className="fade-screen relative flex min-h-[100dvh] flex-col bg-black">
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
         {/* PUBLIC TOP HALF */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center border-b border-white/10 bg-white/5">
           <h1 className="font-kufi text-4xl sm:text-5xl font-bold mb-6 text-yellow-500">أشرقت الشمس</h1>
@@ -1118,7 +1101,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   if (room.state === 'mafia_discussion') {
     return (
       <main className="fade-screen relative flex min-h-[100dvh] flex-col bg-black">
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
         {/* PUBLIC TOP HALF */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center border-b border-white/10 bg-white/5">
           <h1 className="font-kufi text-3xl sm:text-5xl font-bold mb-2 text-white">وقت النقاش!</h1>
@@ -1157,7 +1139,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
 
     return (
       <main className="fade-screen relative flex min-h-[100dvh] flex-col bg-black">
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
         {/* PUBLIC TOP HALF */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center border-b border-white/10 bg-white/5">
           <h1 className="font-kufi text-4xl font-bold mb-4 text-red-400">تصويت الإعدام!</h1>
@@ -1196,7 +1177,6 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   if (room.state === 'mafia_execution_reveal') {
     return (
       <main className="fade-screen relative flex min-h-[100dvh] flex-col bg-black">
-        <VoiceBar socket={socket} code={room.code} playerName={name} />
         {/* PUBLIC TOP HALF */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center border-b border-white/10 bg-white/5">
           <h1 className="font-kufi text-5xl font-bold mb-6 text-red-500">تم الإعدام</h1>
