@@ -125,9 +125,11 @@ export function ActiveModal({ active, timer, timerTotal, timerActive, toggleTime
   return (
     <div className="modal-backdrop fixed inset-0 z-40 flex flex-col items-center overflow-y-auto p-5 md:p-6" role="dialog" aria-modal="true" aria-labelledby="active-card-title">
       <div className="my-auto flex w-full flex-col items-center py-4">
-        <div className="prize-plate prize-sheen mb-5 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold" key={prize}>
-          <Trophy size={14} /> الجائزة: {prize}
-        </div>
+        {prize ? (
+          <div className="prize-plate prize-sheen mb-5 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold" key={prize}>
+            <Trophy size={14} /> الجائزة: {prize}
+          </div>
+        ) : null}
 
         <div className="relative mb-7 flex min-h-[230px] w-full max-w-xl flex-col items-center overflow-hidden rounded-3xl border border-white/20 bg-[url('/images/banner.webp')] bg-cover bg-center text-center shadow-[0_30px_60px_rgba(0,0,0,.8)] md:mb-9">
           <div className="absolute inset-0 bg-black/78" />

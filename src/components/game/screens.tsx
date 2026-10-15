@@ -184,7 +184,7 @@ export function Game(props: GameProps) {
           <ChevronRight size={15} /> <span>خروج</span>
         </button>
 
-        <button onClick={() => setSetup(true)} title="تغيير اللاعبين والجائزة" className="flex min-w-0 items-center gap-3 rounded-full border border-white/10 bg-black/60 px-3 py-2 shadow-inner hover:bg-white/10 md:gap-8 md:px-8">
+        <button onClick={() => setSetup(true)} title="تغيير اللاعبين" className="flex min-w-0 items-center gap-3 rounded-full border border-white/10 bg-black/60 px-3 py-2 shadow-inner hover:bg-white/10 md:gap-8 md:px-8">
           <div className="flex items-center gap-2 md:gap-4">
             <span className="max-w-[80px] truncate text-xs font-bold text-gray-300 md:text-sm">{p1 || 'اللاعب 1'}</span>
             <strong className="font-kufi text-2xl md:text-3xl">{scores[p1] || 0}</strong>
@@ -208,12 +208,10 @@ export function Game(props: GameProps) {
         </div>
       </header>
 
-      {/* شريط الجائزة: يشوفه الكل طول الجولة */}
+      {/* شريط العقوبة */}
       <div className="flex justify-center px-4 pt-4">
-        <button onClick={() => setSetup(true)} className="prize-plate prize-sheen prize-strip" key={prize} title="تغيير الجائزة">
-          <span className="inline-flex items-center gap-1.5"><Trophy size={14} /> الجائزة: <b className="font-kufi text-base">{prize || 'ما تحددت'}</b></span>
-          <span className="divider" />
-          <span className="muted">العقوبة {INTENSITY_LABEL[intensity]}</span>
+        <button onClick={() => setSetup(true)} className="prize-plate prize-sheen prize-strip" title="تغيير الإعدادات">
+          <span className="font-bold">العقوبة: {INTENSITY_LABEL[intensity]}</span>
         </button>
       </div>
 
