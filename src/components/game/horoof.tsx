@@ -88,8 +88,16 @@ export function HoroofLobby({ room, socket, onBack, isHost }: { room: any; socke
           <div className="mt-3 bg-black/40 rounded-xl p-3 min-h-[100px] max-h-[160px] overflow-y-auto space-y-1.5 border border-white/5">
             <div className="text-[11px] text-gray-500 font-bold mb-1">الأعضاء ({greenPlayers.length}):</div>
             {greenPlayers.map((p: any) => (
-              <div key={p.id} className="text-xs sm:text-sm font-bold text-white bg-white/5 px-3 py-1.5 rounded-lg flex items-center justify-between">
-                <span>{p.name} {p.id === socket.id && '(أنت)'}</span>
+              <div key={p.id} className="text-xs sm:text-sm font-bold text-white bg-white/5 px-2.5 py-1.5 rounded-xl flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 truncate">
+                  {p.avatar ? (
+                    <img src={p.avatar} alt={p.name} className="w-6 h-6 rounded-full border border-emerald-400/60 object-cover shrink-0" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-[10px] flex items-center justify-center shrink-0">{p.name.slice(0, 1)}</div>
+                  )}
+                  <span className="truncate">{p.name}</span>
+                </div>
+                {p.id === socket.id && <span className="text-[10px] text-emerald-400 font-semibold shrink-0">(أنت)</span>}
               </div>
             ))}
             {greenPlayers.length === 0 && <p className="text-xs text-gray-600 text-center py-4">بانتظار متسابقين...</p>}
@@ -131,8 +139,16 @@ export function HoroofLobby({ room, socket, onBack, isHost }: { room: any; socke
           <div className="mt-3 bg-black/40 rounded-xl p-3 min-h-[100px] max-h-[160px] overflow-y-auto space-y-1.5 border border-white/5">
             <div className="text-[11px] text-gray-500 font-bold mb-1">الأعضاء ({bluePlayers.length}):</div>
             {bluePlayers.map((p: any) => (
-              <div key={p.id} className="text-xs sm:text-sm font-bold text-white bg-white/5 px-3 py-1.5 rounded-lg flex items-center justify-between">
-                <span>{p.name} {p.id === socket.id && '(أنت)'}</span>
+              <div key={p.id} className="text-xs sm:text-sm font-bold text-white bg-white/5 px-2.5 py-1.5 rounded-xl flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 truncate">
+                  {p.avatar ? (
+                    <img src={p.avatar} alt={p.name} className="w-6 h-6 rounded-full border border-sky-400/60 object-cover shrink-0" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-sky-500/20 text-[10px] flex items-center justify-center shrink-0">{p.name.slice(0, 1)}</div>
+                  )}
+                  <span className="truncate">{p.name}</span>
+                </div>
+                {p.id === socket.id && <span className="text-[10px] text-sky-400 font-semibold shrink-0">(أنت)</span>}
               </div>
             ))}
             {bluePlayers.length === 0 && <p className="text-xs text-gray-600 text-center py-4">بانتظار متسابقين...</p>}

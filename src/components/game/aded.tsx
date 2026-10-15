@@ -69,12 +69,17 @@ export function AdedLobbyView({ room, socket, onBack, isHost }: { room: any; soc
             {contestantPlayers.map((p: any, idx: number) => (
               <div
                 key={p.id}
-                className="flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-white/5 border border-white/5 text-xs sm:text-sm font-bold text-white"
+                className="flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-white/5 border border-white/5 text-xs sm:text-sm font-bold text-white gap-2"
               >
-                <div className="flex items-center gap-2 truncate">
-                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 font-mono text-[11px] flex items-center justify-center font-black">
+                <div className="flex items-center gap-2.5 min-w-0 truncate">
+                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 font-mono text-[11px] flex items-center justify-center font-black shrink-0">
                     {idx + 1}
                   </span>
+                  {p.avatar ? (
+                    <img src={p.avatar} alt={p.name} className="w-6 h-6 rounded-full border border-amber-400/60 object-cover shrink-0" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-amber-500/20 text-[10px] flex items-center justify-center shrink-0">{p.name.slice(0, 1)}</div>
+                  )}
                   <span className="truncate">{p.name} {p.id === socket.id && '(أنت)'}</span>
                 </div>
                 {p.id === room.hostId && <Crown size={13} className="text-yellow-400 shrink-0" />}

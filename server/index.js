@@ -73,13 +73,15 @@ const getPublicRoomsList = () => {
   const list = [];
   rooms.forEach((r, c) => {
     if (r.isPublic && r.players && r.players.length > 0) {
+      const host = r.players.find(p => p.id === r.hostId);
       list.push({
         code: r.code,
         name: r.name || `غرفة ${r.code}`,
         playersCount: r.players.length,
         state: r.state,
         gameName: getGameDisplayName(r.state, r.gameData),
-        hostName: r.players.find(p => p.id === r.hostId)?.name || 'مقدم الروم'
+        hostName: host?.name || 'مقدم الروم',
+        hostAvatar: host?.avatar || null
       });
     }
   });
@@ -1314,12 +1316,12 @@ io.on('connection', (socket) => {
   /* =========================================
      CORE LOBBY
      ========================================= */
-  socket.on('player_join_room', ({ code, name }, callback) => {
+  socket.on('player_join_room', ({ code, name, avatar, userId }, callback) => {
     if (!code || typeof code !== 'string' || !name || typeof name !== 'string') {
       return safeCallback(callback, { success: false, error: 'البيانات غير مكتملة!' });
     }
     const roomCode = code.trim().toUpperCase();
-    const cleanName = name.trim().slice(0, 15);
+    const cleanName = name.trim().slice(0, 25);
     if (!cleanName) {
       return safeCallback(callback, { success: false, error: 'اسم غير صالح!' });
     }
@@ -1330,12 +1332,20 @@ io.on('connection', (socket) => {
       room.hostId = socket.id;
     }
 
-    if (room.players.find(p => p.name === cleanName)) {
-      return safeCallback(callback, { success: false, error: 'الاسم مستخدم!' });
+    const cleanAvatar = avatar && typeof avatar === 'string' && (avatar.startsWith('https://') || avatar.startsWith('/')) ? avatar : null;
+    const cleanUserId = userId && typeof userId === 'string' ? userId : null;
+
+    const existingIndex = room.players.findIndex(p => p.id === socket.id || (cleanUserId && p.userId === cleanUserId) || p.name === cleanName);
+    if (existingIndex !== -1) {
+      room.players[existingIndex].id = socket.id;
+      room.players[existingIndex].name = cleanName;
+      if (cleanAvatar) room.players[existingIndex].avatar = cleanAvatar;
+      if (cleanUserId) room.players[existingIndex].userId = cleanUserId;
+    } else {
+      const newPlayer = { id: socket.id, name: cleanName, avatar: cleanAvatar, userId: cleanUserId };
+      room.players.push(newPlayer);
     }
 
-    const newPlayer = { id: socket.id, name: cleanName };
-    room.players.push(newPlayer);
     socket.join(roomCode);
     io.to(roomCode).emit('room_state_update', room);
     broadcastPublicRooms();

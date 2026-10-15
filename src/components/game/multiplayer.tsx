@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { socket } from '@/lib/socket';
+import { useDiscordUser } from '@/lib/discord';
 import { ChevronRight, Users, Eye, EyeOff, Trophy, Crown, Vote, Radio, Globe, Lock, RefreshCw, CheckCircle2, Play, Timer, Clock } from 'lucide-react';
 import { HoroofLobby, HoroofBoardView, HoroofWinnerView } from './horoof';
 import { AdedLobbyView, AdedGameView, AdedResultsView } from './aded';
@@ -65,10 +66,17 @@ function CodenamesTurnTimer({ expiresAt, totalSeconds = 60 }: { expiresAt?: numb
 }
 
 function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost: boolean }) {
+  const { user: discordUser, isDiscord } = useDiscordUser();
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [room, setRoom] = useState<any>(null);
+
+  useEffect(() => {
+    if (discordUser?.displayName && !name) {
+      setName(discordUser.displayName);
+    }
+  }, [discordUser, name]);
 
   // Public/Private Room State
   const [activeTab, setActiveTab] = useState<'public' | 'code'>('code');
@@ -152,11 +160,16 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
 
   const handleCreateAndJoin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    const finalName = (name.trim() || discordUser?.displayName || 'لاعب').slice(0, 25);
     socket.emit('host_create_room', { isPublic: isPublicRoom, name: customRoomName.trim() || undefined }, (res: any) => {
       if (res.success) {
         setCode(res.code);
-        socket.emit('player_join_room', { code: res.code, name: name.trim() }, (joinRes: any) => {
+        socket.emit('player_join_room', {
+          code: res.code,
+          name: finalName,
+          avatar: discordUser?.avatar || null,
+          userId: discordUser?.id || null
+        }, (joinRes: any) => {
           if (!joinRes.success) setError(joinRes.error);
         });
       }
@@ -165,19 +178,27 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
 
   const handleJoinOnly = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!code || !name.trim()) return;
-    socket.emit('player_join_room', { code, name: name.trim() }, (res: any) => {
+    if (!code) return;
+    const finalName = (name.trim() || discordUser?.displayName || 'لاعب').slice(0, 25);
+    socket.emit('player_join_room', {
+      code,
+      name: finalName,
+      avatar: discordUser?.avatar || null,
+      userId: discordUser?.id || null
+    }, (res: any) => {
       if (!res.success) setError(res.error);
     });
   };
 
   const handleQuickJoinPublic = (roomCode: string) => {
-    if (!name.trim()) {
-      setError('يرجى كتابة اسمك أولاً للدخول للروم');
-      return;
-    }
+    const finalName = (name.trim() || discordUser?.displayName || 'لاعب').slice(0, 25);
     setError('');
-    socket.emit('player_join_room', { code: roomCode, name: name.trim() }, (res: any) => {
+    socket.emit('player_join_room', {
+      code: roomCode,
+      name: finalName,
+      avatar: discordUser?.avatar || null,
+      userId: discordUser?.id || null
+    }, (res: any) => {
       if (!res.success) {
         setError(res.error || 'تعذر الدخول للروم');
       } else {
@@ -210,16 +231,34 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
             </div>
             {error && <div className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-xs font-bold border border-red-500/30 text-center">{error}</div>}
 
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={12}
-              placeholder="اسمك"
-              className="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3 text-sm sm:text-base font-bold text-center text-white focus:outline-none focus:border-white/30 transition-colors"
-              required
-              dir="auto"
-            />
+            {/* Profile Card */}
+            {discordUser ? (
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-sky-400/30 text-start">
+                <img
+                  src={discordUser.avatar}
+                  alt={discordUser.displayName}
+                  className="w-11 h-11 rounded-full border border-sky-400 object-cover shrink-0 shadow-[0_0_12px_rgba(56,189,248,0.35)]"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-sky-400">حساب ديسكورد</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  </div>
+                  <p className="text-sm font-bold text-white truncate">{name || discordUser.displayName}</p>
+                </div>
+              </div>
+            ) : (
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                maxLength={20}
+                placeholder="اسمك"
+                className="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3 text-sm sm:text-base font-bold text-center text-white focus:outline-none focus:border-white/30 transition-colors"
+                required
+                dir="auto"
+              />
+            )}
 
             <input
               type="text"
@@ -274,23 +313,40 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
           <div className="w-full max-w-md flex flex-col gap-3 glass-panel p-4 sm:p-6 rounded-3xl border border-white/10 shadow-2xl">
             <div className="text-center mb-1">
               <h2 className="font-kufi text-xl sm:text-2xl font-bold text-white">الانضمام للعبة</h2>
-              <p className="text-xs text-gray-400 mt-1">ادخل كود الروم واسمك للبدء</p>
+              <p className="text-xs text-gray-400 mt-1">ادخل كود الروم وابدأ اللعب</p>
             </div>
             {error && <div className="bg-red-500/20 text-red-300 px-3 py-2 rounded-xl text-xs font-bold border border-red-500/30 text-center">{error}</div>}
 
-            {/* Name Input */}
-            <div className="w-full">
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                maxLength={12}
-                placeholder="اكتب اسمك أولاً للدخول"
-                className="w-full bg-black/60 border border-white/15 rounded-2xl px-4 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-center text-white focus:outline-none focus:border-emerald-400 transition-colors"
-                required
-                dir="auto"
-              />
-            </div>
+            {/* Profile Card */}
+            {discordUser ? (
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-sky-400/30 text-start">
+                <img
+                  src={discordUser.avatar}
+                  alt={discordUser.displayName}
+                  className="w-11 h-11 rounded-full border border-sky-400 object-cover shrink-0 shadow-[0_0_12px_rgba(56,189,248,0.35)]"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-sky-400">حساب ديسكورد</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  </div>
+                  <p className="text-sm font-bold text-white truncate">{name || discordUser.displayName}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="w-full">
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  maxLength={20}
+                  placeholder="اكتب اسمك أولاً للدخول"
+                  className="w-full bg-black/60 border border-white/15 rounded-2xl px-4 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-center text-white focus:outline-none focus:border-emerald-400 transition-colors"
+                  required
+                  dir="auto"
+                />
+              </div>
+            )}
 
             {/* Tab Selector */}
             <div className="grid grid-cols-2 gap-1.5 p-1 bg-black/40 rounded-2xl border border-white/10">
@@ -549,10 +605,23 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
               <h2 className="font-kufi text-2xl font-bold text-white">اللاعبين ({room.players.length})</h2>
               <Users size={24} className="text-white/20" />
             </div>
-            <div className="flex-1 bg-black/40 rounded-2xl p-4 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-3 content-start">
+            <div className="flex-1 bg-black/40 rounded-2xl p-3 sm:p-4 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3 content-start">
               {room.players.map((p: any) => (
-                <div key={p.id} className="winner-explosion bg-white/10 py-3 px-4 rounded-xl text-center font-bold text-white truncate border border-white/5 flex items-center justify-center gap-2">
-                  {p.name} {p.id === room.hostId && <Crown size={14} className="text-yellow-500" />}
+                <div key={p.id} className="winner-explosion bg-white/10 py-2 px-3 rounded-2xl font-bold text-white border border-white/10 flex items-center justify-between gap-2 shadow-sm">
+                  <div className="flex items-center gap-2.5 min-w-0 truncate">
+                    {p.avatar ? (
+                      <img src={p.avatar} alt={p.name} className="w-8 h-8 rounded-full border border-sky-400/60 object-cover shrink-0 shadow-sm" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-600 to-cyan-500 border border-sky-400/40 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                        {p.name.slice(0, 1).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex flex-col text-start min-w-0">
+                      <span className="truncate text-xs sm:text-sm font-bold text-white">{p.name}</span>
+                      {p.id === socket.id && <span className="text-[10px] text-sky-400 font-semibold">(أنت)</span>}
+                    </div>
+                  </div>
+                  {p.id === room.hostId && <Crown size={15} className="text-yellow-400 shrink-0" />}
                 </div>
               ))}
             </div>

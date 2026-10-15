@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { useDiscordUser } from '@/lib/discord';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -99,8 +100,15 @@ function App() {
   const [screen, setScreen] = useState<Screen>('home');
   const [mode, setMode] = useState<Mode>('dialects');
   const [cards, setCards] = useState<Card[]>([]);
+  const { user: discordUser } = useDiscordUser();
   const [p1, setP1] = useState('');
   const [p2, setP2] = useState('');
+
+  useEffect(() => {
+    if (discordUser?.displayName && !p1) {
+      setP1(discordUser.displayName);
+    }
+  }, [discordUser, p1]);
   const [setup, setSetup] = useState(false);
   const [active, setActive] = useState<Card | null>(null);
   const [timer, setTimer] = useState(30);
