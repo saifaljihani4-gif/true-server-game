@@ -45,6 +45,17 @@ const io = new Server(httpServer, {
   maxHttpBufferSize: 1e6
 });
 
+const ALLOWED_GUILD_ID = '1109636583642103903';
+
+io.use((socket, next) => {
+  const guildId = socket.handshake.query?.guildId || socket.handshake.auth?.guildId;
+  if (guildId && guildId !== ALLOWED_GUILD_ID) {
+    return next(new Error('Unauthorized Guild: Exclusive to Real Server.'));
+  }
+  next();
+});
+
+
 const rooms = new Map();
 const voiceRooms = new Map();
 

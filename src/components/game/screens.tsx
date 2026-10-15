@@ -100,7 +100,7 @@ export function Categories({ onBack, onSelect }: { onBack: () => void; onSelect:
         <div className="fade-in-up mb-3 sm:mb-5 text-center w-full">
           <img src="/images/info.png" alt="Real" className="h-8 sm:h-10 w-auto object-contain mx-auto mb-1.5 drop-shadow-[0_0_15px_rgba(56,189,248,0.4)]" />
           <h2 className="font-kufi text-xl sm:text-2xl md:text-3xl font-bold text-white">اختر اللعبة</h2>
-          <p className="mt-0.5 text-xs sm:text-sm font-medium text-gray-400">{MODES.length} ألعاب، والجائزة تحددها قبل ما تبدأ</p>
+          <p className="mt-0.5 text-xs sm:text-sm font-medium text-gray-400">{MODES.length} ألعاب تنافسية وتفاعلية</p>
         </div>
 
         <div className="grid w-full grid-cols-1 md:grid-cols-2 gap-2 sm:gap-2.5 pb-8">

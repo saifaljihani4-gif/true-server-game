@@ -31,7 +31,7 @@ type SetupProps = {
 export function SetupModal(props: SetupProps) {
   const { modeLabel, round, p1, p2, setP1, setP2, prize, prizes, customPrizes, onSelectPrize, onAddPrize, onRemovePrize, onRandomPrize, intensity, setIntensity, error, canCancel, onCancel, onStart } = props;
   const [draft, setDraft] = useState('');
-  const ready = Boolean(p1.trim()) && Boolean(prize);
+  const ready = Boolean(p1.trim());
   const submitDraft = () => {
     if (!draft.trim()) return;
     onAddPrize(draft);
@@ -68,43 +68,7 @@ export function SetupModal(props: SetupProps) {
             </div>
           </section>
 
-          {/* 2. الجائزة */}
-          <section aria-labelledby="prize-title">
-            <div className="mb-3 flex items-baseline justify-between gap-3">
-              <h3 id="prize-title" className="section-title flex items-center gap-2"><Trophy size={15} className="text-[color:var(--prize)]" /> الجائزة</h3>
-              <span className="section-note">تنعطى للفائز، ولازم تتحدد قبل ما تبدأ</span>
-            </div>
-            <div className="flex flex-wrap gap-2" role="group" aria-label="اختر الجائزة">
-              {prizes.map(item => {
-                const custom = customPrizes.includes(item);
-                return (
-                  <button key={item} type="button" className="chip" aria-pressed={prize === item} onClick={() => onSelectPrize(item)}>
-                    {prize === item && <Check size={14} />}
-                    {item}
-                    {custom && (
-                      <span
-                        role="button" tabIndex={0} aria-label={`حذف ${item}`} className="chip-x"
-                        onClick={e => { e.stopPropagation(); onRemovePrize(item); }}
-                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); onRemovePrize(item); } }}
-                      ><X size={13} /></span>
-                    )}
-                  </button>
-                );
-              })}
-              <button type="button" className="chip" onClick={onRandomPrize}><Dices size={15} /> اختر لي واحدة</button>
-            </div>
-            <div className="mt-2.5 flex gap-2">
-              <input
-                className="setup-input gold !py-2.5 !text-start !text-sm" value={draft} maxLength={24}
-                onChange={e => setDraft(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submitDraft(); } }}
-                placeholder="جائزة جديدة، مثل: بطاقة هدية" aria-label="اسم جائزة جديدة"
-              />
-              <button type="button" onClick={submitDraft} disabled={!draft.trim()} className="chip shrink-0 disabled:opacity-40"><Plus size={15} /> أضف</button>
-            </div>
-          </section>
-
-          {/* 3. العقوبة */}
+          {/* 2. العقوبة */}
           <section>
             <div className="mb-3 flex items-baseline justify-between gap-3">
               <h3 className="section-title flex items-center gap-2"><Skull size={15} className="text-white/70" /> شدة العقوبة</h3>
@@ -121,7 +85,7 @@ export function SetupModal(props: SetupProps) {
         <div className="relative z-10 shrink-0 border-t border-white/10 px-6 py-4 md:px-9">
           {(error || !ready) && (
             <p className={`mb-3 text-center text-sm font-bold ${error ? 'text-rose-300' : 'text-gray-400'}`} role={error ? 'alert' : undefined}>
-              {error || (!p1.trim() ? 'اكتب اسم اللاعب الأول' : 'اختر الجائزة عشان تبدأ')}
+              {error || (!p1.trim() ? 'اكتب اسم اللاعب الأول' : '')}
             </p>
           )}
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -233,7 +197,7 @@ export function FateModal({ fate, onNext }: { fate: Fate; onNext: () => void }) 
       <div className="my-auto flex w-full flex-col items-center py-4">
         <h2 className="font-kufi mb-8 text-center text-4xl font-bold md:mb-12 md:text-6xl">انتهت الجولة</h2>
         <div className="mb-8 flex w-full max-w-5xl flex-col items-stretch justify-center gap-5 md:mb-12 md:flex-row md:gap-8">
-          {fate.winner && <FateCard winner name={fate.winner} label="الجائزة" text={fate.prize} Icon={Crown} />}
+          {fate.winner && <FateCard winner name={fate.winner} label={fate.prize ? "الجائزة" : "الفائز"} text={fate.prize || "فوز مستحق"} Icon={Crown} />}
           {fate.loser && <FateCard name={fate.loser} label="العقوبة" text={fate.punishment} Icon={Skull} />}
         </div>
         <button onClick={onNext} className="btn-clean font-kufi inline-flex items-center gap-2 rounded-full bg-white px-12 py-3.5 text-lg font-bold text-black shadow-lg md:px-14">

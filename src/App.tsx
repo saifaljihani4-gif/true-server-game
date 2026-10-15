@@ -70,7 +70,32 @@ function save(key: string, value: unknown) {
   }
 }
 
+const ALLOWED_GUILD_ID = '1109636583642103903';
+
 function App() {
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const gid = params.get('guild_id');
+    if (gid && gid !== ALLOWED_GUILD_ID) {
+      setIsUnauthorized(true);
+    }
+  }, []);
+
+  if (isUnauthorized) {
+    return (
+      <div className="flex min-h-[100dvh] flex-col items-center justify-center p-6 text-center bg-black text-white">
+        <div className="max-w-md p-8 rounded-3xl border border-red-500/30 bg-red-950/20 backdrop-blur-md">
+          <h2 className="font-kufi text-2xl font-bold mb-3 text-red-400">سيرفر غير مصرح به</h2>
+          <p className="text-gray-300 text-sm leading-relaxed mb-4">
+            هذا البوت واللعبة مخصصان حصرياً لسيرفر <span className="font-bold text-sky-400">Real</span> فقط ولا يمكن تشغيلهما في أي سيرفر آخر.
+          </p>
+          <span className="text-xs font-mono text-gray-500">Guild ID: 1109636583642103903</span>
+        </div>
+      </div>
+    );
+  }
   const [screen, setScreen] = useState<Screen>('home');
   const [mode, setMode] = useState<Mode>('dialects');
   const [cards, setCards] = useState<Card[]>([]);
@@ -160,7 +185,6 @@ function App() {
     const first = p1.trim();
     const second = p2.trim();
     if (!first) { setSetupError('اكتب اسم اللاعب الأول عشان تبدأ.'); return; }
-    if (!prize) { setSetupError('اختر الجائزة قبل ما تبدأ المباراة.'); return; }
     if (second && first.toLocaleLowerCase() === second.toLocaleLowerCase()) { setSetupError('استخدم اسمين مختلفين في المواجهة.'); return; }
     setP1(first);
     setP2(second);
