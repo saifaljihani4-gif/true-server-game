@@ -1,0 +1,15 @@
+name: Keep Alive Ping
+
+on:
+  schedule:
+    # Runs every 10 minutes
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render Server
+        run: |
+          curl -s -f https://true-server-game.onrender.com/health || curl -s https://true-server-game.onrender.com/ping || true

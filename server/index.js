@@ -15,6 +15,10 @@ app.disable('x-powered-by');
 app.use(cors());
 app.use(express.json({ limit: '100kb' }));
 
+// Health and Ping Check for keep-alive bots and monitors
+app.get('/health', (req, res) => res.status(200).send('OK'));
+app.get('/ping', (req, res) => res.status(200).send('PONG'));
+
 // Anti-Leak Security Middleware: Block access to source code, dotfiles, sourcemaps, and sensitive paths
 app.use((req, res, next) => {
   const p = req.path.toLowerCase();
@@ -1409,4 +1413,14 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const PORT = process.env.PORT || 3001;
-httpServer.listen(PORT, () => console.log(`Socket server running on port ${PORT}`));
+httpServer.listen(PORT, () => {
+  console.log(`Socket server running on port ${PORT}`);
+  
+  // Keep-alive loop: Pings the external URL every 8 minutes so Render won't spin down
+  const KEEP_ALIVE_URL = process.env.RENDER_EXTERNAL_URL || 'https://true-server-game.onrender.com';
+  setInterval(() => {
+    fetch(`${KEEP_ALIVE_URL}/health`)
+      .then((res) => console.log(`[Keep-Alive] Pinged ${KEEP_ALIVE_URL}/health - Status: ${res.status}`))
+      .catch((err) => console.log(`[Keep-Alive] Ping note:`, err.message));
+  }, 8 * 60 * 1000);
+});
