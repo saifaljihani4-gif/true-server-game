@@ -11,8 +11,30 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+app.disable('x-powered-by');
 app.use(cors());
 app.use(express.json({ limit: '100kb' }));
+
+// Anti-Leak Security Middleware: Block access to source code, dotfiles, sourcemaps, and sensitive paths
+app.use((req, res, next) => {
+  const p = req.path.toLowerCase();
+  if (
+    p.includes('/.') ||
+    p.includes('..') ||
+    p.endsWith('.map') ||
+    p.endsWith('.ts') ||
+    p.endsWith('.tsx') ||
+    p.endsWith('.env') ||
+    (p.endsWith('.json') && !p.endsWith('manifest.json')) ||
+    p.includes('/server/') ||
+    p.includes('/src/') ||
+    p.includes('/node_modules/')
+  ) {
+    return res.status(404).send('Not Found');
+  }
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  next();
+});
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
@@ -1349,9 +1371,20 @@ io.on('connection', (socket) => {
   });
 });
 
-app.use(express.static(path.join(__dirname, '../dist'), { maxAge: '1d' }));
+app.use(express.static(path.join(__dirname, '../dist'), {
+  maxAge: '1d',
+  dotfiles: 'deny',
+  index: false
+}));
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 const PORT = process.env.PORT || 3001;
