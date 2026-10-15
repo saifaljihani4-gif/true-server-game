@@ -165,7 +165,7 @@ export function ActiveModal({ active, timer, timerTotal, timerActive, toggleTime
           <Trophy size={14} /> الجائزة: {prize}
         </div>
 
-        <div className="relative mb-7 flex min-h-[230px] w-full max-w-xl flex-col items-center overflow-hidden rounded-3xl border border-white/20 bg-[url('/images/banner.png')] bg-cover bg-center text-center shadow-[0_30px_60px_rgba(0,0,0,.8)] md:mb-9">
+        <div className="relative mb-7 flex min-h-[230px] w-full max-w-xl flex-col items-center overflow-hidden rounded-3xl border border-white/20 bg-[url('/images/banner.webp')] bg-cover bg-center text-center shadow-[0_30px_60px_rgba(0,0,0,.8)] md:mb-9">
           <div className="absolute inset-0 bg-black/78" />
           <div className="relative z-10 flex w-full flex-1 flex-col items-center justify-center gap-4 p-7 md:p-11">
             <div className="flex items-center gap-2">
@@ -246,7 +246,7 @@ export function FateModal({ fate, onNext }: { fate: Fate; onNext: () => void }) 
 
 function FateCard({ winner, name, label, text, Icon }: { winner?: boolean; name: string; label: string; text: string; Icon: typeof Crown }) {
   return (
-    <div className={`glass-panel relative mx-auto flex w-full max-w-lg flex-1 flex-col items-center overflow-hidden rounded-[2rem] bg-[url('/images/banner.png')] bg-cover bg-center p-8 text-center md:p-10 ${winner ? 'fate-winner' : ''}`}>
+    <div className={`glass-panel relative mx-auto flex w-full max-w-lg flex-1 flex-col items-center overflow-hidden rounded-[2rem] bg-[url('/images/banner.webp')] bg-cover bg-center p-8 text-center md:p-10 ${winner ? 'fate-winner' : ''}`}>
       <div className="absolute inset-0 bg-black/78" />
       <div className="relative z-10 flex flex-col items-center">
         <div className={`mb-5 flex h-16 w-16 items-center justify-center rounded-full border ${winner ? 'prize-plate prize-sheen' : 'border-white/30 bg-white/10'}`}>

@@ -422,7 +422,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
             <button onClick={() => { socket.disconnect(); onBack(); }} className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-gray-400 hover:text-white transition-colors shrink-0">
               <ChevronRight size={14} /> خروج
             </button>
-            <img src="/images/info.png" alt="True Server" className="h-7 sm:h-10 w-auto object-contain drop-shadow-md" />
+            <img src="/images/info.png" alt="Real" className="h-7 sm:h-10 w-auto object-contain drop-shadow-md" />
           </div>
 
           <div className="flex items-center justify-center gap-2 sm:gap-3 px-4 py-2 bg-white/10 border border-white/20 rounded-2xl shadow-lg">
@@ -448,10 +448,10 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
 
         {/* GAME VOTING SECTION IN LOBBY */}
         {room.voting?.active && (
-          <div className="w-full max-w-5xl mx-auto glass-panel p-4 sm:p-6 rounded-3xl border border-purple-500/40 bg-gradient-to-b from-purple-950/40 via-black/80 to-black mb-5 shadow-2xl fade-in-up">
+          <div className="w-full max-w-5xl mx-auto glass-panel p-4 sm:p-6 rounded-3xl border border-cyan-500/40 bg-gradient-to-b from-sky-950/40 via-black/80 to-black mb-5 shadow-2xl fade-in-up">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4 border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
-                <Vote size={22} className="text-purple-400" />
+                <Vote size={22} className="text-cyan-400" />
                 <div>
                   <h3 className="font-kufi text-base sm:text-lg font-bold text-white">تصويت على اللعبة القادمة</h3>
                   <p className="text-xs text-gray-400">صوّت للعبة التي ترغب بلعبها مع الروم الآن</p>
@@ -459,7 +459,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
               </div>
 
               {room.voting.endTime && (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-bold font-mono">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-bold font-mono">
                   <span>الوقت المتبقي:</span>
                   <span>{Math.max(0, Math.ceil((room.voting.endTime - Date.now()) / 1000))} ثانية</span>
                 </div>
@@ -481,13 +481,13 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                     onClick={() => socket.emit('player_cast_game_vote', { code: room.code, gameId: g.id })}
                     className={`p-3 rounded-2xl border text-start flex flex-col justify-between transition-all relative overflow-hidden ${
                       myVote
-                        ? 'bg-purple-600/30 border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.4)] scale-[1.02]'
+                        ? 'bg-cyan-600/30 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.4)] scale-[1.02]'
                         : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
                     }`}
                   >
                     {/* Progress Background */}
                     <div
-                      className="absolute top-0 bottom-0 start-0 bg-purple-500/15 pointer-events-none transition-all duration-300"
+                      className="absolute top-0 bottom-0 start-0 bg-cyan-500/15 pointer-events-none transition-all duration-300"
                       style={{ width: `${pct}%` }}
                     />
 
@@ -501,7 +501,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                     <p className="relative z-10 text-[11px] text-gray-400 mb-2">{g.desc}</p>
 
                     <div className="relative z-10 flex items-center justify-between text-xs font-bold">
-                      <span className={myVote ? 'text-purple-300' : 'text-gray-400'}>
+                      <span className={myVote ? 'text-cyan-300' : 'text-gray-400'}>
                         {votes} {votes === 1 ? 'صوت' : 'أصوات'} ({pct}%)
                       </span>
                       {myVote ? (
@@ -566,7 +566,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                   {!room.voting?.active && (
                     <button
                       onClick={() => socket.emit('host_start_game_voting', { code: room.code, duration: 30 })}
-                      className="py-3 px-4 rounded-2xl font-bold transition-all bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 shadow-md flex justify-between items-center text-xs sm:text-sm"
+                      className="py-3 px-4 rounded-2xl font-bold transition-all bg-gradient-to-r from-sky-600 to-cyan-600 text-white hover:scale-105 shadow-md flex justify-between items-center text-xs sm:text-sm"
                     >
                       <span className="flex items-center gap-1.5">
                         <Vote size={15} /> بدء تصويت على اللعبة
@@ -693,7 +693,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
           <h1 className="font-kufi text-2xl sm:text-4xl font-bold mb-3 text-white">وقت الأسئلة!</h1>
           {!isDone ? (
             <div className="w-full max-w-2xl flex flex-col items-center winner-explosion" key={`${currentIdx}-${order[currentIdx]?.askerId}-${order[currentIdx]?.answererId}`}>
-              <div className="text-xs sm:text-sm font-bold text-purple-300 mb-4 bg-purple-950/60 border border-purple-500/40 px-3.5 py-1 rounded-full shadow-sm">
+              <div className="text-xs sm:text-sm font-bold text-cyan-300 mb-4 bg-sky-950/60 border border-cyan-500/40 px-3.5 py-1 rounded-full shadow-sm">
                 سؤال {currentIdx + 1} من {order.length}
               </div>
               <p className="text-gray-400 mb-3 font-bold text-sm sm:text-base">الدور الآن على:</p>
@@ -701,13 +701,13 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                  <span className="text-xl sm:text-3xl md:text-4xl text-blue-400 flex-1 text-end truncate">{order[currentIdx]?.asker}</span>
                  <div className="flex flex-col items-center justify-center bg-black/50 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10">
                    <span className="text-gray-300 text-xs sm:text-sm font-bold">يسأل</span>
-                   <ChevronRight size={18} className="text-purple-400 rotate-180" />
+                   <ChevronRight size={18} className="text-cyan-400 rotate-180" />
                  </div>
                  <span className="text-xl sm:text-3xl md:text-4xl text-pink-400 flex-1 text-start truncate">{order[currentIdx]?.answerer}</span>
               </div>
               {isHost && (
                 <div className="flex flex-wrap justify-center items-center gap-2.5 sm:gap-3">
-                  <button onClick={() => socket.emit('host_next_question', { code })} className="btn-clean font-kufi bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:to-[#2e1056] text-white border border-purple-400/40 px-5 sm:px-7 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm md:text-base font-bold shadow-[0_0_20px_rgba(147,51,234,0.35)] hover:scale-105 transition-all">
+                  <button onClick={() => socket.emit('host_next_question', { code })} className="btn-clean font-kufi bg-gradient-to-b from-[#0c2a4a] via-[#0e3b66] to-[#081c33] hover:from-[#113861] hover:to-[#0c2a4a] text-white border border-cyan-400/40 px-5 sm:px-7 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm md:text-base font-bold shadow-[0_0_20px_rgba(6,182,212,0.35)] hover:scale-105 transition-all">
                     {currentIdx === order.length - 1 ? 'إنهاء وبدء التصويت' : 'السؤال التالي'}
                   </button>
                   <button onClick={() => socket.emit('host_skip_question', { code })} className="btn-clean font-kufi bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all hover:scale-105">
@@ -772,7 +772,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
         {isHost && (
           <div className="w-full max-w-xl glass-panel p-3 sm:p-4 rounded-2xl border border-white/15 mb-4 text-center">
             <div className="flex items-center justify-center gap-1.5 text-xs sm:text-sm font-bold text-gray-200 mb-2">
-              <Timer size={16} className="text-purple-400" />
+              <Timer size={16} className="text-cyan-400" />
               <span>مدة الدور لكل فريق:</span>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-2">
@@ -786,7 +786,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                   }}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono transition-all ${
                     currentTurnDuration === dur
-                      ? 'bg-purple-600 text-white border border-purple-400 shadow-md scale-105'
+                      ? 'bg-cyan-600 text-white border border-cyan-400 shadow-md scale-105'
                       : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white'
                   }`}
                 >
@@ -838,7 +838,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
         {isHost && (
           <button
             onClick={() => socket.emit('host_start_codenames', { code, turnDuration: currentTurnDuration })}
-            className="btn-clean font-kufi bg-[#7c3aed] hover:bg-[#6d28d9] text-white border border-purple-400/40 px-8 sm:px-12 py-3 sm:py-4 rounded-2xl text-base sm:text-xl font-bold hover:scale-105 transition-transform shadow-[0_0_25px_rgba(168,85,247,0.4)]"
+            className="btn-clean font-kufi bg-sky-600 hover:bg-sky-500 text-white border border-cyan-400/40 px-8 sm:px-12 py-3 sm:py-4 rounded-2xl text-base sm:text-xl font-bold hover:scale-105 transition-transform shadow-[0_0_25px_rgba(6,182,212,0.4)]"
           >
             ابدأ اللعبة ({currentTurnDuration} ثانية لكل دور)
           </button>
@@ -880,7 +880,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
 
             {gd.clue ? (
               <div className="text-[11px] sm:text-sm text-white mt-0.5">
-                تلميحة: <span className="font-bold text-purple-300">{gd.clue.word}</span> ({gd.clue.number})
+                تلميحة: <span className="font-bold text-cyan-300">{gd.clue.word}</span> ({gd.clue.number})
               </div>
             ) : (
               <div className="text-gray-400 text-[11px] sm:text-xs mt-0.5">بانتظار الرئيس يعطي تلميحة...</div>
@@ -896,7 +896,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
             const revealed = card.revealed;
             const seeColor = revealed || isSpymaster;
             
-            let bg = "bg-gradient-to-b from-[#2e1254] via-[#3a186b] to-[#220d3f] border-purple-500/50 hover:border-purple-300 shadow-[0_4px_12px_rgba(0,0,0,0.5),0_0_10px_rgba(147,51,234,0.25)]";
+            let bg = "bg-gradient-to-b from-[#0c2a4a] via-[#0e3b66] to-[#081c33] border-purple-500/50 hover:border-purple-300 shadow-[0_4px_12px_rgba(0,0,0,0.5),0_0_10px_rgba(6,182,212,0.25)]";
             if (seeColor) {
               if (card.color === 'red') bg = 'bg-red-600 border-red-400 shadow-[0_0_12px_rgba(239,68,68,0.35)]';
               else if (card.color === 'blue') bg = 'bg-blue-600 border-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.35)]';
@@ -923,9 +923,9 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
         <div className="w-full max-w-xl sm:max-w-2xl flex justify-center gap-2 pb-14 sm:pb-4 mt-1">
           {amIActiveSpymaster && !gd.clue && (
             <div className="flex gap-2 w-full max-w-md bg-white/5 p-1.5 sm:p-2 rounded-xl border border-white/10">
-              <input type="text" placeholder="كلمة التلميح" value={clueWord} onChange={e=>setClueWord(e.target.value)} className="flex-1 bg-black/60 text-white text-xs sm:text-sm rounded-lg px-2.5 py-1.5 outline-none focus:border-purple-400 border border-transparent" />
+              <input type="text" placeholder="كلمة التلميح" value={clueWord} onChange={e=>setClueWord(e.target.value)} className="flex-1 bg-black/60 text-white text-xs sm:text-sm rounded-lg px-2.5 py-1.5 outline-none focus:border-cyan-400 border border-transparent" />
               <input type="number" min="1" max="9" value={clueNum} onChange={e=>setClueNum(parseInt(e.target.value) || 1)} className="w-12 sm:w-16 bg-black/60 text-white text-xs sm:text-sm rounded-lg px-1.5 py-1.5 text-center outline-none border border-transparent" />
-              <button onClick={submitClue} className="bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:to-[#2e1056] text-white font-bold text-xs sm:text-sm px-3.5 sm:px-5 py-1.5 rounded-lg border border-purple-400/40 transition-all">أرسل</button>
+              <button onClick={submitClue} className="bg-gradient-to-b from-[#0c2a4a] via-[#0e3b66] to-[#081c33] hover:from-[#113861] hover:to-[#0c2a4a] text-white font-bold text-xs sm:text-sm px-3.5 sm:px-5 py-1.5 rounded-lg border border-cyan-400/40 transition-all">أرسل</button>
             </div>
           )}
           
@@ -1018,7 +1018,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
             <div className={`p-4 rounded-xl border text-sm font-bold ${doctorDone ? 'border-green-500 bg-green-500/20 text-green-400' : 'border-white/20 bg-white/5 text-gray-500'}`}>الطبيب {doctorDone ? 'جاهز' : 'ينتظر'}</div>
           </div>
           {isHost && (
-            <button onClick={() => socket.emit('host_end_night', { code })} className="btn-clean font-kufi bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:to-[#2e1056] text-white border border-purple-400/40 px-8 py-3 rounded-2xl font-bold shadow-[0_0_20px_rgba(147,51,234,0.35)] hover:scale-105 transition-all">إنهاء الليلة</button>
+            <button onClick={() => socket.emit('host_end_night', { code })} className="btn-clean font-kufi bg-gradient-to-b from-[#0c2a4a] via-[#0e3b66] to-[#081c33] hover:from-[#113861] hover:to-[#0c2a4a] text-white border border-cyan-400/40 px-8 py-3 rounded-2xl font-bold shadow-[0_0_20px_rgba(6,182,212,0.35)] hover:scale-105 transition-all">إنهاء الليلة</button>
           )}
         </div>
 
@@ -1074,7 +1074,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
             )}
           </div>
           {isHost && (
-            <button onClick={() => socket.emit('host_start_discussion', { code })} className="btn-clean font-kufi bg-gradient-to-b from-[#2e1254] via-[#431b7a] to-[#250d45] hover:from-[#3b176d] hover:to-[#2e1056] text-white border border-purple-400/40 px-8 py-3.5 rounded-2xl text-lg font-bold shadow-[0_0_20px_rgba(147,51,234,0.35)] hover:scale-105 transition-all">
+            <button onClick={() => socket.emit('host_start_discussion', { code })} className="btn-clean font-kufi bg-gradient-to-b from-[#0c2a4a] via-[#0e3b66] to-[#081c33] hover:from-[#113861] hover:to-[#0c2a4a] text-white border border-cyan-400/40 px-8 py-3.5 rounded-2xl text-lg font-bold shadow-[0_0_20px_rgba(6,182,212,0.35)] hover:scale-105 transition-all">
               بدء النقاش (وقت السوالف)
             </button>
           )}
@@ -1144,7 +1144,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
           <h1 className="font-kufi text-4xl font-bold mb-4 text-red-400">تصويت الإعدام!</h1>
           <div className="text-6xl font-black text-white mb-6">{votesCount} <span className="text-3xl text-white/30">/ {aliveCount}</span></div>
           {isHost && (
-            <button onClick={() => socket.emit('host_execute_mafia', { code })} disabled={votesCount === 0} className="btn-clean font-kufi bg-[#7c3aed] hover:bg-[#6d28d9] text-white border border-purple-400/40 px-8 py-3 rounded-2xl text-lg font-bold shadow-[0_0_20px_rgba(168,85,247,0.35)] disabled:opacity-50">
+            <button onClick={() => socket.emit('host_execute_mafia', { code })} disabled={votesCount === 0} className="btn-clean font-kufi bg-sky-600 hover:bg-sky-500 text-white border border-cyan-400/40 px-8 py-3 rounded-2xl text-lg font-bold shadow-[0_0_20px_rgba(6,182,212,0.35)] disabled:opacity-50">
               إعدام الأعلى تصويتاً
             </button>
           )}

@@ -19,9 +19,9 @@ export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin:
     <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-between py-5 px-4 sm:py-7 sm:px-6">
       {/* Top Tag - Clean neutral glass without purple background/border */}
       <div className="w-full flex justify-center items-center pt-1">
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 py-1 backdrop-blur-md">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-          <span className="font-kufi text-[11px] sm:text-xs font-semibold text-gray-300">سيرفر ترو الرسمي • True Server</span>
+        <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-950/30 px-3.5 py-1 backdrop-blur-md">
+          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          <span className="font-kufi text-[11px] sm:text-xs font-semibold text-sky-200">سيرفر Real الرسمي • Real</span>
         </div>
       </div>
 
@@ -30,18 +30,14 @@ export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin:
         {/* Animated Icon - Clean without any colored glow or colored borders */}
         <div className="relative mb-3 sm:mb-4">
           <img
-            src="/images/icon.gif"
-            alt="True Icon"
+            src="/images/icon.png"
+            alt="Real"
             className="w-20 h-20 sm:w-24 sm:h-24 object-contain rounded-2xl drop-shadow-md"
           />
         </div>
 
         {/* Info banner / title */}
-        <img
-          src="/images/info.png"
-          alt="True Server"
-          className="h-8 sm:h-11 w-auto object-contain mx-auto mb-2 drop-shadow-md"
-        />
+        <h1 className="font-display text-4xl sm:text-5xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-sky-200 to-cyan-400 drop-shadow-[0_0_25px_rgba(56,189,248,0.5)] mb-2">Real</h1>
 
         <p className="font-kufi text-xs sm:text-sm font-medium text-gray-400 max-w-xs sm:max-w-sm leading-relaxed mb-4">
           تحديات جماعية ومسابقات تفاعلية مع أصدقائك في الديسكورد
@@ -102,7 +98,7 @@ export function Categories({ onBack, onSelect }: { onBack: () => void; onSelect:
         </div>
 
         <div className="fade-in-up mb-3 sm:mb-5 text-center w-full">
-          <img src="/images/info.png" alt="True Server" className="h-8 sm:h-10 w-auto object-contain mx-auto mb-1.5 drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]" />
+          <img src="/images/info.png" alt="Real" className="h-8 sm:h-10 w-auto object-contain mx-auto mb-1.5 drop-shadow-[0_0_15px_rgba(56,189,248,0.4)]" />
           <h2 className="font-kufi text-xl sm:text-2xl md:text-3xl font-bold text-white">اختر اللعبة</h2>
           <p className="mt-0.5 text-xs sm:text-sm font-medium text-gray-400">{MODES.length} ألعاب، والجائزة تحددها قبل ما تبدأ</p>
         </div>

@@ -26,7 +26,7 @@ export function AdedLobbyView({ room, socket, onBack, isHost }: { room: any; soc
           >
             <ChevronRight size={16} /> خروج للوبي الرئيسي
           </button>
-          <img src="/images/info.png" alt="True Server" className="h-7 sm:h-10 w-auto object-contain drop-shadow-md" />
+          <img src="/images/info.png" alt="Real" className="h-7 sm:h-10 w-auto object-contain drop-shadow-md" />
         </div>
         <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-mono font-bold bg-white/10 px-5 py-2 rounded-2xl border border-white/15 text-white shadow-lg">
           <span className="text-gray-400">كود الروم:</span>
@@ -427,7 +427,7 @@ export function AdedGameView({ room, socket, onBack, isHost }: { room: any; sock
 
               {/* Live Counter (Progress against target) */}
               <div className="flex flex-col items-center">
-                <div className={`px-6 sm:px-10 py-2.5 sm:py-3.5 rounded-2xl bg-gradient-to-b from-purple-950/90 via-[#18112e] to-black border border-purple-400/50 shadow-[0_0_30px_rgba(168,85,247,0.35)] flex flex-col items-center justify-center transition-transform duration-150 ${bumping ? 'scale-110 border-amber-400' : 'scale-100'}`}>
+                <div className={`px-6 sm:px-10 py-2.5 sm:py-3.5 rounded-2xl bg-gradient-to-b from-sky-950/90 via-[#0a182e] to-black border border-cyan-400/50 shadow-[0_0_30px_rgba(6,182,212,0.35)] flex flex-col items-center justify-center transition-transform duration-150 ${bumping ? 'scale-110 border-amber-400' : 'scale-100'}`}>
                   <div className="flex items-baseline gap-1">
                     <span className="font-mono text-4xl sm:text-6xl font-black text-white drop-shadow-[0_0_20px_rgba(168,85,247,0.8)]">
                       {count}
@@ -560,7 +560,7 @@ export function AdedResultsView({ room, socket, onBack, isHost }: { room: any; s
           >
             <ChevronRight size={14} /> خروج للوبي
           </button>
-          <img src="/images/info.png" alt="True Server" className="h-7 sm:h-9 w-auto object-contain drop-shadow-md" />
+          <img src="/images/info.png" alt="Real" className="h-7 sm:h-9 w-auto object-contain drop-shadow-md" />
         </div>
         <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-mono font-bold bg-white/10 px-5 py-2 rounded-2xl border border-white/15 text-white shadow-lg">
           <span className="text-gray-400">كود الروم:</span>

@@ -22,7 +22,7 @@ export function HoroofLobby({ room, socket, onBack, isHost }: { room: any; socke
           >
             <ChevronRight size={14} /> خروج
           </button>
-          <img src="/images/info.png" alt="True Server" className="h-7 sm:h-9 w-auto object-contain drop-shadow-md" />
+          <img src="/images/info.png" alt="Real" className="h-7 sm:h-9 w-auto object-contain drop-shadow-md" />
         </div>
         <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-bold bg-white/10 px-5 py-2 rounded-2xl border border-white/20 text-white shadow-lg">
           <span className="text-gray-400">كود الروم:</span>
@@ -38,12 +38,12 @@ export function HoroofLobby({ room, socket, onBack, isHost }: { room: any; socke
       </div>
 
       {/* Presenter / Host Role Badge */}
-      <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-purple-950/60 border border-purple-500/30 text-purple-200 text-xs sm:text-sm font-bold mb-4 shadow-lg">
+      <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-sky-950/60 border border-cyan-500/30 text-cyan-200 text-xs sm:text-sm font-bold mb-4 shadow-lg">
         <Crown size={16} className="text-yellow-400 shrink-0" />
         <span>مقدم المسابقة والحكم:</span>
         <span className="text-white font-black">{hostPlayer?.name || 'الهوست'}</span>
         {isHost ? (
-          <span className="bg-purple-500/30 text-purple-300 text-[10px] px-2 py-0.5 rounded-full font-bold">
+          <span className="bg-cyan-500/30 text-cyan-300 text-[10px] px-2 py-0.5 rounded-full font-bold">
             (أنت - تدير الأسئلة والتحكيم)
           </span>
         ) : (
@@ -181,7 +181,7 @@ export function HoroofLobby({ room, socket, onBack, isHost }: { room: any; socke
           <button
             onClick={() => socket.emit('host_start_horoof', { code })}
             disabled={greenPlayers.length === 0 || bluePlayers.length === 0}
-            className="btn-clean font-kufi bg-gradient-to-r from-purple-700 to-purple-900 hover:from-purple-600 hover:to-purple-800 text-white border border-purple-400/40 px-8 sm:px-10 py-3 sm:py-3.5 rounded-2xl text-base sm:text-lg font-bold shadow-[0_0_25px_rgba(168,85,247,0.4)] disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 transition-all"
+            className="btn-clean font-kufi bg-gradient-to-r from-sky-700 to-cyan-900 hover:from-sky-600 hover:to-cyan-800 text-white border border-cyan-400/40 px-8 sm:px-10 py-3 sm:py-3.5 rounded-2xl text-base sm:text-lg font-bold shadow-[0_0_25px_rgba(6,182,212,0.4)] disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 transition-all"
           >
             بدء المسابقة
           </button>
@@ -256,7 +256,7 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
             <span className="text-sm sm:text-base font-black text-white">{scores.green || 0}</span>
           </div>
 
-          <div className="text-xs font-black text-purple-300 bg-purple-950/70 border border-purple-500/40 px-3 py-1 rounded-full">
+          <div className="text-xs font-black text-cyan-300 bg-sky-950/70 border border-cyan-500/40 px-3 py-1 rounded-full">
             جولة {round}
           </div>
 
@@ -269,7 +269,7 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
 
         <div className="flex items-center gap-1.5">
           {isHost && (
-            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-400/30 hidden sm:inline-block">
+            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 hidden sm:inline-block">
               الحكم والمقدم
             </span>
           )}
@@ -320,7 +320,7 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
                     }
 
                     if (isActive) {
-                      bgClass = 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-2 border-white ring-4 ring-yellow-400 scale-110 z-20 animate-pulse';
+                      bgClass = 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white border-2 border-white ring-4 ring-yellow-400 scale-110 z-20 animate-pulse';
                     }
 
                     if (isWinning) {
@@ -367,7 +367,7 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
         {activeQuestion ? (
           <div className="flex flex-col items-center text-center gap-2.5 fade-in-up">
             <div className="flex items-center gap-2">
-              <span className="px-3 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-400/30 text-xs font-bold">
+              <span className="px-3 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 text-xs font-bold">
                 حرف ({board.find((c: any) => c.id === activeCellId)?.letter})
               </span>
               <span className="text-xs text-gray-400">السؤال الحالي:</span>
@@ -417,9 +417,9 @@ export function HoroofBoardView({ room, socket, onBack, isHost }: { room: any; s
             {isHost && (
               <div className="w-full mt-2 pt-3 border-t border-white/10 flex flex-col items-center gap-2.5">
                 <div className="flex flex-wrap items-center justify-center gap-2">
-                  <div className="bg-purple-950/50 border border-purple-500/30 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm">
+                  <div className="bg-sky-950/50 border border-cyan-500/30 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm">
                     <span className="text-gray-400">الإجابة الصحيحة: </span>
-                    <span className="text-purple-300 font-bold font-mono">{activeQuestion.a}</span>
+                    <span className="text-cyan-300 font-bold font-mono">{activeQuestion.a}</span>
                   </div>
 
                   <button
@@ -576,7 +576,7 @@ export function HoroofWinnerView({ room, socket, isHost, onBack }: { room: any; 
         <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
           <button
             onClick={() => socket.emit('host_horoof_new_round', { code })}
-            className="btn-clean font-kufi bg-gradient-to-b from-purple-700 to-purple-900 text-white border border-purple-400/40 px-8 py-3.5 rounded-2xl text-base sm:text-lg font-bold shadow-[0_0_20px_rgba(168,85,247,0.35)] hover:scale-105 transition-all"
+            className="btn-clean font-kufi bg-gradient-to-b from-sky-700 to-cyan-900 text-white border border-cyan-400/40 px-8 py-3.5 rounded-2xl text-base sm:text-lg font-bold shadow-[0_0_20px_rgba(6,182,212,0.35)] hover:scale-105 transition-all"
           >
             راوند جديد (حروف جديدة)
           </button>
