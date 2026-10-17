@@ -73,10 +73,10 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   const [room, setRoom] = useState<any>(null);
 
   useEffect(() => {
-    if (discordUser?.displayName && !name) {
+    if (discordUser?.displayName) {
       setName(discordUser.displayName);
     }
-  }, [discordUser, name]);
+  }, [discordUser]);
 
   // Public/Private Room State
   const [activeTab, setActiveTab] = useState<'public' | 'code'>('code');
@@ -160,7 +160,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
 
   const handleCreateAndJoin = (e: React.FormEvent) => {
     e.preventDefault();
-    const finalName = (name.trim() || discordUser?.displayName || 'لاعب').slice(0, 25);
+    const finalName = (discordUser?.displayName || name.trim() || 'لاعب').slice(0, 25);
     socket.emit('host_create_room', { isPublic: isPublicRoom, name: customRoomName.trim() || undefined }, (res: any) => {
       if (res.success) {
         setCode(res.code);
@@ -179,7 +179,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   const handleJoinOnly = (e: React.FormEvent) => {
     e.preventDefault();
     if (!code) return;
-    const finalName = (name.trim() || discordUser?.displayName || 'لاعب').slice(0, 25);
+    const finalName = (discordUser?.displayName || name.trim() || 'لاعب').slice(0, 25);
     socket.emit('player_join_room', {
       code,
       name: finalName,
@@ -191,7 +191,7 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
   };
 
   const handleQuickJoinPublic = (roomCode: string) => {
-    const finalName = (name.trim() || discordUser?.displayName || 'لاعب').slice(0, 25);
+    const finalName = (discordUser?.displayName || name.trim() || 'لاعب').slice(0, 25);
     setError('');
     socket.emit('player_join_room', {
       code: roomCode,
@@ -244,7 +244,10 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-sky-400">حساب ديسكورد</span>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                   </div>
-                  <p className="text-sm font-bold text-white truncate">{name || discordUser.displayName}</p>
+                  <p className="text-sm font-bold text-white truncate">{discordUser.displayName || name}</p>
+                  {discordUser.username && discordUser.username !== discordUser.displayName && (
+                    <p className="text-[11px] text-gray-400 truncate">@{discordUser.username}</p>
+                  )}
                 </div>
               </div>
             ) : (
@@ -330,7 +333,10 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-sky-400">حساب ديسكورد</span>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                   </div>
-                  <p className="text-sm font-bold text-white truncate">{name || discordUser.displayName}</p>
+                  <p className="text-sm font-bold text-white truncate">{discordUser.displayName || name}</p>
+                  {discordUser.username && discordUser.username !== discordUser.displayName && (
+                    <p className="text-[11px] text-gray-400 truncate">@{discordUser.username}</p>
+                  )}
                 </div>
               </div>
             ) : (

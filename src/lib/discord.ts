@@ -1,4 +1,4 @@
-import { DiscordSDK, Events } from '@discord/embedded-app-sdk';
+import { DiscordSDK } from '@discord/embedded-app-sdk';
 import { useEffect, useState } from 'react';
 
 export const DISCORD_CLIENT_ID = '1552416496179740715';
@@ -14,12 +14,53 @@ export interface DiscordUser {
 let cachedUser: DiscordUser | null = null;
 let initPromise: Promise<DiscordUser> | null = null;
 let discordSdkInstance: DiscordSDK | null = null;
+let capturedReadyUser: any = null;
+
+function cleanOldGuestProfile() {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = localStorage.getItem('real_player_profile');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (
+        !parsed ||
+        !parsed.isDiscord ||
+        parsed.id?.startsWith('guest_') ||
+        parsed.displayName?.startsWith('لاعب_')
+      ) {
+        localStorage.removeItem('real_player_profile');
+      }
+    }
+  } catch {
+    localStorage.removeItem('real_player_profile');
+  }
+}
+cleanOldGuestProfile();
+
+export function isRunningInDiscord(): boolean {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  return Boolean(params.get('frame_id') || params.get('instance_id'));
+}
+
+if (typeof window !== 'undefined' && isRunningInDiscord()) {
+  try {
+    discordSdkInstance = new DiscordSDK(DISCORD_CLIENT_ID);
+    (discordSdkInstance as any).eventBus?.once('READY', (eventData: any) => {
+      if (eventData?.user) {
+        capturedReadyUser = eventData.user;
+      }
+    });
+  } catch (e) {
+    console.warn('DiscordSDK early init error:', e);
+  }
+}
 
 function buildAvatarUrl(userId?: string, avatarHash?: string | null, discriminator: string = '0'): string {
   if (userId && avatarHash) {
     const isAnimated = avatarHash.startsWith('a_');
     const ext = isAnimated ? 'gif' : 'webp';
-    return `https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.${ext}?size=128`;
+    return `https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.${ext}?size=256`;
   }
   let index = 0;
   if (userId) {
@@ -42,7 +83,7 @@ function getStoredFallback(): DiscordUser {
     const raw = localStorage.getItem('real_player_profile');
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed && parsed.displayName) return parsed;
+      if (parsed && parsed.displayName && parsed.isDiscord) return parsed;
     }
   } catch {}
   const randomNum = Math.floor(1000 + Math.random() * 9000);
@@ -53,23 +94,16 @@ function getStoredFallback(): DiscordUser {
     avatar: '/images/icon.png',
     isDiscord: false
   };
-  try {
-    localStorage.setItem('real_player_profile', JSON.stringify(guest));
-  } catch {}
   return guest;
 }
 
-export function isRunningInDiscord(): boolean {
-  if (typeof window === 'undefined') return false;
-  const params = new URLSearchParams(window.location.search);
-  return Boolean(params.get('frame_id'));
-}
-
 export async function getDiscordUser(): Promise<DiscordUser> {
-  if (cachedUser) return cachedUser;
+  if (cachedUser && cachedUser.isDiscord) return cachedUser;
   if (initPromise) return initPromise;
 
   initPromise = (async () => {
+    cleanOldGuestProfile();
+
     if (!isRunningInDiscord()) {
       cachedUser = getStoredFallback();
       return cachedUser;
@@ -78,20 +112,21 @@ export async function getDiscordUser(): Promise<DiscordUser> {
     try {
       if (!discordSdkInstance) {
         discordSdkInstance = new DiscordSDK(DISCORD_CLIENT_ID);
+        (discordSdkInstance as any).eventBus?.once('READY', (eventData: any) => {
+          if (eventData?.user) {
+            capturedReadyUser = eventData.user;
+          }
+        });
       }
       const sdk = discordSdkInstance;
 
-      let readyUser: any = null;
-      sdk.subscribe(Events.READY as any, (eventData: any) => {
-        if (eventData?.user) {
-          readyUser = eventData.user;
-        }
-      });
-
-      await Promise.race([
+      const readyData: any = await Promise.race([
         sdk.ready(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Discord SDK ready timeout')), 7000))
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Discord SDK ready timeout')), 10000))
       ]);
+      if (!capturedReadyUser && readyData?.user) {
+        capturedReadyUser = readyData.user;
+      }
 
       let participants: any[] = [];
       try {
@@ -101,17 +136,36 @@ export async function getDiscordUser(): Promise<DiscordUser> {
         console.warn('Could not fetch connected participants:', e);
       }
 
-      let targetUser = readyUser;
+      let targetUser = capturedReadyUser;
       if (!targetUser && participants.length > 0) {
         targetUser = participants[0];
       }
 
-      if (targetUser) {
-        const id = String(targetUser.id || '');
-        const username = String(targetUser.username || 'لاعب');
-        const displayName = String(targetUser.global_name || targetUser.nickname || username);
-        const avatar = buildAvatarUrl(id, targetUser.avatar, targetUser.discriminator || '0');
+      let fullUserDetails: any = null;
+      if (targetUser?.id) {
+        try {
+          fullUserDetails = await sdk.commands.getUser({ id: targetUser.id });
+        } catch (e) {
+          console.warn('Could not fetch getUser from Discord:', e);
+        }
+      }
 
+      const id = String(fullUserDetails?.id || targetUser?.id || '');
+      const username = String(fullUserDetails?.username || targetUser?.username || 'لاعب');
+      const matchedParticipant = participants.find((p: any) => p.id === id);
+      const displayName = String(
+        fullUserDetails?.global_name ||
+        matchedParticipant?.global_name ||
+        matchedParticipant?.nickname ||
+        targetUser?.global_name ||
+        targetUser?.nickname ||
+        username
+      );
+      const avatarHash = fullUserDetails?.avatar || matchedParticipant?.avatar || targetUser?.avatar || null;
+      const discriminator = String(fullUserDetails?.discriminator || targetUser?.discriminator || '0');
+      const avatar = buildAvatarUrl(id, avatarHash, discriminator);
+
+      if (id) {
         cachedUser = {
           id,
           username,
