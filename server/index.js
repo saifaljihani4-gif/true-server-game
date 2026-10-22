@@ -19,6 +19,45 @@ app.use(express.json({ limit: '100kb' }));
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/ping', (req, res) => res.status(200).send('PONG'));
 
+// Discord OAuth Token Exchange for Embedded App SDK
+app.post('/api/token', async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code || typeof code !== 'string') {
+      return res.status(400).json({ error: 'Code is required' });
+    }
+    const clientSecret = process.env.DISCORD_CLIENT_SECRET;
+    if (!clientSecret) {
+      console.warn('DISCORD_CLIENT_SECRET is not set in environment');
+      return res.status(500).json({ error: 'DISCORD_CLIENT_SECRET not configured' });
+    }
+    const clientId = process.env.DISCORD_CLIENT_ID || '1552416496179740715';
+    const params = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: 'authorization_code',
+      code: code,
+    });
+    const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
+    });
+    if (!tokenResponse.ok) {
+      const errText = await tokenResponse.text();
+      console.error('Discord token exchange failed:', errText);
+      return res.status(tokenResponse.status).send(errText);
+    }
+    const tokenData = await tokenResponse.json();
+    return res.json({ access_token: tokenData.access_token });
+  } catch (err) {
+    console.error('Error in /api/token:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Anti-Leak Security Middleware: Block access to source code, dotfiles, sourcemaps, and sensitive paths
 app.use((req, res, next) => {
   const p = req.path.toLowerCase();

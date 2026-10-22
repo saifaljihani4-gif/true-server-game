@@ -128,6 +128,56 @@ export async function getDiscordUser(): Promise<DiscordUser> {
         capturedReadyUser = readyData.user;
       }
 
+      // Method 1: Official OAuth2 Silent Authorize and Authenticate
+      try {
+        const authData = await sdk.commands.authorize({
+          client_id: DISCORD_CLIENT_ID,
+          response_type: 'code',
+          state: '',
+          prompt: 'none',
+          scope: ['identify']
+        });
+
+        if (authData?.code) {
+          const tokenRes = await fetch('/api/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: authData.code })
+          });
+
+          if (tokenRes.ok) {
+            const tokenJson = await tokenRes.json();
+            if (tokenJson?.access_token) {
+              const authenticateRes = await sdk.commands.authenticate({
+                access_token: tokenJson.access_token
+              });
+              if (authenticateRes?.user) {
+                const u = authenticateRes.user;
+                const id = String(u.id);
+                const username = String(u.username || 'لاعب');
+                const displayName = String((u as any).global_name || username);
+                const avatar = buildAvatarUrl(id, u.avatar, (u as any).discriminator || '0');
+
+                cachedUser = {
+                  id,
+                  username,
+                  displayName,
+                  avatar,
+                  isDiscord: true
+                };
+                try {
+                  localStorage.setItem('real_player_profile', JSON.stringify(cachedUser));
+                } catch {}
+                return cachedUser;
+              }
+            }
+          }
+        }
+      } catch (authErr) {
+        console.warn('OAuth authorization note:', authErr);
+      }
+
+      // Method 2: Connected participants fallback
       let participants: any[] = [];
       try {
         const pRes = await sdk.commands.getActivityInstanceConnectedParticipants();
