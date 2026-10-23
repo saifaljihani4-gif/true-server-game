@@ -109,6 +109,8 @@ const getGameDisplayName = (state, gameData) => {
   if (state.startsWith('codenames')) return 'كود نيمز';
   if (state.startsWith('horoof')) return 'تحدي الحروف';
   if (state.startsWith('aded')) return 'عدّد';
+  if (state.startsWith('quick')) return gameData?.title || 'تحدي سريع';
+  if (state.startsWith('baloot')) return 'البلوت';
   return 'جاري اللعب';
 };
 
@@ -162,6 +164,90 @@ const barraCategories = {
   'وظائف': ['طيار', 'دكتور', 'حلاق', 'سباك', 'محامي', 'طباخ'],
   'حيوانات': ['أسد', 'فيل', 'زرافة', 'قرد', 'تمساح', 'بطريق']
 };
+
+const quickGameData = {
+  quiz: {
+    title: 'صح أو خطأ',
+    rounds: [
+      { prompt: 'الرياض هي عاصمة المملكة العربية السعودية.', answer: true },
+      { prompt: 'عدد أيام الأسبوع ثمانية أيام.', answer: false },
+      { prompt: 'الماء يتجمد عند صفر مئوية.', answer: true },
+      { prompt: 'الشمس كوكب.', answer: false },
+      { prompt: 'القمر يدور حول الأرض.', answer: true }
+    ]
+  },
+  whoami: {
+    title: 'من أنا؟',
+    rounds: [
+      { prompt: 'شخصية خيالية ترتدي رداءً أسود وتحارب الجريمة.', answer: 'باتمان' },
+      { prompt: 'عالم مشهور ارتبط اسمه بنظرية النسبية.', answer: 'أينشتاين' },
+      { prompt: 'شخصية كرتونية تعشق الجبن وتعيش في بيت أصفر.', answer: 'سبونج بوب' }
+    ]
+  },
+  forbidden: {
+    title: 'الكلمة الممنوعة',
+    rounds: [
+      { prompt: 'اشرح: مطار', forbidden: ['طائرة', 'سفر', 'رحلة'] },
+      { prompt: 'اشرح: قهوة', forbidden: ['فنجان', 'شرب', 'بن'] },
+      { prompt: 'اشرح: ملعب', forbidden: ['كرة', 'لاعب', 'مباراة'] }
+    ]
+  },
+  speed: {
+    title: 'تحدي السرعة',
+    rounds: [
+      { prompt: 'اذكر لونًا يبدأ بحرف أ', answer: 'أحمر' },
+      { prompt: 'اذكر دولة عربية', answer: 'السعودية' },
+      { prompt: 'اذكر حيوانًا يعيش في الصحراء', answer: 'جمل' }
+    ]
+  }
+};
+
+const balootSuits = ['♠', '♥', '♦', '♣'];
+const balootRanks = [
+  { rank: '7', value: 0, points: 0 }, { rank: '8', value: 1, points: 0 },
+  { rank: '9', value: 2, points: 0 }, { rank: 'J', value: 3, points: 2 },
+  { rank: 'Q', value: 4, points: 3 }, { rank: 'K', value: 5, points: 4 },
+  { rank: '10', value: 6, points: 10 }, { rank: 'A', value: 7, points: 11 }
+];
+function makeBalootDeck() {
+  return balootSuits.flatMap(suit => balootRanks.map(card => ({
+    id: `${suit}-${card.rank}`, suit, rank: card.rank, value: card.value, points: card.points
+  }))).sort(() => Math.random() - 0.5);
+}
+function dealBaloot(room) {
+  const deck = makeBalootDeck();
+  room.gameData.hands = {};
+  room.players.slice(0, 4).forEach((player, index) => {
+    room.gameData.hands[player.id] = deck.slice(index * 8, index * 8 + 8);
+  });
+  room.gameData.trick = [];
+  room.gameData.trickNumber = 1;
+  room.gameData.leadSuit = null;
+  room.gameData.turn = room.players[0]?.id || null;
+}
+function resolveBalootTrick(room) {
+  const trick = room.gameData.trick || [];
+  if (trick.length < 4) return;
+  const leadSuit = trick[0].card.suit;
+  const trumpSuit = room.gameData.trumpSuit;
+  const strength = (card) => {
+    const trumpOrder = { J: 100, '9': 90, A: 80, '10': 70, K: 60, Q: 50, '8': 40, '7': 30 };
+    const normalOrder = { A: 80, '10': 70, K: 60, Q: 50, J: 40, '9': 30, '8': 20, '7': 10 };
+    return (card.suit === trumpSuit ? 1000 : card.suit === leadSuit ? 500 : 0) + (card.suit === trumpSuit ? trumpOrder[card.rank] : normalOrder[card.rank]);
+  };
+  const winner = trick.slice().sort((a, b) => strength(b.card) - strength(a.card))[0];
+  const team = room.gameData.teams[winner.playerId];
+  room.gameData.scores[team] = (room.gameData.scores[team] || 0) + trick.reduce((sum, play) => sum + play.card.points * (play.card.suit === trumpSuit ? 2 : 1), 0);
+  room.gameData.lastTrickWinner = winner.playerId;
+  room.gameData.trick = [];
+  room.gameData.trickNumber += 1;
+  room.gameData.leadSuit = null;
+  room.gameData.turn = winner.playerId;
+  if (room.gameData.trickNumber > 8) {
+    room.state = 'baloot_results';
+    room.gameData.winner = room.gameData.scores.northSouth >= room.gameData.scores.eastWest ? 'northSouth' : 'eastWest';
+  }
+}
 function generateBarraQuestions(players) {
   if (!players || players.length < 2) return [];
   const shuffled = [...players].sort(() => Math.random() - 0.5);
@@ -1093,7 +1179,27 @@ io.on('connection', (socket) => {
     if (room.voting?.timeoutId) clearTimeout(room.voting.timeoutId);
     room.voting = { active: false, votes: {}, endTime: null };
 
-    if (gameId === 'barra') {
+    if (gameId === 'baloot') {
+      room.state = 'baloot_lobby';
+      room.gameData = {
+        mode: 'baloot', title: 'البلوت',
+        teams: {}, scores: { northSouth: 0, eastWest: 0 },
+        phase: 'teams', round: 1, turn: null, trick: [], hands: {}
+      };
+      room.players.forEach((p, idx) => { room.gameData.teams[p.id] = idx % 2 === 0 ? 'northSouth' : 'eastWest'; });
+      io.to(room.code).emit('room_state_update', room);
+      broadcastPublicRooms();
+    } else if (quickGameData[gameId]) {
+      const config = quickGameData[gameId];
+      room.state = 'quick_playing';
+      room.gameData = {
+        mode: gameId, title: config.title, round: 1,
+        scores: Object.fromEntries(room.players.map(p => [p.id, 0])),
+        rounds: config.rounds, current: 0, responses: {}, winner: null
+      };
+      io.to(room.code).emit('room_state_update', room);
+      broadcastPublicRooms();
+    } else if (gameId === 'barra') {
       room.state = 'barra_playing';
       const categories = Object.keys(barraCategories);
       const randomCategory = categories[Math.floor(Math.random() * categories.length)];
@@ -1219,7 +1325,7 @@ io.on('connection', (socket) => {
     if (!room || !room.voting || !room.voting.active) return;
     if (room.voting.timeoutId) clearTimeout(room.voting.timeoutId);
 
-    const counts = { barra: 0, horoof: 0, aded: 0, codenames: 0, mafia: 0 };
+    const counts = { barra: 0, horoof: 0, aded: 0, codenames: 0, mafia: 0, quiz: 0, whoami: 0, forbidden: 0, speed: 0, baloot: 0 };
     Object.values(room.voting.votes || {}).forEach(v => {
       if (counts[v] !== undefined) counts[v]++;
     });
@@ -1237,9 +1343,13 @@ io.on('connection', (socket) => {
     triggerGameStart(room, topGame);
   };
 
-  socket.on('host_start_game_voting', ({ code, duration = 30 }) => {
+  socket.on('host_start_game_voting', ({ code, duration = 30, directGameId }) => {
     const room = getRoom(code);
     if (room && (room.hostId === socket.id || !room.hostId)) {
+      if (directGameId) {
+        triggerGameStart(room, directGameId);
+        return;
+      }
       const validDuration = Math.min(60, Math.max(10, Number(duration) || 30));
       if (room.voting?.timeoutId) clearTimeout(room.voting.timeoutId);
       room.voting = {
@@ -1276,6 +1386,78 @@ io.on('connection', (socket) => {
       room.voting = { active: false, votes: {}, endTime: null };
       io.to(room.code).emit('room_state_update', room);
     }
+  });
+
+  // Quick party games: shared round state with host-controlled progression.
+  socket.on('quick_submit_answer', ({ code, answer }) => {
+    const room = getRoom(code);
+    if (!room || room.state !== 'quick_playing' || !room.gameData) return;
+    room.gameData.responses[socket.id] = String(answer ?? '').trim().slice(0, 100);
+    io.to(room.code).emit('room_state_update', room);
+  });
+
+  socket.on('host_quick_next_round', ({ code, winnerId }) => {
+    const room = getRoom(code);
+    if (!room || room.hostId !== socket.id || room.state !== 'quick_playing') return;
+    if (winnerId && room.gameData.scores[winnerId] !== undefined) room.gameData.scores[winnerId] += 1;
+    const next = (room.gameData.current || 0) + 1;
+    if (next >= room.gameData.rounds.length) {
+      room.gameData.winner = Object.entries(room.gameData.scores).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+      room.state = 'quick_results';
+    } else {
+      room.gameData.current = next;
+      room.gameData.round = next + 1;
+      room.gameData.responses = {};
+    }
+    io.to(room.code).emit('room_state_update', room);
+  });
+
+  socket.on('host_start_baloot', ({ code }) => {
+    const room = getRoom(code);
+    if (!room || room.hostId !== socket.id || room.state !== 'baloot_lobby') return;
+    if (room.players.length < 4) return;
+    room.state = 'baloot_playing';
+    room.gameData.phase = 'playing';
+    room.gameData.trumpSuit = null;
+    dealBaloot(room);
+    io.to(room.code).emit('room_state_update', room);
+  });
+
+  socket.on('host_baloot_set_trump', ({ code, suit }) => {
+    const room = getRoom(code);
+    if (!room || room.hostId !== socket.id || room.state !== 'baloot_playing' || !balootSuits.includes(suit)) return;
+    room.gameData.trumpSuit = suit;
+    io.to(room.code).emit('room_state_update', room);
+  });
+
+  socket.on('baloot_play_card', ({ code, cardId }) => {
+    const room = getRoom(code);
+    if (!room || room.state !== 'baloot_playing' || room.gameData.turn !== socket.id) return;
+    const hand = room.gameData.hands?.[socket.id] || [];
+    const cardIndex = hand.findIndex(card => card.id === cardId);
+    if (cardIndex < 0) return;
+    const card = hand[cardIndex];
+    if (room.gameData.leadSuit && card.suit !== room.gameData.leadSuit && hand.some(c => c.suit === room.gameData.leadSuit)) return;
+    hand.splice(cardIndex, 1);
+    room.gameData.leadSuit = room.gameData.leadSuit || card.suit;
+    room.gameData.trick.push({ playerId: socket.id, card });
+    if (room.gameData.trick.length === 4) resolveBalootTrick(room);
+    else {
+      const playerIndex = room.players.findIndex(player => player.id === socket.id);
+      room.gameData.turn = room.players[(playerIndex + 1) % 4]?.id || null;
+    }
+    io.to(room.code).emit('room_state_update', room);
+  });
+
+  socket.on('host_baloot_new_round', ({ code }) => {
+    const room = getRoom(code);
+    if (!room || room.hostId !== socket.id || !['baloot_results', 'baloot_playing'].includes(room.state)) return;
+    room.state = 'baloot_playing';
+    room.gameData.scores = { northSouth: 0, eastWest: 0 };
+    room.gameData.trickNumber = 1;
+    room.gameData.trumpSuit = null;
+    dealBaloot(room);
+    io.to(room.code).emit('room_state_update', room);
   });
 
   /* =========================================

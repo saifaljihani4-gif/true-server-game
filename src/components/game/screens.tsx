@@ -16,41 +16,30 @@ export const MODE_ICONS: Record<Mode, LucideIcon> = {
 
 export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin: () => void; onHost: () => void }) {
   return (
-    <main className="fade-screen flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-between py-5 px-4 sm:py-7 sm:px-6">
+    <main className="fade-screen relative flex min-h-[100dvh] w-full max-w-full overflow-hidden flex-col items-center justify-between px-4 py-6 sm:px-8 sm:py-8">
+      <div className="absolute inset-0 -z-10 overflow-hidden"><img src="/images/banner.webp" alt="" className="h-full w-full object-cover opacity-35 scale-105" /><div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/65 to-black" /><div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(255,255,255,.12),transparent_38%)]" /></div>
       {/* Top Tag - Clean neutral glass without purple background/border */}
-      <div className="w-full flex justify-center items-center pt-1">
-        <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-950/30 px-3.5 py-1 backdrop-blur-md">
-          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
-          <span className="font-kufi text-[11px] sm:text-xs font-semibold text-sky-200">سيرفر Real الرسمي • Real</span>
+      <div className="w-full flex justify-between items-center pt-1">
+        <div className="flex items-center gap-3"><img src="/images/icon.png" alt="Real" className="h-9 w-9 rounded-xl object-cover" /><span className="font-display text-lg font-black tracking-[.25em] text-white">REAL</span></div>
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/30 px-3.5 py-1 backdrop-blur-md">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="font-kufi text-[11px] sm:text-xs font-semibold text-gray-200">السيرفر الرسمي</span>
         </div>
       </div>
 
       {/* Hero Section */}
-      <div className="fade-in-up flex flex-col items-center text-center my-auto py-3 max-w-md w-full">
-        {/* Animated Icon - Clean without any colored glow or colored borders */}
-        <div className="relative mb-3 sm:mb-4">
-          <img
-            src="/images/icon.png"
-            alt="Real"
-            className="w-20 h-20 sm:w-24 sm:h-24 object-contain rounded-2xl drop-shadow-md"
-          />
-        </div>
+      <div className="fade-in-up flex flex-col items-center text-center my-auto py-3 max-w-2xl w-full">
 
         {/* Info banner / title */}
-        <h1 className="font-display text-4xl sm:text-5xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-sky-200 to-cyan-400 drop-shadow-[0_0_25px_rgba(56,189,248,0.5)] mb-2">Real</h1>
+        <img src="/images/info.png" alt="Real" className="mb-6 h-12 sm:h-16 w-auto object-contain drop-shadow-[0_0_30px_rgba(255,255,255,.28)]" />
+        <h1 className="font-display text-5xl sm:text-8xl font-black tracking-[.16em] text-white drop-shadow-[0_8px_35px_rgba(0,0,0,.8)] mb-3">REAL</h1>
 
         <p className="font-kufi text-xs sm:text-sm font-medium text-gray-400 max-w-xs sm:max-w-sm leading-relaxed mb-4">
-          تحديات جماعية ومسابقات تفاعلية مع أصدقائك في الديسكورد
+          ساحة ألعاب جماعية سريعة — اجمع فريقك، اختر التحدي، وخذ الجولة
         </p>
 
         {/* Feature Pills showcase */}
-        <div className="flex flex-wrap justify-center items-center gap-1.5 max-w-xs sm:max-w-sm">
-          <span className="text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-400">تحدي الحروف</span>
-          <span className="text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-400">عدّد</span>
-          <span className="text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-400">برا السالفة</span>
-          <span className="text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-400">مافيا</span>
-          <span className="text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-400">كود نيمز</span>
-        </div>
+        <div className="mt-3 flex flex-wrap justify-center items-center gap-2 max-w-xl"><span className="rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-[11px] font-bold text-gray-300">بلوت</span><span className="rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-[11px] font-bold text-gray-300">مافيا</span><span className="rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-[11px] font-bold text-gray-300">كود نيمز</span><span className="rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-[11px] font-bold text-gray-300">تحديات سريعة</span></div>
       </div>
 
       {/* Action Buttons Section */}
@@ -90,6 +79,7 @@ export function Home({ onEnter, onJoin, onHost }: { onEnter: () => void; onJoin:
 export function Categories({ onBack, onSelect }: { onBack: () => void; onSelect: (mode: Mode) => void }) {
   return (
     <main className="fade-screen relative flex min-h-[100dvh] w-full max-w-full overflow-x-hidden flex-col items-center justify-start py-3 px-3 sm:py-5 sm:px-4">
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"><img src="/images/discord_banner_1024x576.png" alt="" className="h-full w-full object-cover opacity-20" /><div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/80 to-black" /></div>
       <div className="w-full max-w-md sm:max-w-xl md:max-w-3xl flex flex-col items-stretch">
         <div className="w-full flex items-center justify-start mb-2 pt-1">
           <button onClick={onBack} className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-gray-400 hover:text-white transition-colors">
@@ -97,20 +87,20 @@ export function Categories({ onBack, onSelect }: { onBack: () => void; onSelect:
           </button>
         </div>
 
-        <div className="fade-in-up mb-3 sm:mb-5 text-center w-full">
+        <div className="fade-in-up mb-3 sm:mb-5 text-center w-full rounded-[2rem] border border-white/10 bg-black/30 px-5 py-6 backdrop-blur-md">
           <img src="/images/info.png" alt="Real" className="h-8 sm:h-10 w-auto object-contain mx-auto mb-1.5 drop-shadow-[0_0_15px_rgba(56,189,248,0.4)]" />
           <h2 className="font-kufi text-xl sm:text-2xl md:text-3xl font-bold text-white">اختر اللعبة</h2>
           <p className="mt-0.5 text-xs sm:text-sm font-medium text-gray-400">{MODES.length} ألعاب تنافسية وتفاعلية</p>
         </div>
 
-        <div className="grid w-full grid-cols-1 md:grid-cols-2 gap-2 sm:gap-2.5 pb-8">
+        <div className="grid w-full grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 pb-8">
           {MODES.map((item, i) => {
             const Icon = MODE_ICONS[item.id];
             return (
               <button
                 key={item.id}
                 onClick={() => onSelect(item.id)}
-                className="mode-card mode-row glass-panel fade-in-up group flex items-center gap-2.5 sm:gap-3 rounded-xl p-2.5 sm:p-3 w-full text-right transition-all"
+                className="mode-card mode-row glass-panel fade-in-up group flex items-center gap-3 sm:gap-4 rounded-3xl p-3 sm:p-4 w-full text-right transition-all hover:-translate-y-1 hover:border-white/30 hover:bg-white/[.08]"
                 style={{ animationDelay: `${i * 0.04}s` }}
               >
                 <span className="mode-icon flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white">
@@ -178,7 +168,8 @@ export function Game(props: GameProps) {
   const wide = mode !== 'letters';
 
   return (
-    <main className="fade-screen relative flex min-h-[100dvh] flex-col">
+    <main className="fade-screen relative flex min-h-[100dvh] flex-col overflow-hidden">
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"><img src="/images/banner.png" alt="" className="h-full w-full object-cover opacity-[.12]" /><div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/80 to-black" /></div>
       <header className="glass-nav sticky top-0 z-20 flex items-center justify-between gap-3 px-4 py-3 shadow-xl md:px-6 md:py-4">
         <button onClick={onExit} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-bold text-gray-400 hover:text-white md:px-4">
           <ChevronRight size={15} /> <span>خروج</span>

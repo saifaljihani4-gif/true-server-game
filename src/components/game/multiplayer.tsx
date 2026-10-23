@@ -11,6 +11,11 @@ const VOTABLE_GAMES = [
   { id: 'aded', name: 'عدّد', min: 1, desc: 'مزايدة حية وسرعة في ذكر الكلمات' },
   { id: 'codenames', name: 'كود نيمز', min: 4, desc: 'فريقين وكلمات سرية وتلميحات ذكية' },
   { id: 'mafia', name: 'مافيا', min: 4, desc: 'صراع المافيا والمواطنين وخداع الليل' },
+  { id: 'quiz', name: 'صح أو خطأ', min: 2, desc: 'أسئلة سريعة ونقاط مباشرة' },
+  { id: 'whoami', name: 'من أنا؟', min: 3, desc: 'خمن الشخصية قبل انتهاء الوقت' },
+  { id: 'forbidden', name: 'الكلمة الممنوعة', min: 3, desc: 'اشرح الكلمة بدون الكلمات المحظورة' },
+  { id: 'speed', name: 'تحدي السرعة', min: 2, desc: 'أول إجابة صحيحة تكسب النقطة' },
+  { id: 'baloot', name: 'البلوت', min: 4, desc: 'بلوت سعودي بنظام فريقين' },
 ];
 
 function DiscussionTimer({ duration = 60 }: { duration?: number }) {
@@ -665,6 +670,21 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
                   <button onClick={() => socket.emit('host_start_aded', { code: room.code })} disabled={room.players.length < 1} className="py-4 px-5 rounded-2xl font-bold transition-all bg-white text-black hover:scale-105 disabled:opacity-50 flex justify-between items-center">
                     عدّد <span className="w-3 h-3 rounded-full bg-amber-500" />
                   </button>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {[
+                      ['quiz', 'صح أو خطأ', 'bg-cyan-200'],
+                      ['whoami', 'من أنا؟', 'bg-violet-300'],
+                      ['forbidden', 'الكلمة الممنوعة', 'bg-rose-300'],
+                      ['speed', 'تحدي السرعة', 'bg-lime-300'],
+                    ].map(([gameId, label, color]) => (
+                      <button key={gameId} onClick={() => socket.emit('host_start_game_voting', { code: room.code, directGameId: gameId })} disabled={room.players.length < 2} className={`rounded-xl px-2 py-3 text-xs font-black text-black ${color} disabled:opacity-40`}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={() => socket.emit('host_start_game_voting', { code: room.code, directGameId: 'baloot' })} disabled={room.players.length < 4} className="mt-2 py-4 px-5 rounded-2xl font-black transition-all bg-amber-300 text-black hover:scale-105 disabled:opacity-50 flex justify-between items-center">
+                    البلوت <span className="w-3 h-3 rounded-full bg-amber-700" />
+                  </button>
                 </div>
                 {room.players.length < 2 && <p className="text-sm text-red-400 mt-4 text-center font-bold">تحتاج لاعبين على الأقل لبدء اللعبة</p>}
               </div>
@@ -751,6 +771,48 @@ function UnifiedRoom({ onBack, initialHost }: { onBack: () => void, initialHost:
       <div className="w-full flex flex-col">
         <AdedResultsView room={room} socket={socket} isHost={isHost} onBack={onBack} />
       </div>
+    );
+  }
+
+  if (room.state === 'baloot_lobby' || room.state === 'baloot_playing' || room.state === 'baloot_results') {
+    const teams = room.gameData?.teams || {};
+    const myHand = room.gameData?.hands?.[socket.id || ''] || [];
+    const isMyTurn = room.gameData?.turn === socket.id;
+    return (
+      <main className="fade-screen min-h-[100dvh] p-4 sm:p-8 flex items-center justify-center">
+        <section className="w-full max-w-5xl glass-panel rounded-[2rem] border border-amber-400/20 bg-black/40 p-5 sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+            <div><p className="text-amber-300 text-xs font-black tracking-[.3em]">EIGHTYTWO TABLE</p><h1 className="font-kufi text-3xl sm:text-5xl font-black text-white">البلوت</h1></div>
+            <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-4 py-2 text-sm font-bold text-amber-200">{room.state === 'baloot_lobby' ? 'تجهيز الفرق' : 'الجولة بدأت'}</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {(['northSouth', 'eastWest'] as const).map((team, idx) => (
+              <div key={team} className="rounded-3xl border border-white/10 bg-white/[.04] p-5">
+                <h2 className="font-kufi text-xl font-bold text-white mb-4">{idx === 0 ? 'فريق الشمال والجنوب' : 'فريق الشرق والغرب'}</h2>
+                <div className="space-y-2">{room.players.filter((p: any) => teams[p.id] === team).map((p: any) => <div key={p.id} className="flex items-center gap-3 rounded-2xl bg-black/30 p-3 text-white"><img src={p.avatar || '/images/icon.png'} className="h-9 w-9 rounded-full object-cover" /><span className="font-bold">{p.name}</span></div>)}</div>
+              </div>
+            ))}
+          </div>
+          {room.state === 'baloot_lobby' && isHost && <button onClick={() => socket.emit('host_start_baloot', { code })} disabled={room.players.length < 4} className="mt-6 w-full rounded-2xl bg-amber-300 py-4 font-black text-black disabled:opacity-40">بدء لعبة البلوت</button>}
+          {room.state === 'baloot_playing' && <div className="mt-6 rounded-3xl border border-amber-300/20 bg-amber-300/5 p-5"><div className="flex flex-wrap justify-between gap-3 text-sm text-amber-100 mb-4"><span>النقاط: {room.gameData.scores?.northSouth || 0} - {room.gameData.scores?.eastWest || 0}</span><span>اللفة {room.gameData.trickNumber || 1} / 8</span><span>الحكم: {room.gameData.trumpSuit || 'لم يحدد'}</span></div>{isHost && !room.gameData.trumpSuit && <div className="mb-4 flex flex-wrap justify-center gap-2"><span className="w-full text-center text-xs text-amber-200">اختر الحكم</span>{['♠', '♥', '♦', '♣'].map((suit) => <button key={suit} onClick={() => socket.emit('host_baloot_set_trump', { code, suit })} className={`rounded-xl bg-white px-4 py-2 font-black ${suit === '♥' || suit === '♦' ? 'text-red-600' : 'text-black'}`}>{suit}</button>)}</div>}<div className="min-h-24 rounded-2xl bg-black/30 border border-white/10 p-4 flex flex-wrap gap-3 justify-center items-center">{(room.gameData.trick || []).map((play: any) => <div key={play.playerId} className="rounded-xl bg-white p-3 text-black font-black shadow-lg"><small className="block text-[10px] text-gray-500">{room.players.find((p: any) => p.id === play.playerId)?.name}</small>{play.card.suit} {play.card.rank}</div>)}</div><p className="mt-4 text-center text-amber-200 font-bold">{isMyTurn ? 'دورك — اختر ورقة' : `دور ${room.players.find((p: any) => p.id === room.gameData.turn)?.name || 'اللاعب'}`}</p><div className="mt-4 flex flex-wrap justify-center gap-2">{myHand.map((card: any) => <button key={card.id} disabled={!isMyTurn || !room.gameData.trumpSuit || Boolean(room.gameData.leadSuit && card.suit !== room.gameData.leadSuit && myHand.some((c: any) => c.suit === room.gameData.leadSuit))} onClick={() => socket.emit('baloot_play_card', { code, cardId: card.id })} className={`w-14 h-20 rounded-xl border bg-white text-black font-black shadow-md transition-transform ${card.suit === '♥' || card.suit === '♦' ? 'text-red-600' : 'text-black'} disabled:opacity-35 enabled:hover:-translate-y-2`}>{card.suit}<br />{card.rank}</button>)}</div></div>}
+          {room.state === 'baloot_results' && <div className="mt-6 text-center"><p className="text-2xl font-black text-amber-200">فاز فريق {room.gameData.winner === 'northSouth' ? 'الشمال والجنوب' : 'الشرق والغرب'}</p><p className="mt-2 text-white">{room.gameData.scores?.northSouth || 0} - {room.gameData.scores?.eastWest || 0}</p>{isHost && <button onClick={() => socket.emit('host_baloot_new_round', { code })} className="mt-5 rounded-2xl bg-amber-300 px-8 py-3 font-black text-black">جولة جديدة</button>}</div>}
+        </section>
+      </main>
+    );
+  }
+
+  if (room.state === 'quick_playing' || room.state === 'quick_results') {
+    const currentIndex = typeof room.gameData?.current === 'number' ? room.gameData.current : 0;
+    const currentRound = room.gameData?.rounds?.[currentIndex];
+    const myAnswer = room.gameData?.responses?.[socket.id || ''] || '';
+    const isHostView = isHost;
+    return (
+      <main className="fade-screen min-h-[100dvh] p-4 sm:p-8 flex items-center justify-center">
+        <section className="w-full max-w-3xl glass-panel rounded-[2rem] border border-cyan-300/20 bg-black/40 p-5 sm:p-8 text-center">
+          <p className="text-cyan-300 text-xs font-black tracking-[.3em]">QUICK ARENA</p><h1 className="font-kufi text-3xl sm:text-5xl font-black text-white mt-2">{room.gameData.title}</h1>
+          {room.state === 'quick_results' ? <><p className="mt-8 text-2xl font-bold text-white">انتهت اللعبة</p><div className="mt-5 space-y-2">{room.players.map((p: any) => <div key={p.id} className="flex justify-between rounded-xl bg-white/5 p-3 text-white"><span>{p.name}</span><b>{room.gameData.scores[p.id] || 0}</b></div>)}</div></> : <><div className="mt-8 rounded-3xl bg-white/5 p-8"><p className="text-xl sm:text-3xl font-bold text-white">{currentRound?.prompt}</p>{currentRound?.forbidden && <p className="mt-4 text-red-300">ممنوع: {currentRound.forbidden.join('، ')}</p>}</div><input value={myAnswer} onChange={e => socket.emit('quick_submit_answer', { code, answer: e.target.value })} placeholder="اكتب إجابتك هنا" className="mt-5 w-full rounded-2xl border border-white/10 bg-black/40 p-4 text-center text-white outline-none" />{isHostView && <div className="mt-5 grid grid-cols-2 gap-2">{room.players.map((p: any) => <button key={p.id} onClick={() => socket.emit('host_quick_next_round', { code, winnerId: p.id })} className="rounded-xl bg-white px-3 py-3 text-xs font-black text-black">نقطة لـ {p.name}</button>)}</div>}</>}
+        </section>
+      </main>
     );
   }
 
